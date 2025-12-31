@@ -1,0 +1,60 @@
+
+  .datepicker-container {
+    z-index: 1060; /* Đảm bảo date picker có z-index cao hơn modal */
+  }
+  
+.date-picker-dropdown {
+    z-index: 9999;
+  
+}
+
+
+/* ghi đề giá trị mặc đinhh là 800px */
+/* @media (min-width: 992px) {
+  .modal-lg, .modal-xl {
+      --cui-modal-width: 1100px !important;
+  }
+} */
+
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.labelcustome {
+  color: #211fb1;
+  font-weight: 500;
+}
+
+.overflow-auto::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.overflow-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

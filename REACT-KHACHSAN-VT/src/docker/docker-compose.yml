@@ -1,0 +1,11 @@
+version: '3'
+services:
+  react-app:
+    build:
+      context: ../../
+      dockerfile: src/docker/Dockerfile
+    ports:
+      - '3000:80'
+    container_name: my-react-khach-san
+    restart: always # Thêm dòng này để container tự động restart
+
