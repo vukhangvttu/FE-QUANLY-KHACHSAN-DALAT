@@ -123,7 +123,7 @@ const routes = [
 
   {
     path: '/dashboard',
-    name: <Translation>{(t) => t('Khách sạn')}</Translation>,
+    name: <Translation>{(t) => t('Trang chủ')}</Translation>,
     element: ViewChatRoom,
   },
   {

@@ -104,7 +104,7 @@ const DanhSachDatPhong = () => {
       _style: { color: 'blue' },
     },
     {
-      key: 'ma_nhan_vien',
+      key: 'nguoi_tao',
       label: 'Nhân viên',
       _style: { color: 'blue' },
     },

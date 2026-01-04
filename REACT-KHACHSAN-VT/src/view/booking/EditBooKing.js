@@ -2801,7 +2801,7 @@ const EditBooKing = () => {
                   ))}
                 </CCol>
 
-                <div className="">
+                {/* <div className="">
                   <div className="flex items-center ">
                     <div className="font-semibold cursor-pointer ">
                       <FontAwesomeIcon icon={faCirclePlus} className="text-blue-500 mr-1" />
@@ -2810,7 +2810,7 @@ const EditBooKing = () => {
                       </span>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 

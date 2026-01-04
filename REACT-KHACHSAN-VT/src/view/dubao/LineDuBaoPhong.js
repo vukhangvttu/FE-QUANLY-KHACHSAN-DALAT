@@ -355,7 +355,9 @@ const LineDuBaoPhong = ({ isActive }) => {
                     while (i < days.length) {
                       const booking = getBookingForDate(bookings, days[i].date)
                       // Nếu không có booking hoặc maxepphongbooking === null thì render ô trống
-                      if (!booking || booking.maxepphongbooking === null) {
+                      if ( !booking ||
+                        booking.maxepphongbooking === null ||
+                        booking.daTraPhong === true) {
                         const emptyCellClass = isPastDate(days[i].date) ? 'bg-white' : 'bg-white'
                         cells.push(
                           <td
@@ -376,7 +378,7 @@ const LineDuBaoPhong = ({ isActive }) => {
                         const nextBooking = getBookingForDate(bookings, days[j].date)
                         if (
                           nextBooking &&
-                          nextBooking.tenkhachhang === booking.tenkhachhang &&
+                          nextBooking.maxepphongbooking === booking.maxepphongbooking &&
                           nextBooking.trangThaiHienTai === booking.trangThaiHienTai
                         ) {
                           j++

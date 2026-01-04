@@ -145,12 +145,10 @@ const App = () => {
     const theme = urlParams.get('theme') && urlParams.get('theme').match(/^[A-Za-z0-9\s]+/)[0]
     if (theme) {
       setColorMode(theme)
-    }
-
-    if (isColorModeSet()) {
       return
     }
 
+    // Luôn set về theme từ store (mặc định là 'light')
     setColorMode(storedTheme)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

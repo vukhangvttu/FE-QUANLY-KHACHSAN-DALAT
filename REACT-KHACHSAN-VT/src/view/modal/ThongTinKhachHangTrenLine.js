@@ -165,7 +165,7 @@ const ThongTinKhachHangTrenLine = ({ visible, onClose, ma_xepphong }) => {
               <CRow>
                 <CCol xs={12} md={12}>
                   <CFormLabel className="labelcustome">Nhân viên: </CFormLabel>
-                  <span className="font-semibold"> {data.ma_nhan_vien}</span>
+                  <span className="font-semibold"> {data.nguoi_tao}</span>
                 </CCol>
               </CRow>
               <CRow>

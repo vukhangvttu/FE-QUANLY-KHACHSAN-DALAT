@@ -2459,7 +2459,9 @@ const ThemDatPhong = () => {
                                           {option.giaNgayLe ? ' (Ngày lễ)' : ''}
                                           {option.giaGiuong ? ' (Giường extra)' : ''}
                                         </option>
+
                                       ))}
+                                        <option value="MACDINH">Giá Booking Online </option>
                                     </CFormSelect>
                                   </CTableDataCell>
                                   <CTableDataCell>

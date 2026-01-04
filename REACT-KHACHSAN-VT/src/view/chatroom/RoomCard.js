@@ -421,7 +421,7 @@ const RoomCard = ({
 
       <CRow>
         <CCol xs={5} sm={5} md={6} lg={5}>
-          <CTooltip
+          {/* <CTooltip
             content={
               <div className=" text-white shadow-xl rounded-lg p-4 ">
                 <div className="flex items-start space-x-3">
@@ -431,21 +431,17 @@ const RoomCard = ({
                     <div>{room.ghiChu}</div>
                     <div>{room.tong}m2</div>
                     <div>Số khách tối đa: {room.soLuongKhach}</div>
-                    {/* <div className="mt-2 flex space-x-2">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                        {room.maLoaiPhong}
-                      </span>
-                    </div> */}
+                   
                   </div>
                 </div>
               </div>
             }
             placement="left"
-          >
+          > */}
             <h3 className="text-xl font-bold flex items-center text-center gap-2 cursor-pointer">
               {room.tenPhong}
             </h3>
-          </CTooltip>
+          {/* </CTooltip> */}
         </CCol>
         <CCol xs={7} sm={7} md={6} lg={7} className="flex justify-end">
           {room.soGiuongThem > 0 ? (

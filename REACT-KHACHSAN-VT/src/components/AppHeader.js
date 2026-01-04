@@ -1,46 +1,16 @@
 import React, { useEffect, useRef } from 'react'
-import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { useTranslation } from 'react-i18next'
-import {
-  CContainer,
-  CDropdown,
-  CDropdownItem,
-  CDropdownMenu,
-  CDropdownToggle,
-  CHeader,
-  CHeaderNav,
-  CHeaderToggler,
-  CNavLink,
-  CNavItem,
-  useColorModes,
-} from '@coreui/react-pro'
+import { CContainer, CHeader, CHeaderNav, CHeaderToggler, CNavLink } from '@coreui/react-pro'
 import CIcon from '@coreui/icons-react'
-import {
-  cilContrast,
-  cilApplicationsSettings,
-  cilMenu,
-  cilMoon,
-  cilSun,
-  cilLanguage,
-  cifGb,
-  cifEs,
-  cifPl,
-} from '@coreui/icons'
+import { cilHome, cilMenu } from '@coreui/icons'
 
 import { AppBreadcrumb } from './index'
 
-import {
-  AppHeaderDropdown,
-  AppHeaderDropdownMssg,
-  AppHeaderDropdownNotif,
-  AppHeaderDropdownTasks,
-} from './header/index'
+import { AppHeaderDropdown } from './header/index'
+import { NavLink } from 'react-router-dom'
 
 const AppHeader = () => {
   const headerRef = useRef()
-  const { colorMode, setColorMode } = useColorModes('coreui-pro-react-admin-template-theme-light')
-  const { i18n, t } = useTranslation()
 
   const dispatch = useDispatch()
   const asideShow = useSelector((state) => state.asideShow)
@@ -55,12 +25,14 @@ const AppHeader = () => {
 
   return (
     <CHeader position="sticky" className="mb-2 p-0" ref={headerRef}>
-      <CContainer className="border-bottom px-4" fluid>
+      <CContainer className="border-bottom px-4 position-relative" fluid>
         <CHeaderToggler
           onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
           style={{ marginInlineStart: '-14px' }}
         >
-          <CIcon icon={cilMenu} size="lg" />
+          <CNavLink to="/" as={NavLink}>
+            <CIcon icon={cilHome} size="lg" />
+          </CNavLink>
         </CHeaderToggler>
         {/* <CContainer className="px-4" fluid>
           <AppBreadcrumb />
@@ -79,15 +51,32 @@ const AppHeader = () => {
             <CNavLink href="#">{t('settings')}</CNavLink>
           </CNavItem> */}
         </CHeaderNav>
+
+        <div className="position-absolute top-50 start-50 translate-middle d-none d-lg-block">
+          <span
+            className="fw-bold text-uppercase"
+            style={{
+              fontSize: '1.8rem',
+              color: '#b8860b',
+              letterSpacing: '1px',
+              textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+              fontFamily: '"Times New Roman", Times, serif',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Golden Era Vũng Tàu
+          </span>
+        </div>
+
         <CHeaderNav className="d-none d-md-flex ms-auto">
           {/* <AppHeaderDropdownNotif />
           <AppHeaderDropdownTasks />
           <AppHeaderDropdownMssg /> */}
         </CHeaderNav>
         <CHeaderNav className="ms-auto ms-md-0">
-          <li className="nav-item py-1">
+          {/* <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
+          </li> */}
           {/* <CDropdown variant="nav-item" placement="bottom-end">
             <CDropdownToggle caret={false}>
               <CIcon icon={cilLanguage} size="lg" />
@@ -119,8 +108,8 @@ const AppHeader = () => {
               </CDropdownItem>
             </CDropdownMenu>
           </CDropdown> */}
-          <CDropdown variant="nav-item" placement="bottom-end">
-            <CDropdownToggle caret={false}>
+          {/* <CDropdown variant="nav-item" placement="bottom-end"> */}
+          {/* <CDropdownToggle caret={false}>
               {colorMode === 'dark' ? (
                 <CIcon icon={cilMoon} size="lg" />
               ) : colorMode === 'auto' ? (
@@ -128,8 +117,8 @@ const AppHeader = () => {
               ) : (
                 <CIcon icon={cilSun} size="lg" />
               )}
-            </CDropdownToggle>
-            <CDropdownMenu>
+            </CDropdownToggle> */}
+          {/* <CDropdownMenu>
               <CDropdownItem
                 active={colorMode === 'light'}
                 className="d-flex align-items-center"
@@ -157,11 +146,11 @@ const AppHeader = () => {
               >
                 <CIcon className="me-2" icon={cilContrast} size="lg" /> Auto
               </CDropdownItem>
-            </CDropdownMenu>
-          </CDropdown>
-          <li className="nav-item py-1">
+            </CDropdownMenu> */}
+          {/* </CDropdown> */}
+          {/* <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
+          </li> */}
           <AppHeaderDropdown />
         </CHeaderNav>
         {/* <CHeaderToggler
