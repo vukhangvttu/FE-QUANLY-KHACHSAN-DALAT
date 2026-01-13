@@ -2461,7 +2461,7 @@ const ThemDatPhong = () => {
                                         </option>
 
                                       ))}
-                                        <option value="MACDINH">Giá Booking Online </option>
+                                        <option value="41">Giá Booking Online </option>
                                     </CFormSelect>
                                   </CTableDataCell>
                                   <CTableDataCell>
