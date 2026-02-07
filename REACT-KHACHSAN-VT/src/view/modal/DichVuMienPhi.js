@@ -16,13 +16,14 @@ import {
   CToastBody,
   CToaster,
   CToastHeader,
+  CDatePicker,
 } from '@coreui/react-pro'
 import { CButton, CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react-pro'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
 
 import { useNavigate } from 'react-router-dom'
-import { createDichVuMienPhi, getListDichVuMienPhi } from 'src/service/XepPhongBooKingService'
+import { createDichVuMienPhi, getListDichVuMienPhi, getAllDichVuMienPhi } from 'src/service/XepPhongBooKingService'
 
 import { format, parseISO } from 'date-fns'
 
@@ -31,9 +32,6 @@ const DichVuMienPhi = ({
   onClose,
   maPhong,
   ma_xepphong,
-  soGiuongMax,
-  maLoaiPhong,
-  soLuongKhach,
 }) => {
   const navigate = useNavigate()
   const [trangthaiload, setTrangthaiload] = useState(false)
@@ -63,9 +61,10 @@ const DichVuMienPhi = ({
 
   const [loading, setLoading] = useState(false)
 
-  const [tongPhuThu, setTongPhuThu] = useState(0)
-
   const [listDichVuMienPhi, setListDichVuMienPhi] = useState([])
+  const [allDichVuMienPhi, setAllDichVuMienPhi] = useState([])
+  const [soLuongDichVu, setSoLuongDichVu] = useState({})
+  const [selectedDate, setSelectedDate] = useState(new Date())
 
   // Tính tổng số lượng cho từng loại dịch vụ
   const tinhTongSoLuong = (maDichVu) => {
@@ -74,29 +73,37 @@ const DichVuMienPhi = ({
       .reduce((total, item) => total + item.soLuong, 0)
   }
 
+  const fetchAllDichVuMienPhi = async () => {
+    try {
+      const response = await getAllDichVuMienPhi(navigate)
+      if (response) {
+        setAllDichVuMienPhi(response)
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách dịch vụ miễn phí:', error)
+      addToast(exampleToast('Lỗi khi tải danh sách dịch vụ'))
+    }
+  }
+
   const fetchData = async () => {
     try {
       setLoading(true)
 
       const response = await getListDichVuMienPhi(ma_xepphong, navigate)
       if (response) {
-        // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
-        const today = new Date().toISOString().split('T')[0]
+        // Lấy ngày được chọn theo định dạng YYYY-MM-DD
+        const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
 
-        // Lọc các dịch vụ có ngày bổ sung là ngày hiện tại
-        const todayServices = response.filter((item) => item.ngayBoSung === today)
+        // Lọc các dịch vụ có ngày bổ sung là ngày được chọn
+        const selectedDayServices = response.filter((item) => item.ngayBoSung === selectedDateStr)
 
-        // Cập nhật số lượng cho từng loại dịch vụ
-        const nuocSuoi = todayServices.find(
-          (item) => item.maDichVuMienPhi.maDichVuMienPhi === 'NUOC_SUOI',
-        )
-        const tra = todayServices.find((item) => item.maDichVuMienPhi.maDichVuMienPhi === 'TRA')
-        const caphe = todayServices.find((item) => item.maDichVuMienPhi.maDichVuMienPhi === 'CAPHE')
-
-        // Cập nhật state với số lượng tương ứng
-        setSoLuongNuocSuoi(nuocSuoi ? nuocSuoi.soLuong : 0)
-        setSoLuongTra(tra ? tra.soLuong : 0)
-        setSoLuongCafe(caphe ? caphe.soLuong : 0)
+        // Cập nhật số lượng cho từng loại dịch vụ động
+        const soLuongTemp = {}
+        selectedDayServices.forEach((item) => {
+          const maDichVu = item.maDichVuMienPhi.maDichVuMienPhi
+          soLuongTemp[maDichVu] = item.soLuong
+        })
+        setSoLuongDichVu(soLuongTemp)
 
         // Lưu toàn bộ danh sách để hiển thị lịch sử
         setListDichVuMienPhi(response)
@@ -113,77 +120,33 @@ const DichVuMienPhi = ({
 
   useEffect(() => {
     if (visible) {
+      fetchAllDichVuMienPhi()
       fetchData()
     }
-  }, [visible])
+  }, [visible, selectedDate])
 
-  const [soLuongNuocSuoi, setSoLuongNuocSuoi] = useState(0)
-  const [soLuongTra, setSoLuongTra] = useState(0)
-  const [soLuongCafe, setSoLuongCafe] = useState(0)
   const [dichVuMienPhiList, setDichVuMienPhiList] = useState([])
 
-  const tinhTongTien = (giaGiuong, soluong, giaTreEm, soTre) => {
-    setTongPhuThu(giaGiuong * soluong + giaTreEm * soTre)
-  }
-
-  const handleChangeSoLuongNuocSuoi = (value) => {
+  const handleChangeSoLuong = (maDichVu, value) => {
     const soluong = Math.abs(parseInt(value.target.value) || 0)
-    setSoLuongNuocSuoi(soluong)
+    
+    setSoLuongDichVu((prev) => ({
+      ...prev,
+      [maDichVu]: soluong,
+    }))
 
     setDichVuMienPhiList((prevList) => {
       const filteredList = prevList.filter(
-        (item) => item.dichVuMienPhi.maDichVuMienPhi !== 'NUOC_SUOI',
+        (item) => item.dichVuMienPhi.maDichVuMienPhi !== maDichVu,
       )
       if (soluong > 0) {
         return [
           ...filteredList,
           {
             xepPhongBooking: { maChiTietBooking: ma_xepphong },
-            dichVuMienPhi: { maDichVuMienPhi: 'NUOC_SUOI' },
+            dichVuMienPhi: { maDichVuMienPhi: maDichVu },
             soLuong: soluong,
-            ngayBoSung: new Date().toISOString().split('T')[0],
-          },
-        ]
-      }
-      return filteredList
-    })
-  }
-
-  const handleChangeSoLuongTra = (value) => {
-    const soluong = Math.abs(parseInt(value.target.value) || 0)
-    setSoLuongTra(soluong)
-
-    setDichVuMienPhiList((prevList) => {
-      const filteredList = prevList.filter((item) => item.dichVuMienPhi.maDichVuMienPhi !== 'TRA')
-      if (soluong > 0) {
-        return [
-          ...filteredList,
-          {
-            xepPhongBooking: { maChiTietBooking: ma_xepphong },
-            dichVuMienPhi: { maDichVuMienPhi: 'TRA' },
-            soLuong: soluong,
-            ngayBoSung: new Date().toISOString().split('T')[0],
-          },
-        ]
-      }
-      return filteredList
-    })
-  }
-
-  const handleChangeSoLuongCafe = (value) => {
-    const soluong = Math.abs(parseInt(value.target.value) || 0)
-    setSoLuongCafe(soluong)
-
-    setDichVuMienPhiList((prevList) => {
-      const filteredList = prevList.filter((item) => item.dichVuMienPhi.maDichVuMienPhi !== 'CAPHE')
-      if (soluong > 0) {
-        return [
-          ...filteredList,
-          {
-            xepPhongBooking: { maChiTietBooking: ma_xepphong },
-            dichVuMienPhi: { maDichVuMienPhi: 'CAPHE' },
-            soLuong: soluong,
-            ngayBoSung: new Date().toISOString().split('T')[0],
+            ngayBoSung: format(selectedDate, 'yyyy-MM-dd'),
           },
         ]
       }
@@ -192,30 +155,25 @@ const DichVuMienPhi = ({
   }
 
   const onClickUpdatePhuThuPhong = async () => {
-    if (soLuongNuocSuoi < 0) {
-      return addToast(exampleToast('⚠️ Số lượng nước suối không hợp lệ'))
-    } else if (soLuongTra < 0) {
-      return addToast(exampleToast('⚠️ Số lượng trà không hợp lệ'))
-    } else if (soLuongCafe < 0) {
-      return addToast(exampleToast('⚠️ Số lượng cà phê không hợp lệ'))
-    }
-
     if (!ma_xepphong) {
       return addToast(exampleToast('⚠️ Mã xếp phòng không hợp lệ'))
     }
 
-    console.log(dichVuMienPhiList)
-
     try {
       setTrangthaiload(true)
-      const response = await createDichVuMienPhi(dichVuMienPhiList, ma_xepphong, navigate)
+      const response = await createDichVuMienPhi(
+        dichVuMienPhiList,
+        ma_xepphong,
+        format(selectedDate, 'yyyy-MM-dd'),
+        navigate
+      )
       if ([400, 500].includes(response.code)) {
         addToast(exampleToast(response.message))
         return
       }
       if (response.code === 200) {
         if (response.result) {
-          addToast(exampleToast('✅ ' + response.message + ' Phòng ' + maPhong))
+          addToast(exampleToast('✔️ ' + response.message + ' Phòng ' + maPhong))
 
           fetchData()
           //   onSubmit(data)
@@ -251,6 +209,8 @@ const DichVuMienPhi = ({
       <CModal
         size="lg"
         // alignment="center"
+        scrollable
+        backdrop="static"
         visible={visible}
         onClose={onClose}
         aria-labelledby="LiveDemoExampleLabel"
@@ -261,6 +221,21 @@ const DichVuMienPhi = ({
           </CModalTitle>
         </CModalHeader>
         <CModalBody>
+          <CRow className="mb-3">
+            <CCol sm={12} md={6}>
+              <CFormLabel className="font-semibold">Chọn ngày:</CFormLabel>
+              <CDatePicker
+                locale="en-GB"
+                date={selectedDate}
+                onDateChange={(date) => {
+                  if (date) {
+                    setSelectedDate(date)
+                  }
+                }}
+                placeholder="Chọn ngày"
+              />
+            </CCol>
+          </CRow>
           {loading ? (
             <div className="d-flex justify-content-center">
               <CSpinner />
@@ -274,79 +249,53 @@ const DichVuMienPhi = ({
                       <CTableHeaderCell scope="col" className="!text-blue-600">
                         Tên dịch vụ
                       </CTableHeaderCell>
-                      <CTableHeaderCell scope="col" className="!text-blue-600 text-center">
-                        Số lượng tối đa
+                       <CTableHeaderCell scope="col" className="!text-blue-600 ">
+                       ĐVT
                       </CTableHeaderCell>
+                      {/* <CTableHeaderCell scope="col" className="!text-blue-600 text-center">
+                        Số lượng tối đa
+                      </CTableHeaderCell> */}
+                       
                       <CTableHeaderCell scope="col" className="!text-blue-600 text-center">
                         Tổng số lượng
                       </CTableHeaderCell>
                       <CTableHeaderCell scope="col" className="!text-blue-600">
-                        Số lượng đã nhập hôm nay
+                        Số lượng 
                       </CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    <CTableRow>
-                      <CTableDataCell>
-                        <CFormLabel htmlFor="inputPassword">Nước suối (350ml)</CFormLabel>
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        {' '}
-                        {parseInt(soLuongKhach) + parseInt(soGiuongMax)} / 1 ngày
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        {tinhTongSoLuong('NUOC_SUOI')}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <input
-                          type="number"
-                          className="outline-none w-24 border-b-2 border-gray-500 rounded-none text-center"
-                          min={0}
-                          value={soLuongNuocSuoi || ''}
-                          onChange={handleChangeSoLuongNuocSuoi}
-                        />
-                      </CTableDataCell>
-                    </CTableRow>
-                    <CTableRow>
-                      <CTableDataCell>
-                        <CFormLabel htmlFor="inputPassword">Trà</CFormLabel>
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        {parseInt(soLuongKhach) + parseInt(soGiuongMax)} / 1 ngày
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        {tinhTongSoLuong('TRA')}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <input
-                          type="number"
-                          className="outline-none w-24 border-b-2 border-gray-500 rounded-none text-center"
-                          min={0}
-                          value={soLuongTra || ''}
-                          onChange={handleChangeSoLuongTra}
-                        />
-                      </CTableDataCell>
-                    </CTableRow>
-                    <CTableRow>
-                      <CTableDataCell>
-                        <CFormLabel htmlFor="inputPassword">Cà phê</CFormLabel>
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        {parseInt(soLuongKhach) + parseInt(soGiuongMax)} / 1 ngày
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        {tinhTongSoLuong('CAPHE')}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <input
-                          type="number"
-                          className="outline-none w-24 border-b-2 border-gray-500 rounded-none text-center"
-                          min={0}
-                          value={soLuongCafe || ''}
-                          onChange={handleChangeSoLuongCafe}
-                        />
-                      </CTableDataCell>
-                    </CTableRow>
+                    {allDichVuMienPhi.map((dichVu) => {
+                      const tongSoLuong = tinhTongSoLuong(dichVu.maDichVuMienPhi)
+                      const soLuongHienTai = soLuongDichVu[dichVu.maDichVuMienPhi] || 0
+                      
+                      return (
+                        <CTableRow key={dichVu.maDichVuMienPhi}>
+                          <CTableDataCell>
+                            <CFormLabel>{dichVu.tenDichVuMienPhi}</CFormLabel>
+                          </CTableDataCell>
+                          <CTableDataCell>
+                            <CFormLabel>{dichVu.donViTinh}</CFormLabel>
+                          </CTableDataCell>
+                          {/* <CTableDataCell className="text-center">
+                            {parseInt(soLuongKhach) + parseInt(soGiuongMax)} / 1 ngày
+                          </CTableDataCell> */}
+                           
+                          <CTableDataCell className="text-center">
+                            {tongSoLuong}
+                          </CTableDataCell>
+                          <CTableDataCell>
+                            <input
+                              type="number"
+                              className="outline-none w-24 border-b-2 border-gray-500 rounded-none text-center"
+                              min={0}
+                              value={soLuongHienTai || ''}
+                              onChange={(e) => handleChangeSoLuong(dichVu.maDichVuMienPhi, e)}
+                            />
+                          </CTableDataCell>
+                        </CTableRow>
+                      )
+                    })}
                   </CTableBody>
                 </CTable>
               </CCol>
@@ -366,6 +315,9 @@ const DichVuMienPhi = ({
                         <CTableHeaderCell scope="col" className="!text-blue-600">
                           Ngày bổ sung
                         </CTableHeaderCell>
+                           <CTableHeaderCell scope="col" className="!text-blue-600">
+                          Người thêm
+                        </CTableHeaderCell>
                       </CTableRow>
                     </CTableHead>
                     <CTableBody>
@@ -381,6 +333,9 @@ const DichVuMienPhi = ({
                             {item.ngayBoSung
                               ? format(parseISO(item.ngayBoSung), 'dd/MM/yyyy')
                               : 'N/A'}
+                          </CTableDataCell>
+                           <CTableDataCell>
+                            {item.nguoiTao}
                           </CTableDataCell>
                         </CTableRow>
                       ))}
@@ -408,7 +363,7 @@ const DichVuMienPhi = ({
           </CButton>
           {!trangthaiload && (
             <CButton color="success" className="text-white px-3" onClick={onClickUpdatePhuThuPhong}>
-              <FontAwesomeIcon icon={faCheck} /> Đồng ý
+              <FontAwesomeIcon icon={faCheck} /> Lưu
             </CButton>
           )}
           {trangthaiload && (

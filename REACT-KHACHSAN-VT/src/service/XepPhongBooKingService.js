@@ -1,7 +1,7 @@
 import axiosInstance from './axiosConfig'
 import config from './Config'
 
-export async function createXepPhongBooking(ma_booking, xepPhongData, navigate) {
+export async function createXepPhongBooking(ma_booking, xepPhongData) {
   try {
     const response = await axiosInstance.post(`/xep-phong-booking/${ma_booking}`, xepPhongData)
     console.log('Tạo xếp phòng booking:', response)
@@ -12,7 +12,7 @@ export async function createXepPhongBooking(ma_booking, xepPhongData, navigate) 
   }
 }
 
-export async function getChiTietXepPhongByMaBooKing(ma_booking, navigate) {
+export async function getChiTietXepPhongByMaBooKing(ma_booking) {
   try {
     const response = await axiosInstance.get(`/xep-phong-booking/${ma_booking}`)
     console.log('Chi tiết xếp phòng booking:', response)
@@ -23,7 +23,7 @@ export async function getChiTietXepPhongByMaBooKing(ma_booking, navigate) {
   }
 }
 
-export async function updateXepPhongBooking(ma_booking, xepPhongData, navigate) {
+export async function updateXepPhongBooking(ma_booking, xepPhongData) {
   try {
     const response = await axiosInstance.put(`/xep-phong-booking/${ma_booking}`, xepPhongData)
     console.log('Cập nhật xếp phòng booking:', response)
@@ -34,7 +34,7 @@ export async function updateXepPhongBooking(ma_booking, xepPhongData, navigate) 
   }
 }
 
-export async function deleteXepPhongBooking(ma_booking, navigate) {
+export async function deleteXepPhongBooking(ma_booking) {
   try {
     const response = await axiosInstance.delete(`/xep-phong-booking/${ma_booking}`)
     console.log('Xóa xếp phòng booking:', response)
@@ -49,7 +49,6 @@ export async function updateNhanPhongBooking(
   ma_xepphong_bookking,
   nhanphong,
   phuThuCheckInSom,
-  navigate,
 ) {
   try {
     const response = await axiosInstance.put(
@@ -70,7 +69,7 @@ export async function updateNhanPhongBooking(
   }
 }
 
-export async function getXepPhongByMaXepPhong(ma_xepphong, navigate) {
+export async function getXepPhongByMaXepPhong(ma_xepphong) {
   try {
     const response = await axiosInstance.get(`/xep-phong-booking/chi-tiet-xep-phong/${ma_xepphong}`)
     console.log('Chi tiết xếp phòng:', response)
@@ -81,7 +80,7 @@ export async function getXepPhongByMaXepPhong(ma_xepphong, navigate) {
   }
 }
 
-export async function getThongTinKhachHang(ma_xepphong, navigate) {
+export async function getThongTinKhachHang(ma_xepphong) {
   try {
     const response = await axiosInstance.get(
       `/xep-phong-booking/thong-tin-khach-hang-thanh-toan/${ma_xepphong}`,
@@ -94,7 +93,7 @@ export async function getThongTinKhachHang(ma_xepphong, navigate) {
   }
 }
 
-export async function getThongTinXuatPhieuDangKy(ma_xepphong, navigate) {
+export async function getThongTinXuatPhieuDangKy(ma_xepphong) {
   try {
     const response = await axiosInstance.get(
       `/xep-phong-booking/thong-tin-xuat-phieu-dang-ky/${ma_xepphong}`,
@@ -169,7 +168,7 @@ export async function updatePhuThuXepPhong(
   }
 }
 
-export async function getPhuThuXepPhong(ma_xepphong, navigate) {
+export async function getPhuThuXepPhong(ma_xepphong) {
   try {
     const response = await axiosInstance.get(`/xep-phong-booking/phu-thu-xep-phong/${ma_xepphong}`)
     console.log('Thông tin phụ thu xếp phòng:', response)
@@ -180,7 +179,7 @@ export async function getPhuThuXepPhong(ma_xepphong, navigate) {
   }
 }
 
-export async function deleteXepPhongBooking_Phong(ma_chitiet, ma_phong, navigate) {
+export async function deleteXepPhongBooking_Phong(ma_chitiet, ma_phong) {
   try {
     const response = await axiosInstance.delete(`/xep-phong-booking/xoa_xep_phong/${ma_chitiet}`, {
       params: {
@@ -195,11 +194,16 @@ export async function deleteXepPhongBooking_Phong(ma_chitiet, ma_phong, navigate
   }
 }
 
-export async function createDichVuMienPhi(bookingData, ma_xepphong, navigate) {
+export async function createDichVuMienPhi(bookingData, ma_xepphong, ngay ) {
   try {
     const response = await axiosInstance.post(
       `/chi-tiet-booking-dich-vu-mien-phi/${ma_xepphong}`,
       bookingData,
+      {
+        params: {
+          ngay: ngay,
+        },
+      },
     )
     console.log('Tạo dịch vụ miễn phí:', response)
     return response.data
@@ -209,7 +213,7 @@ export async function createDichVuMienPhi(bookingData, ma_xepphong, navigate) {
   }
 }
 
-export async function getListDichVuMienPhi(ma_xepphong, navigate) {
+export async function getListDichVuMienPhi(ma_xepphong) {
   try {
     const response = await axiosInstance.get(`/chi-tiet-booking-dich-vu-mien-phi/${ma_xepphong}`)
     console.log('Danh sách dịch vụ miễn phí:', response)
@@ -220,13 +224,24 @@ export async function getListDichVuMienPhi(ma_xepphong, navigate) {
   }
 }
 
-export async function getListGiaPhongTheoNgay(ma_xepphong, navigate) {
+export async function getListGiaPhongTheoNgay(ma_xepphong) {
   try {
     const response = await axiosInstance.get(`/chi-tiet-booking/gia-phong-theo-ngay/${ma_xepphong}`)
     console.log('Danh sách giá phòng theo ngày:', response)
     return response.data.result
   } catch (error) {
     console.log('Lỗi lấy danh sách giá phòng theo ngày:', error)
+    throw error
+  }
+}
+
+export async function getAllDichVuMienPhi() {
+  try {
+    const response = await axiosInstance.get('/dich-vu-mien-phi')
+    console.log('Danh sách tất cả dịch vụ miễn phí:', response)
+    return response.data.result
+  } catch (error) {
+    console.log('Lỗi lấy danh sách dịch vụ miễn phí:', error)
     throw error
   }
 }

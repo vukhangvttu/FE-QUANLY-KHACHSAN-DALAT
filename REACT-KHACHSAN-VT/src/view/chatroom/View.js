@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -110,7 +110,20 @@ const HotelManagement = () => {
     getDefaultActiveTab,
   } = usePermissions()
 
-  const [activeTab, setActiveTab] = useState(() => getDefaultActiveTab())
+  const [activeTab, setActiveTab] = useState(() => {
+    // Đọc tab đã lưu từ sessionStorage
+    const savedTab = sessionStorage.getItem('activeTab')
+    if (savedTab) {
+      return parseInt(savedTab)
+    }
+    return getDefaultActiveTab()
+  })
+
+  // Lưu tab vào sessionStorage mỗi khi thay đổi
+  const handleTabChange = useCallback((key) => {
+    setActiveTab(key)
+    sessionStorage.setItem('activeTab', key.toString())
+  }, [])
 
   const handleStatusClick = (status) => {
     console.log('status', status)
@@ -119,6 +132,26 @@ const HotelManagement = () => {
 
   const filteredRooms = useMemo(() => {
     if (!statusFilter) return rooms
+    
+    // Nếu lọc 'SẼ ĐẾN TRONG HÔM NAY' thì bao gồm cả 'CHECK-IN TRỄ'
+    if (statusFilter === 'SẼ ĐẾN TRONG HÔM NAY') {
+      return rooms.filter(
+        (room) => 
+          room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' || 
+          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ||
+          room.trangThaiHienTai === 'CHECK-IN TRỄ'
+      )
+    }
+    
+    // Nếu lọc 'SẼ ĐI TRONG HÔM NAY' thì bao gồm cả 'CHECK-OUT TRỄ'
+    if (statusFilter === 'SẼ ĐI TRONG HÔM NAY') {
+      return rooms.filter(
+        (room) => 
+          room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
+          room.trangThaiHienTai === 'CHECK-OUT TRỄ'
+      )
+    }
+    
     return rooms.filter(
       (room) => room.trangThaiHienTai === statusFilter || room.trangThaiTuongLai === statusFilter,
     )
@@ -133,13 +166,36 @@ const HotelManagement = () => {
   const isVeSinhFilter = statusFilterBuonPhong === 'DƠ' || statusFilterBuonPhong === 'SẠCH'
 
   const filteredRoomsBuonPhong = useMemo(() => {
+    if (!statusFilterBuonPhong) return rooms
+    
+    // Nếu lọc theo vệ sinh
+    if (isVeSinhFilter) {
+      return rooms.filter((room) => room.trangThaiVeSinh === statusFilterBuonPhong)
+    }
+    
+    // Nếu lọc 'SẼ ĐẾN TRONG HÔM NAY' thì bao gồm cả 'CHECK-IN TRỄ'
+    if (statusFilterBuonPhong === 'SẼ ĐẾN TRONG HÔM NAY') {
+      return rooms.filter(
+        (room) => 
+          room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' || 
+          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ||
+          room.trangThaiHienTai === 'CHECK-IN TRỄ'
+      )
+    }
+    
+    // Nếu lọc 'SẼ ĐI TRONG HÔM NAY' thì bao gồm cả 'CHECK-OUT TRỄ'
+    if (statusFilterBuonPhong === 'SẼ ĐI TRONG HÔM NAY') {
+      return rooms.filter(
+        (room) => 
+          room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
+          room.trangThaiHienTai === 'CHECK-OUT TRỄ'
+      )
+    }
+    
     return rooms.filter(
       (room) =>
-        isVeSinhFilter
-          ? !statusFilterBuonPhong || room.trangThaiVeSinh === statusFilterBuonPhong // Lọc theo vệ sinh nếu isVeSinhFilter = true
-          : !statusFilterBuonPhong ||
-            room.trangThaiHienTai === statusFilterBuonPhong ||
-            room.trangThaiTuongLai === statusFilterBuonPhong, // Lọc theo trạng thái hiện tại nếu isVeSinhFilter = false
+        room.trangThaiHienTai === statusFilterBuonPhong ||
+        room.trangThaiTuongLai === statusFilterBuonPhong,
     )
   }, [rooms, statusFilterBuonPhong, isVeSinhFilter])
 
@@ -196,20 +252,16 @@ const HotelManagement = () => {
       setRooms((prevRooms) =>
         prevRooms.map((room) => {
           if (room.maPhong === maPhong) {
-            // Nếu ngày đi bằng ngày hiện tại và giờ hiện tại >= 14:00
-            if (ngayDi === currentDate && currentHour >= 14) {
-              return { ...room, ngayDi, gioDi, trangThaiHienTai: 'CHECK-OUT TRỄ' }
+            // Nếu ngày đi bằng hoặc nhỏ hơn ngày hiện tại
+            if (ngayDi <= currentDate) {
+              return { ...room, ngayDi, gioDi, trangThaiHienTai: 'SẼ ĐI TRONG HÔM NAY' }
             }
             // Nếu ngày đi lớn hơn ngày hiện tại
             else if (ngayDi > currentDate) {
               return { ...room, ngayDi, gioDi, trangThaiHienTai: 'ĐANG Ở' }
             }
-            // Nếu ngày đi bằng ngày hiện tại
-            else if (ngayDi === currentDate) {
-              return { ...room, ngayDi, gioDi, trangThaiHienTai: 'SẼ ĐI TRONG HÔM NAY' }
-            }
-            // Các trường hợp còn lại (ngày đi < ngày hiện tại)
-            return { ...room, ngayDi, gioDi, trangThaiHienTai: 'CHECK-OUT TRỄ' }
+            // Mặc định
+            return { ...room, ngayDi, gioDi }
           }
           return room
         }),
@@ -273,12 +325,15 @@ const HotelManagement = () => {
       upcoming: rooms.filter(
         (room) =>
           room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' ||
-          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY',
+          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ||
+          room.trangThaiHienTai === 'CHECK-IN TRỄ',
       ).length,
       occupied: rooms.filter((room) => room.trangThaiHienTai === 'ĐANG Ở').length,
-      leaving: rooms.filter((room) => room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY').length,
-      overdue: rooms.filter((room) => room.trangThaiHienTai === 'CHECK-OUT TRỄ').length,
-      received_late: rooms.filter((room) => room.trangThaiHienTai === 'CHECK-IN TRỄ').length,
+      leaving: rooms.filter(
+        (room) => 
+          room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
+          room.trangThaiHienTai === 'CHECK-OUT TRỄ'
+      ).length,
     }
   }
 
@@ -289,9 +344,14 @@ const HotelManagement = () => {
       upcoming: rooms.filter(
         (room) =>
           room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' ||
-          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY',
+          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ||
+          room.trangThaiHienTai === 'CHECK-IN TRỄ',
       ).length,
-      leaving: rooms.filter((room) => room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY').length,
+      leaving: rooms.filter(
+        (room) => 
+          room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
+          room.trangThaiHienTai === 'CHECK-OUT TRỄ'
+      ).length,
     }
   }
 
@@ -325,9 +385,9 @@ const HotelManagement = () => {
   useEffect(() => {
     if (!permissionsLoading && !canAccessTab(activeTab) && allowedTabs.length > 0) {
       const firstAllowedTab = allowedTabs[0].key
-      setActiveTab(firstAllowedTab)
+      handleTabChange(firstAllowedTab)
     }
-  }, [permissionsLoading, activeTab, canAccessTab, allowedTabs])
+  }, [permissionsLoading, activeTab, canAccessTab, allowedTabs, handleTabChange])
 
   if (loading || permissionsLoading) {
     return (
@@ -345,26 +405,14 @@ const HotelManagement = () => {
     )
   }
 
-  // Nếu token không hợp lệ, hiển thị thông báo
-  if (!isTokenValid) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <h3 className="text-red-600 mb-4">Phiên đăng nhập đã hết hạn</h3>
-          <p className="text-gray-600 mb-4">Vui lòng đăng nhập lại để tiếp tục sử dụng</p>
-          <CButton color="primary" onClick={() => navigate('/login')}>
-            Đăng nhập lại
-          </CButton>
-        </div>
-      </div>
-    )
-  }
+  // Không hiển thị gì cả - để axios interceptor xử lý refresh token
+  // Màn hình lỗi chỉ hiển thị khi redirectToLogin() được gọi (tự động redirect)
   console.log('key', activeTab)
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className=" mx-auto ">
-        <CTabs activeItemKey={activeTab} onActiveTabChange={(key) => setActiveTab(key)}>
+        <CTabs activeItemKey={activeTab} onActiveTabChange={handleTabChange}>
           <CTabList variant="underline-border" className="flex flex-wrap gap-2">
             {/* Tab Dự báo loại phòng */}
             {canAccessTab(1) && (
@@ -372,7 +420,7 @@ const HotelManagement = () => {
                 aria-controls="home-tab-pane"
                 className="flex items-center text-sm sm:text-base"
                 itemKey={1}
-                onClick={() => setActiveTab(1)}
+                onClick={() => handleTabChange(1)}
               >
                 <svg
                   className="w-4 h-4 mt-1 me-0.5"
@@ -393,7 +441,7 @@ const HotelManagement = () => {
               <CTab
                 aria-controls="profile-tab-pane"
                 itemKey={6}
-                onClick={() => setActiveTab(6)}
+                onClick={() => handleTabChange(6)}
                 className="flex items-center text-sm sm:text-base"
               >
                 <FontAwesomeIcon icon={faGripLines} className="me-1" />
@@ -406,7 +454,7 @@ const HotelManagement = () => {
               <CTab
                 aria-controls="profile-tab-pane"
                 itemKey={7}
-                onClick={() => setActiveTab(7)}
+                onClick={() => handleTabChange(7)}
                 className="flex items-center text-sm sm:text-base"
               >
                 <FontAwesomeIcon icon={faTableCells} className="me-1" />
@@ -419,7 +467,7 @@ const HotelManagement = () => {
               <CTab
                 aria-controls="profile-tab-pane"
                 itemKey={2}
-                onClick={() => setActiveTab(2)}
+                onClick={() => handleTabChange(2)}
                 className="flex items-center text-sm sm:text-base"
               >
                 <FontAwesomeIcon icon={faTableCells} className="me-1" />
@@ -432,7 +480,7 @@ const HotelManagement = () => {
               <CTab
                 aria-controls="profile-tab-pane"
                 itemKey={3}
-                onClick={() => setActiveTab(3)}
+                onClick={() => handleTabChange(3)}
                 className="flex items-center text-sm sm:text-base"
               >
                 <i className="fa-solid fa-bed-front mt-1 me-1"></i>
@@ -445,7 +493,7 @@ const HotelManagement = () => {
               <CTab
                 aria-controls="profile-tab-pane"
                 itemKey={4}
-                onClick={() => setActiveTab(4)}
+                onClick={() => handleTabChange(4)}
                 className="flex items-center text-sm sm:text-base"
               >
                 <FontAwesomeIcon icon={faUtensils} className="me-1" />
@@ -554,22 +602,6 @@ const HotelManagement = () => {
                         count={getRoomCounts().leaving}
                         active={statusFilter === 'SẼ ĐI TRONG HÔM NAY'}
                         onClick={() => handleStatusClick('SẼ ĐI TRONG HÔM NAY')}
-                      />
-                      <StatusButton
-                        icon={faCircle}
-                        color="red"
-                        label="Check-in trễ"
-                        count={getRoomCounts().received_late}
-                        active={statusFilter === 'CHECK-IN TRỄ'}
-                        onClick={() => handleStatusClick('CHECK-IN TRỄ')}
-                      />
-                      <StatusButton
-                        icon={faCircle}
-                        color="orange"
-                        label="Check-out trễ"
-                        count={getRoomCounts().overdue}
-                        active={statusFilter === 'CHECK-OUT TRỄ'}
-                        onClick={() => handleStatusClick('CHECK-OUT TRỄ')}
                       />
                     </div>
                   </div>

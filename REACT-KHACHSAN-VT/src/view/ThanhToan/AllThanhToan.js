@@ -123,6 +123,14 @@ const AllThanhToan = () => {
           item.phuThuNguoiLon * item.soNguoiLon
         return total + tienPhong + tienDichVu + tienPhuThu * item.soNgayO
       }, 0)
+
+      // Tự động hiển thị chi tiết thanh toán khi load data
+      if (khachHangData && thanhToanData) {
+        setSelectedBooking({
+          ...khachHangData,
+          danhSachPhong: thanhToanData,
+        })
+      }
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu:', error)
     } finally {
@@ -924,7 +932,6 @@ const AllThanhToan = () => {
                       <CTableHeaderCell>Tiền phòng</CTableHeaderCell>
                       <CTableHeaderCell>Tiền cọc</CTableHeaderCell>
                       <CTableHeaderCell>Trạng thái</CTableHeaderCell>
-                      <CTableHeaderCell>Thao tác</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
@@ -955,21 +962,6 @@ const AllThanhToan = () => {
                       <CTableDataCell>{formatCurrency(thongTinKhachHang.tien_coc)}</CTableDataCell>
                       <CTableDataCell>
                         <span className="badge bg-warning">Chờ thanh toán</span>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CButton
-                          color="primary"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleSelectBooking({
-                              ...thongTinKhachHang,
-                              danhSachPhong: thongTinThanhToan,
-                            })
-                          }
-                        >
-                          <FontAwesomeIcon icon={faFileInvoiceDollar} />
-                        </CButton>
                       </CTableDataCell>
                     </CTableRow>
                   </CTableBody>
@@ -1007,10 +999,10 @@ const AllThanhToan = () => {
                         <p>
                           <strong>Ngày thanh toán:</strong> {formatDate(new Date())}
                         </p>
-                        <p>
+                        {/* <p>
                           <strong>Trạng thái:</strong>{' '}
                           <span className="badge bg-warning">Chờ thanh toán</span>
-                        </p>
+                        </p> */}
                       </div>
                     </div>
 

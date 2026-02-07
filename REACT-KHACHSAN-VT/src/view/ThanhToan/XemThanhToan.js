@@ -396,6 +396,14 @@ const XemThanhToan = () => {
                             Phương thức thanh toán: {thongTinKhachHang.ten_hinh_thuc_thanh_toan}
                           </CFormLabel>
                         </CCol>
+                         <CCol>
+                              <CFormLabel
+                                htmlFor="inputPassword"
+                                className=" col-form-label text-green-600 font-bold"
+                              >
+                                Ghi chú: {thongTinKhachHang.ghi_chu}
+                              </CFormLabel>
+                            </CCol>
                         <hr />
                         <CCol>
                           <CFormLabel

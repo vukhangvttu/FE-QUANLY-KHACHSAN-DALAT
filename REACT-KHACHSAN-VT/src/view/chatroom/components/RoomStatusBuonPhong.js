@@ -19,9 +19,15 @@ const RoomStatusBuonPhong = ({ status, trangThaiHienTai }) => {
     >
       <span
         className={`text-base border ${
-          trangThaiHienTai !== 'TRỐNG' ? 'bg-white text-red-500' : ''
+          trangThaiHienTai !== 'TRỐNG' 
+            ? status === 'DƠ' 
+              ? 'bg-white text-red-500' 
+              : 'bg-white text-black'
+            : ''
         } bg-white  rounded-full px-3 py-1`}
       >
+        {status === 'DƠ' && <i className="fa-solid fa-broom-wide hidden sm:inline mr-1"></i>}
+        {status === 'SẠCH' && <i className="fa-solid fa-sparkles hidden sm:inline mr-1"></i>}
         {label.text}
       </span>
     </div>

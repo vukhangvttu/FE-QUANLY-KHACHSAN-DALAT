@@ -68,7 +68,7 @@ const CapNhatTrangThaiDonPhong = ({ visible, onClose, valueDaDo, maPhong, onSubm
 
       if (response.code === 200) {
         if (response.result) {
-          handleSuccess('✅ ' + response.message + ' P.' + maphong)
+          handleSuccess('✔️ ' + response.message + ' P.' + maphong)
         } else {
           addToast(exampleToast('❌ Update không thành công'))
         }

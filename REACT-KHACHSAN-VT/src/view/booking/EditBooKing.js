@@ -247,6 +247,12 @@ const EditBooKing = () => {
     })
   }
 
+  // Helper function kiểm tra loại phòng hội nghị
+  const isLoaiPhongHoiNghi = (maLoaiPhong) => {
+    const loaiPhongHoiNghi = ['HOI-TRUONG', 'HOI-THAO', 'GALA', 'BREAK']
+    return loaiPhongHoiNghi.includes(maLoaiPhong)
+  }
+
   const handleLoaiPhongChange = (event, rowIndex) => {
     const selectedMaLoaiPhong = event.target.value
 
@@ -311,6 +317,9 @@ const EditBooKing = () => {
           })
         }
 
+        // Nếu là loại phòng hội nghị, reset các giá trị phụ thu về 0
+        const isHoiNghi = isLoaiPhongHoiNghi(selectedLoaiPhong.maLoaiPhong)
+
         return {
           ...row,
           loaiPhong: {
@@ -331,6 +340,15 @@ const EditBooKing = () => {
           tongTienDong: tongTienPhong * (row.soLuong || 0),
           giaPhongTheoNgays: giaPhongTheoNgays,
           danhSachPhongChiTiets: [], // Reset danh sách phòng khi đổi loại phòng
+          // Reset các giá trị phụ thu về 0 nếu là loại phòng hội nghị
+          nguoiLon: isHoiNghi ? 0 : row.nguoiLon,
+          treEm: isHoiNghi ? 0 : row.treEm,
+          soLuongExtraBed: isHoiNghi ? 0 : row.soLuongExtraBed,
+          giaExtraBed: isHoiNghi ? 0 : row.giaExtraBed,
+          soLuongPhuThuTreEm: isHoiNghi ? 0 : row.soLuongPhuThuTreEm,
+          giaPhuThuTreEm: isHoiNghi ? 0 : row.giaPhuThuTreEm,
+          soLuongPhuThuAnSang: isHoiNghi ? 0 : row.soLuongPhuThuAnSang,
+          giaPhuThuAnSang: isHoiNghi ? 0 : row.giaPhuThuAnSang,
         }
       }
       return row
@@ -2148,13 +2166,25 @@ const EditBooKing = () => {
           return sum + (giaNgay.gia || 0)
         }, 0)
 
+        // Tính tiền phòng (bao gồm số lượng phòng)
+        const tongTienPhong = tongTien * (row.soLuong || 0)
+
         // Tính tiền extra bed
         const tienExtraBed = (row.giaExtraBed || 0) * (row.soLuongExtraBed || 0) * soDem
+
+        // Tính tiền phụ thu trẻ em
+        const tienPhuThuTreEm = (row.giaPhuThuTreEm || 0) * (row.soLuongPhuThuTreEm || 0) * soDem
+
+        // Tính tiền phụ thu ăn sáng
+        const tienPhuThuAnSang = (row.giaPhuThuAnSang || 0) * (row.soLuongPhuThuAnSang || 0) * soDem
+
+        // Tổng tiền của dòng = tiền phòng + tiền extra bed + tiền phụ thu trẻ em + tiền phụ thu ăn sáng
+        const tongTienDong = tongTienPhong + tienExtraBed + tienPhuThuTreEm + tienPhuThuAnSang
 
         return {
           ...row,
           giaPhongTheoNgays: updatedGiaPhongTheoNgays,
-          tongTienDong: tongTien * (row.soLuong || 0) + tienExtraBed,
+          tongTienDong: tongTienDong,
         }
       }
       return row
@@ -2343,7 +2373,7 @@ const EditBooKing = () => {
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
                     >
-                      First Name <span className="text-danger"> *</span>
+                      First Name 
                     </CFormLabel>
                     <CCol sm={8}>
                       <CFormInput
@@ -2454,14 +2484,14 @@ const EditBooKing = () => {
                     <CCol sm={8}>
                       <CFormInput
                         type="text"
-                        className="peer border border-gray-300  hover:!border-green-500 transition-colors duration-300 uppercase"
+                        className="peer border border-gray-300  hover:!border-green-500 transition-colors duration-300"
                         name="loaiNguonKhach"
                         value={booKing.loaiNguonKhach}
                         onChange={onInputChange}
                       />
                     </CCol>
                   </CRow>
-                  <CRow>
+                  <CRow className='mb-4'>
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -2480,7 +2510,10 @@ const EditBooKing = () => {
                   </CRow>
                 </div>
               </div>
-              <div className="relative mb-3">
+             
+            </CCol>
+            <CCol md={6}>
+               <div className="relative mb-3">
                 <span className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold">
                   Contract Preson Infomation
                 </span>
@@ -2532,7 +2565,7 @@ const EditBooKing = () => {
                         <CFormInput
                           type="text"
                           className="peer border border-gray-300  hover:!border-green-500 transition-colors duration-300"
-                          name="thongTinLienHeBooKing.sdttThongTinLienHeBooKing"
+                          name="thongTinLienHeBooKing.sdtThongTinLienHeBooKing"
                           value={booKing.thongTinLienHeBooKing.sdtThongTinLienHeBooKing}
                           onChange={onInputChange}
                         />
@@ -2546,7 +2579,7 @@ const EditBooKing = () => {
                       </CInputGroup>
                     </CCol>
                   </CRow>
-                  <CRow>
+                  <CRow >
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -2561,141 +2594,6 @@ const EditBooKing = () => {
                         value={booKing.thongTinLienHeBooKing.tourCode}
                         onChange={onInputChange}
                       />
-                    </CCol>
-                  </CRow>
-                </div>
-              </div>
-            </CCol>
-            <CCol md={6}>
-              <div className="relative mb-3">
-                <span className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold">
-                  Others Infomation
-                </span>
-                <div className="border-2 border-gray-500 rounded-md p-4 ">
-                  <CRow className="mb-1">
-                    <CFormLabel
-                      htmlFor="inputPassword"
-                      className="col-sm-4 col-form-label labelcustome"
-                    >
-                      Area Market
-                    </CFormLabel>
-                    <CCol sm={8}>
-                      <CFormSelect
-                        name="khuVuc.maKhuVuc"
-                        value={booKing.khuVuc.maKhuVuc}
-                        onChange={onInputChange}
-                      >
-                        {khuVuc.map((item) => (
-                          <option key={item.maKhuVuc} value={item.maKhuVuc}>
-                            {item.tenKhucVucVi}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                    </CCol>
-                  </CRow>
-                  <CRow className="mb-1">
-                    <CFormLabel
-                      htmlFor="inputPassword"
-                      className="col-sm-4 col-form-label labelcustome"
-                    >
-                      Market Segment Code
-                    </CFormLabel>
-                    <CCol sm={8}>
-                      <CFormSelect
-                        name="thiTruong.maThiTruong"
-                        value={booKing.thiTruong.maThiTruong}
-                        onChange={onInputChange}
-                      >
-                        {thiTruong.map((item) => (
-                          <option key={item.maThiTruong} value={item.maThiTruong}>
-                            {item.tenThiTruong}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                    </CCol>
-                  </CRow>
-                  <CRow className="mb-1">
-                    <CFormLabel
-                      htmlFor="inputPassword"
-                      className="col-sm-4 col-form-label labelcustome"
-                    >
-                      Method of Payment
-                    </CFormLabel>
-                    <CCol sm={8}>
-                      <CFormSelect
-                        name="hinhThucThanhToan.maHinhThucThanhToan"
-                        value={booKing.hinhThucThanhToan.maHinhThucThanhToan}
-                        onChange={onInputChange}
-                      >
-                        {hinhThucThanhToan.map((item) => (
-                          <option key={item.maHinhThucThanhToan} value={item.maHinhThucThanhToan}>
-                            {item.tenHinhThucThanhToan}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                    </CCol>
-                  </CRow>
-                  <CRow className="mb-1">
-                    <CFormLabel
-                      htmlFor="inputPassword"
-                      className="col-sm-4 col-form-label labelcustome"
-                    >
-                      Purpose Arrival
-                    </CFormLabel>
-                    <CCol sm={8}>
-                      <CFormSelect
-                        name="mucDichDen.maMucDich"
-                        value={booKing.mucDichDen.maMucDich}
-                        onChange={onInputChange}
-                      >
-                        {mucDichDen.map((item) => (
-                          <option key={item.maMucDich} value={item.maMucDich}>
-                            {item.tenMucDich}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                    </CCol>
-                  </CRow>
-                  <CRow className="mb-1">
-                    <CFormLabel
-                      htmlFor="inputPassword"
-                      className="col-sm-4 col-form-label labelcustome"
-                    >
-                      Source Booking
-                    </CFormLabel>
-                    <CCol sm={8}>
-                      <CFormSelect
-                        name="nguonKhach.maNguonKhach"
-                        value={booKing.nguonKhach.maNguonKhach}
-                        onChange={onInputChange}
-                      >
-                        {sourceBooking.map((item) => (
-                          <option key={item.maNguonKhach} value={item.maNguonKhach}>
-                            {item.tenNguonKhach}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                    </CCol>
-                  </CRow>
-                  <CRow className="mb-1">
-                    <CFormLabel
-                      htmlFor="inputPassword"
-                      className="col-sm-4 col-form-label labelcustome"
-                    >
-                      Promotion Name
-                    </CFormLabel>
-                    <CCol sm={8}>
-                      <CFormSelect
-                        name="giamGia.maGiamGia"
-                        value={booKing.giamGia.maGiamGia}
-                        onChange={onInputChange}
-                      >
-                        {promotionName.map((item) => (
-                          <option key={item.maGiamGia} value={item.maGiamGia}>
-                            {item.tenGiamGia}
-                          </option>
-                        ))}
-                      </CFormSelect>
                     </CCol>
                   </CRow>
                 </div>
@@ -2732,6 +2630,25 @@ const EditBooKing = () => {
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
                     >
+                      Amount Deposit
+                    </CFormLabel>
+                    <CCol sm={8}>
+                      <CurrencyInput
+                        className="form-control "
+                        name="input-name"
+                        placeholder="Please enter a number"
+                        value={booKing.tienCoc}
+                        decimalsLimit={2}
+                        onValueChange={handleOnValueChange}
+                      />
+                    </CCol>
+                  </CRow>
+
+                   <CRow>
+                    <CFormLabel
+                      htmlFor="inputPassword"
+                      className="col-sm-4 col-form-label labelcustome"
+                    >
                       Card Type
                     </CFormLabel>
                     <CCol sm={8}>
@@ -2749,26 +2666,11 @@ const EditBooKing = () => {
                     </CCol>
                   </CRow>
 
-                  <CRow>
-                    <CFormLabel
-                      htmlFor="inputPassword"
-                      className="col-sm-4 col-form-label labelcustome"
-                    >
-                      Amount Deposit
-                    </CFormLabel>
-                    <CCol sm={8}>
-                      <CurrencyInput
-                        className="form-control "
-                        name="input-name"
-                        placeholder="Please enter a number"
-                        value={booKing.tienCoc}
-                        decimalsLimit={2}
-                        onValueChange={handleOnValueChange}
-                      />
-                    </CCol>
-                  </CRow>
                 </div>
-                <div>
+              
+              </div>
+            </CCol>
+              <CCol className='mb-3'>
                   <CFormTextarea
                     className="border-2 border-gray-500"
                     rows={2}
@@ -2777,9 +2679,8 @@ const EditBooKing = () => {
                     placeholder="Nhập ghi chú"
                     onChange={onInputChange}
                   ></CFormTextarea>
-                </div>
-              </div>
-            </CCol>
+                </CCol>
+
             <div className="relative mb-3">
               <span className="absolute -top-3 left-6 bg-white px-1 text-sm font-semibold">
                 Reservation required
@@ -2818,8 +2719,8 @@ const EditBooKing = () => {
               <span className="absolute -top-3 left-6 bg-white px-1 text-sm font-semibold">
                 Thông tin booking <span className="text-danger"> *</span>
               </span>
-              <div className="border-2 border-blue-500 rounded-md p-3 mb-3">
-                <div className="w-full bg-white p-3 rounded-lg shadow mb-3">
+              <div className="border-2 border-blue-500 rounded-md mb-3">
+                <div className="w-full bg-white p-3 rounded-lg  mb-3">
                   <CCol className="mb-2 border-b" md={12}>
                     <div
                       className="overflow-auto"
@@ -2853,23 +2754,23 @@ const EditBooKing = () => {
                                 Dự báo Extra bed
                               </CTableHeaderCell> */}
                               <CTableHeaderCell style={{ width: '110px' }}>
-                                SL Extra bed
+                                SL Extra
                               </CTableHeaderCell>
                               <CTableHeaderCell style={{ width: '130px' }}>
-                                Phụ thu extra
+                                PT extra
                               </CTableHeaderCell>
 
                               <CTableHeaderCell style={{ width: '100px' }}>
                                 SL trẻ em
                               </CTableHeaderCell>
                               <CTableHeaderCell style={{ width: '130px' }}>
-                                Phụ thu trẻ em
+                                PT trẻ em
                               </CTableHeaderCell>
-                              <CTableHeaderCell style={{ width: '100px' }}>
+                              <CTableHeaderCell style={{ width: '110px' }}>
                                 SL ăn sáng
                               </CTableHeaderCell>
                               <CTableHeaderCell style={{ width: '130px' }}>
-                                Phụ thu ăn sáng
+                                PT ăn sáng
                               </CTableHeaderCell>
                               <CTableHeaderCell style={{ width: '400px' }}>
                                 Số phòng
@@ -2995,6 +2896,7 @@ const EditBooKing = () => {
                                           onChange={(event) =>
                                             handleSLNguoiLonChange(event, row.loaiPhong)
                                           }
+                                          disabled={isLoaiPhongHoiNghi(row.loaiPhong.maLoaiPhong)}
                                         />
                                       </CTableDataCell>
                                       <CTableDataCell>
@@ -3004,6 +2906,7 @@ const EditBooKing = () => {
                                           onChange={(event) =>
                                             handleSLTreEmChange(event, row.loaiPhong)
                                           }
+                                          disabled={isLoaiPhongHoiNghi(row.loaiPhong.maLoaiPhong)}
                                         />
                                       </CTableDataCell>
                                       {/* <CTableDataCell className="text-center">
@@ -3025,6 +2928,7 @@ const EditBooKing = () => {
                                               row.soLuong,
                                             )
                                           }
+                                          disabled={isLoaiPhongHoiNghi(row.loaiPhong.maLoaiPhong)}
                                         />
                                       </CTableDataCell>
                                       <CTableDataCell>
@@ -3042,6 +2946,7 @@ const EditBooKing = () => {
                                               row.index,
                                             )
                                           }
+                                          disabled={isLoaiPhongHoiNghi(row.loaiPhong.maLoaiPhong)}
                                         />
                                       </CTableDataCell>
 
@@ -3052,6 +2957,7 @@ const EditBooKing = () => {
                                           onChange={(event) =>
                                             handlesoLuongPhuThuTreEmChange(event, row.index)
                                           }
+                                          disabled={isLoaiPhongHoiNghi(row.loaiPhong.maLoaiPhong)}
                                         />
                                       </CTableDataCell>
                                       <CTableDataCell>
@@ -3064,6 +2970,7 @@ const EditBooKing = () => {
                                           onValueChange={(input) =>
                                             handlegiaPhuThuTreEmChange(input, row.index)
                                           }
+                                          disabled={isLoaiPhongHoiNghi(row.loaiPhong.maLoaiPhong)}
                                         />
                                       </CTableDataCell>
                                       <CTableDataCell>
@@ -3073,6 +2980,7 @@ const EditBooKing = () => {
                                           onChange={(event) =>
                                             handlesoLuongPhuThuAnSangChange(event, row.index)
                                           }
+                                          disabled={isLoaiPhongHoiNghi(row.loaiPhong.maLoaiPhong)}
                                         />
                                       </CTableDataCell>
                                       <CTableDataCell>
@@ -3087,6 +2995,7 @@ const EditBooKing = () => {
                                               handlegiaPhuThuAnSangChange(input, row.index)
                                             }
                                           }}
+                                          disabled={isLoaiPhongHoiNghi(row.loaiPhong.maLoaiPhong)}
                                         />
                                       </CTableDataCell>
                                       <CTableDataCell className="text-center">
@@ -3372,7 +3281,7 @@ const EditBooKing = () => {
                             </CTableDataCell>
 
                             <CTableDataCell
-                              colSpan={7}
+                              colSpan={9}
                               scope="col"
                               className="text-center"
                             ></CTableDataCell>
@@ -3386,7 +3295,7 @@ const EditBooKing = () => {
                   </CCol>
                 </div>
 
-                <CCol className=" d-md-flex justify-content-md-end">
+                <CCol className=" d-md-flex justify-content-md-end mb-3 mr-4">
                   <CButton
                     color="success"
                     onClick={handleAddRow}

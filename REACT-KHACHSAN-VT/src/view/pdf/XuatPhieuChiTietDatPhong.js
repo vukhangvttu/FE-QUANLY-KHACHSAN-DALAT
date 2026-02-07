@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   colNote: { width: 470, fontWeight: 'bold', borderBottomWidth: 1, borderRightWidth: 1 },
   colTT: {
-    width: 25,
+    width: 20,
     textAlign: 'center',
     borderLeftWidth: 1,
     // height: 33,
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     minHeight: 33,
   },
   colPeople: { width: 150, borderBottomWidth: 1, borderRightWidth: 1 },
-  colNights: { width: 25, textAlign: 'center', borderBottomWidth: 1, borderRightWidth: 1 },
+  colNights: { width: 15, textAlign: 'center', borderBottomWidth: 1, borderRightWidth: 1 },
   colPrice: { width: 50, textAlign: 'center', borderBottomWidth: 1, borderRightWidth: 1 },
   colTotal: { width: 70, textAlign: 'center', borderBottomWidth: 1, borderRightWidth: 1 },
   colTotalMoneyRoom: {
@@ -291,13 +291,13 @@ const columns = [
         const tongTienPhuThuAnSang = (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang
         content += `Phụ thu ăn sáng ${row.so_luong_phu_thu_an_sang} người\n ${formatCurrency(
           tongTienPhuThuAnSang,
-        )} đ`
+        )} đ\n`
       }
 
       // Bổ sung thông tin phụ thu trẻ em (chỉ hiển thị khi ghi_chu !== "Đặt phòng")
       if (row.so_luong_phu_thu_tre_em > 0 && row.ghi_chu !== 'Đặt phòng') {
         const tongTienPhuThuTreEm = (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em
-        content += `Phụ thu ${row.so_luong_phu_thu_tre_em} trẻ em ${formatCurrency(
+        content += `Phụ thu ${row.so_luong_phu_thu_tre_em} trẻ em\n ${formatCurrency(
           row.gia_phu_thu_tre_em,
         )} x ${row.so_luong_phu_thu_tre_em} = ${formatCurrency(tongTienPhuThuTreEm)} đ`
       }
@@ -306,9 +306,14 @@ const columns = [
     },
   },
   {
+    key: 'so_luong_dat_phong',
+    style: [styles.cell_align_center, styles.colNights],
+    render: (row) => (Object.keys(row).length === 0 ? '' : row.so_luong_dat_phong || '0'),
+  },
+  {
     key: 'so_dem',
     style: [styles.cell_align_center, styles.colNights],
-    render: (row) => (Object.keys(row).length === 0 ? '' : row.so_dem || ''),
+    render: (row) => (Object.keys(row).length === 0 ? '' : row.so_dem || '0'),
   },
   // {
   //   key: 'so_luong_dat_phong',
@@ -321,16 +326,30 @@ const columns = [
     render: (row) => {
       if (Object.keys(row).length === 0) return ''
 
-      // Nếu là phụ thu ăn sáng và gia = 0, tính từ gia_phu_thu_an_sang x so_luong_phu_thu_an_sang
-      if (row.so_luong_phu_thu_an_sang > 0 && row.gia === 0) {
-        const giaTinhToan = (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang
-        return formatCurrency(giaTinhToan)
-      }
-
-      // Nếu là phụ thu trẻ em và gia = 0, tính từ gia_phu_thu_tre_em x so_luong_phu_thu_tre_em
-      if (row.so_luong_phu_thu_tre_em > 0 && row.gia === 0) {
-        const giaTinhToan = (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em
-        return formatCurrency(giaTinhToan)
+      // Kiểm tra nếu có bất kỳ phụ thu nào, tính tổng tất cả các phụ thu
+      if (
+        row.so_luong_phu_thu_an_sang > 0 ||
+        row.so_luong_phu_thu_tre_em > 0 ||
+        row.so_luong_extra_bed > 0
+      ) {
+        let tongGiaPhuThu = 0
+        
+        // Cộng phụ thu ăn sáng
+        if (row.so_luong_phu_thu_an_sang > 0) {
+          tongGiaPhuThu += (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang
+        }
+        
+        // Cộng phụ thu trẻ em
+        if (row.so_luong_phu_thu_tre_em > 0) {
+          tongGiaPhuThu += (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em
+        }
+        
+        // Cộng phụ thu extra bed
+        if (row.so_luong_extra_bed > 0) {
+          tongGiaPhuThu += (row.gia_extra_bed || 0) * row.so_luong_extra_bed
+        }
+        
+        return formatCurrency(tongGiaPhuThu)
       }
 
       return formatCurrency(row.gia)
@@ -342,18 +361,30 @@ const columns = [
     render: (row) => {
       if (Object.keys(row).length === 0) return ''
 
-      // Nếu là phụ thu ăn sáng và tong_tien = 0, tính từ gia_phu_thu_an_sang x so_luong_phu_thu_an_sang x so_dem
-      if (row.so_luong_phu_thu_an_sang > 0 && row.tong_tien === 0) {
-        const tongTienTinhToan =
-          (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1)
-        return formatCurrency(tongTienTinhToan)
-      }
-
-      // Nếu là phụ thu trẻ em và tong_tien = 0, tính từ gia_phu_thu_tre_em x so_luong_phu_thu_tre_em x so_dem
-      if (row.so_luong_phu_thu_tre_em > 0 && row.tong_tien === 0) {
-        const tongTienTinhToan =
-          (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em * (row.so_dem || 1)
-        return formatCurrency(tongTienTinhToan)
+      // Kiểm tra nếu có bất kỳ phụ thu nào, tính tổng tất cả các phụ thu nhân với số đêm
+      if (
+        row.so_luong_phu_thu_an_sang > 0 ||
+        row.so_luong_phu_thu_tre_em > 0 ||
+        row.so_luong_extra_bed > 0
+      ) {
+        let tongTienPhuThu = 0
+        
+        // Cộng phụ thu ăn sáng
+        if (row.so_luong_phu_thu_an_sang > 0) {
+          tongTienPhuThu += (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1)
+        }
+        
+        // Cộng phụ thu trẻ em
+        if (row.so_luong_phu_thu_tre_em > 0) {
+          tongTienPhuThu += (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em * (row.so_dem || 1)
+        }
+        
+        // Cộng phụ thu extra bed
+        if (row.so_luong_extra_bed > 0) {
+          tongTienPhuThu += (row.gia_extra_bed || 0) * row.so_luong_extra_bed * (row.so_dem || 1)
+        }
+        
+        return formatCurrency(tongTienPhuThu)
       }
 
       return formatCurrency(row.tong_tien)
@@ -389,19 +420,15 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
     combinedData.push(...thongTinThanhToan)
   }
 
-  // Thêm dữ liệu phụ thu chỉ khi có phụ thu thực sự
+  // Thêm dữ liệu phụ thu - mỗi bản ghi chỉ thêm 1 lần
   if (thongTinPhuThu && thongTinPhuThu.length > 0) {
     thongTinPhuThu.forEach((phuThu) => {
-      // Chỉ thêm vào nếu có phụ thu thực sự
+      // Chỉ thêm 1 dòng duy nhất cho mỗi phụ thu
       if (
-        phuThu.so_luong_phu_thu_tre_em > 0
-        // ||
-        // phuThu.so_luong_extra_bed > 0 ||
-        // phuThu.so_luong_phu_thu_nguoi_lon > 0
+        phuThu.so_luong_phu_thu_tre_em > 0 ||
+        phuThu.so_luong_phu_thu_an_sang > 0 ||
+        phuThu.so_luong_extra_bed > 0
       ) {
-        combinedData.push(phuThu)
-      }
-      if (phuThu.so_luong_phu_thu_an_sang > 0) {
         combinedData.push(phuThu)
       }
     })
@@ -482,6 +509,9 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
             </View>
             <View style={[styles.cell_align_center, styles.colPeople]}>
               <Text>Số lượng người/phòng</Text>
+            </View>
+               <View style={[styles.cell_align_center, styles.colNights]}>
+              <Text>SL</Text>
             </View>
             <View style={[styles.cell_align_center, styles.colNights]}>
               <Text>SĐ</Text>
@@ -579,7 +609,7 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
 
         <Image
           src={contactImg}
-          style={{ width: '100%', marginBottom: 5, height: '160px', marginTop: 5 }}
+          style={{ width: '100%', marginBottom: 5, height: '140px', marginTop: 5 }}
         />
         <View style={styles.contactInfo}>
           <Text style={{ fontWeight: 'bold' }}>Hoang Kim - Golden Era Vung Tau Hotel </Text>
@@ -641,8 +671,9 @@ HotelRegistrationForm.propTypes = {
 }
 
 // Example usage in your React app
-const ChiTietDatPhong = () => {
-  const { ma_booking } = useParams()
+const ChiTietDatPhong = ({ maBookingProp }) => {
+  const { ma_booking: ma_booking_param } = useParams()
+  const ma_booking = maBookingProp || ma_booking_param
 
   const [loading, setLoading] = useState(false)
   const [thongTinKhachHang, setThongTinKhachHang] = useState(null)
@@ -697,6 +728,10 @@ const ChiTietDatPhong = () => {
       {/* You can also add a download button that uses ReactPDF.pdf(HotelRegistrationPDFDownload).toBlob().then(...) */}
     </div>
   )
+}
+
+ChiTietDatPhong.propTypes = {
+  maBookingProp: PropTypes.string,
 }
 
 export default ChiTietDatPhong

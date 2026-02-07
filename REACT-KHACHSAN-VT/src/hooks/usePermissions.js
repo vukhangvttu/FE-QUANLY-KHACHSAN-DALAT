@@ -25,18 +25,21 @@ export const usePermissions = () => {
     try {
       setIsLoading(true)
 
-      // Kiểm tra token có hết hạn không
-      const expired = isTokenExpired()
-      setIsTokenValid(!expired)
-
-      if (expired) {
-        console.warn('Token đã hết hạn')
+      // Chỉ kiểm tra có token không, không kiểm tra hết hạn
+      // để axios interceptor có cơ hội refresh token tự động
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.warn('Không tìm thấy token')
+        setIsTokenValid(false)
         setUserInfo(null)
         setAllowedTabs([])
         return
       }
 
-      // Lấy thông tin user và permissions
+      // Có token thì cho phép truy cập
+      setIsTokenValid(true)
+
+      // Lấy thông tin user và permissions (có thể null nếu token hết hạn)
       const user = getUserInfo()
       const tabs = getAllowedTabs()
 
@@ -71,8 +74,29 @@ export const usePermissions = () => {
       }
     }
 
+    // Listen for tokenRefreshed event from axiosConfig
+    const handleTokenRefreshed = () => {
+      console.log('Token refreshed event received, updating permissions...')
+      refreshPermissions()
+    }
+
+    // Listen for authFailed event (khi refresh token thất bại)
+    const handleAuthFailed = () => {
+      console.log('Auth failed event received, clearing permissions...')
+      setIsTokenValid(false)
+      setUserInfo(null)
+      setAllowedTabs([])
+    }
+
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    window.addEventListener('tokenRefreshed', handleTokenRefreshed)
+    window.addEventListener('authFailed', handleAuthFailed)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('tokenRefreshed', handleTokenRefreshed)
+      window.removeEventListener('authFailed', handleAuthFailed)
+    }
   }, [refreshPermissions])
 
   // Helper functions

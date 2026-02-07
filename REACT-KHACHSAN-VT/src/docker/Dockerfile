@@ -16,3 +16,6 @@ EXPOSE 80
 
 # Khởi chạy Nginx
 CMD ["nginx", "-g", "daemon off;"]
+
+
+#docker build -f src/docker/Dockerfile -t vukhangvttu/fe-khachsan-vt:1.0 .

@@ -23,6 +23,7 @@ import XuatExcelXacNhanPhong from '../modal/XuatExcelXacNhanPhong'
 import XuatExcelHoaDon from '../modal/XuatExcelHoaDon'
 import { ROOM_ACTIONS } from '../chatroom/constants'
 import { Popover } from 'flowbite-react'
+import XuatPhieuChiTietDatPhongModal from '../modal/XuatPhieuChiTietDatPhongModal'
 
 const getBadge = (status) => {
   switch (status) {
@@ -78,12 +79,12 @@ const DanhSachDatPhong = () => {
     },
 
     {
-      key: 'ngay_den',
+      key: 'ngay_den_hien_thi',
       label: 'Ngày đến',
       _style: { color: 'blue' },
     },
     {
-      key: 'ngay_di',
+      key: 'ngay_di_hien_thi',
       label: 'Ngày đi',
       _style: { color: 'blue' },
     },
@@ -134,7 +135,14 @@ const DanhSachDatPhong = () => {
       setLoading(true)
       const danhsach = await getAllBooKing()
       console.log(danhsach)
-      setBooKing(danhsach)
+      
+      // Thêm _props cho row có co_hoa_don_vat = true
+      const danhsachWithProps = danhsach.map((item) => ({
+        ...item,
+        _props: item.co_hoa_don_vat === true ? { color: 'success' } : undefined,
+      }))
+      
+      setBooKing(danhsachWithProps)
     } catch (error) {
       console.log('Lỗi getAllBooKing:', error)
     } finally {
@@ -154,6 +162,8 @@ const DanhSachDatPhong = () => {
 
   const [showReport, setShowReport] = useState(false)
   const [selectedBookingForPrint, setSelectedBookingForPrint] = useState(null)
+  const [visibleChiTietDatPhong, setVisibleChiTietDatPhong] = useState(false)
+  const [selectedMaBookingChiTiet, setSelectedMaBookingChiTiet] = useState('')
 
   const handlePrint = (booking) => {
     setSelectedBookingForPrint(booking)
@@ -197,6 +207,11 @@ const DanhSachDatPhong = () => {
       deposit: (selectedBookingForPrint.tien_coc || 0).toLocaleString('en-US') + ' ₫',
       payment: (selectedBookingForPrint.tong_tien || 0).toLocaleString('en-US') + ' ₫',
     }
+  }
+
+  const handleOpenChiTietDatPhong = (maBooking) => {
+    setSelectedMaBookingChiTiet(maBooking)
+    setVisibleChiTietDatPhong(true)
   }
 
   const [visibleXautExcelXacNhanPhong, setVisibleXuatExcelXacNhanPhong] = useState(false)
@@ -329,13 +344,12 @@ const DanhSachDatPhong = () => {
                                       </Link>
                                     )}
 
-                                    <Link
-                                      to={`/dashboard/pos/danh-sach-booking/xuat-chi-tiet-dat-phong/${item.ma_booking}`}
+                                    <button
+                                      onClick={() => handleOpenChiTietDatPhong(item.ma_booking)}
+                                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
                                     >
-                                      <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 hover:text-blue-500">
-                                        {ROOM_ACTIONS.PRINT_REGISTRATION_FROM_CHI_TIET_DAT_PHONG}
-                                      </button>
-                                    </Link>
+                                      {ROOM_ACTIONS.PRINT_REGISTRATION_FROM_CHI_TIET_DAT_PHONG}
+                                    </button>
 
                                     <Link
                                       to={`/dashboard/pos/danh-sach-booking/edit-booking/${item.ma_booking}`}
@@ -412,7 +426,7 @@ const DanhSachDatPhong = () => {
             tableProps={{
               className: 'add-this-custom-class',
               responsive: true,
-              striped: true,
+              // striped: true,
               hover: true,
             }}
             tableBodyProps={{
@@ -451,6 +465,12 @@ const DanhSachDatPhong = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      <XuatPhieuChiTietDatPhongModal
+        visible={visibleChiTietDatPhong}
+        onClose={() => setVisibleChiTietDatPhong(false)}
+        maBooking={selectedMaBookingChiTiet}
+      />
     </CRow>
   )
 }

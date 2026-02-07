@@ -1,21 +1,22 @@
 export const ROOM_STATUS_STYLES = {
-  'CHECK-OUT TRỄ': 'bg-orange-500 text-white',
+  'TRỐNG': 'bg-white text-gray-800 border border-gray-300',
   'ĐÃ ĐẶT': 'bg-blue-600 text-white',
-  'CHECK-IN TRỄ': 'bg-red-500 text-white',
-  'ĐANG Ở': 'bg-green-600 text-white',
-  // 'ĐANG Ở': 'bg-purple-500 text-white',
-  'SẼ ĐẾN TRONG HÔM NAY': 'bg-pink-600 text-white',
-  'SẼ ĐI TRONG HÔM NAY': 'bg-yellow-500 text-white',
-  default: 'bg-white',
+  'ĐANG Ở': 'bg-green-500 text-white',
+  'SẼ ĐẾN TRONG HÔM NAY': 'bg-blue-600 text-white border border-blue-300',
+  'SẼ ĐI TRONG HÔM NAY': 'bg-amber-600 text-white',
+  'CHECK-IN TRỄ': 'bg-blue-600 text-white border border-blue-300',
+  'CHECK-OUT TRỄ': 'bg-white text-gray-800 border border-gray-300',
+  default: 'bg-white text-gray-800 border border-gray-300',
 }
 export const ROOM_STATUS_BUON_PHONG_STYLES = {
   DƠ: 'bg-red-500 text-white',
-  SẠCH: 'bg-white text-white',
-  'SẼ ĐẾN TRONG HÔM NAY': 'bg-pink-600 text-white',
-  'ĐANG Ở': 'bg-green-600 text-white',
-  // 'ĐANG Ở': 'bg-purple-500 text-white',
-  'SẼ ĐI TRONG HÔM NAY': 'bg-yellow-500 text-white',
-  default: 'bg-white',
+  SẠCH: 'bg-white text-gray-800 border border-gray-300',
+  'SẼ ĐẾN TRONG HÔM NAY': 'bg-blue-100 text-blue-800 border border-blue-300',
+  'ĐANG Ở': 'bg-green-500 text-white',
+  'SẼ ĐI TRONG HÔM NAY': 'bg-amber-600 text-white',
+  'CHECK-IN TRỄ': 'bg-blue-100 text-blue-800 border border-blue-300',
+  'CHECK-OUT TRỄ': 'bg-amber-600 text-white',
+  default: 'bg-white text-gray-800 border border-gray-300',
 }
 
 export const ROOM_STATUS_LABELS = {

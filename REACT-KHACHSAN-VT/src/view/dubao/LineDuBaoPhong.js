@@ -1,10 +1,11 @@
-import { CCol, CDatePicker, CFormLabel, CRow, CSpinner } from '@coreui/react-pro'
+import { CCol, CDatePicker, CFormLabel, CRow, CSpinner, CFormSelect } from '@coreui/react-pro'
 
 import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { format } from 'date-fns'
 import { getPhongTrongTheoKhoanThoiGian } from 'src/service/PhongService'
+import { getAllLoaiPhongBooKing } from 'src/service/LoaiPhongService'
 import { ROOM_STATUS_STYLES } from '../chatroom/constants'
 import ThongTinKhachHangTrenLine from '../modal/ThongTinKhachHangTrenLine'
 
@@ -12,6 +13,9 @@ const LineDuBaoPhong = ({ isActive }) => {
   const [roomData, setRoomData] = useState([])
   const [loading, setLoading] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
+  const [loaiPhongList, setLoaiPhongList] = useState([])
+  const [selectedLoaiPhong, setSelectedLoaiPhong] = useState('')
+  const [selectedTang, setSelectedTang] = useState('')
 
   // Generate dates for the week
   const generateDates = (checkin, checkout) => {
@@ -86,12 +90,35 @@ const LineDuBaoPhong = ({ isActive }) => {
   useEffect(() => {
     if (isActive && !hasFetched) {
       fetchRoomData()
+      fetchLoaiPhong()
       setHasFetched(true)
     }
     if (!isActive) {
       setHasFetched(false) // reset để lần sau vào lại tab sẽ fetch lại
     }
   }, [isActive])
+
+  // Fetch danh sách loại phòng
+  const fetchLoaiPhong = async () => {
+    try {
+      const data = await getAllLoaiPhongBooKing(navigate)
+      if (data) {
+        setLoaiPhongList(data)
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách loại phòng:', error)
+    }
+  }
+
+  // Xử lý khi thay đổi loại phòng
+  const handleLoaiPhongChange = (e) => {
+    setSelectedLoaiPhong(e.target.value)
+  }
+
+  // Xử lý khi thay đổi tầng
+  const handleTangChange = (e) => {
+    setSelectedTang(e.target.value)
+  }
 
   const navigate = useNavigate()
 
@@ -140,6 +167,18 @@ const LineDuBaoPhong = ({ isActive }) => {
     [navigate],
   )
 
+  // Lọc dữ liệu phòng theo loại phòng và tầng
+  const filterRoomData = (data) => {
+    if (!selectedLoaiPhong && !selectedTang) return data
+    
+    return data.filter(room => {
+      const matchLoaiPhong = !selectedLoaiPhong || room.maLoaiPhong === selectedLoaiPhong
+      const matchTang = !selectedTang || room.maTang === selectedTang
+      
+      return matchLoaiPhong && matchTang
+    })
+  }
+
   // Gom các phòng trùng mã phòng lại thành 1 dòng duy nhất, mỗi dòng là 1 maPhong, chứa mảng các booking
   const groupRoomsByMaPhong = (roomData) => {
     const map = new Map()
@@ -150,8 +189,23 @@ const LineDuBaoPhong = ({ isActive }) => {
       map.get(room.maPhong).push(room)
     })
 
+    // Danh sách loại phòng đặc biệt cần đẩy xuống cuối
+    const specialRoomTypes = ['GALA', 'HOI-THAO', 'HOI-TRUONG', 'TEA-BREAK', 'KHO-BUON']
+
     // Sắp xếp theo thứ tự từng tầng: 201, 301, 401, 202, 302, 402, ...
-    const sortedEntries = Array.from(map.entries()).sort(([maPhongA], [maPhongB]) => {
+    const sortedEntries = Array.from(map.entries()).sort(([maPhongA, bookingsA], [maPhongB, bookingsB]) => {
+      // Lấy loại phòng từ booking đầu tiên
+      const loaiPhongA = bookingsA[0]?.maLoaiPhong || ''
+      const loaiPhongB = bookingsB[0]?.maLoaiPhong || ''
+
+      // Kiểm tra xem có phải loại phòng đặc biệt không
+      const isSpecialA = specialRoomTypes.includes(loaiPhongA)
+      const isSpecialB = specialRoomTypes.includes(loaiPhongB)
+
+      // Nếu một trong hai là loại phòng đặc biệt, đẩy nó xuống cuối
+      if (isSpecialA && !isSpecialB) return 1  // A xuống sau B
+      if (!isSpecialA && isSpecialB) return -1 // B xuống sau A
+
       // Lấy số phòng từ mã phòng (ví dụ: 201 -> 01, 301 -> 01)
       const roomNumberA = maPhongA.slice(-2) // Lấy 2 ký tự cuối
       const roomNumberB = maPhongB.slice(-2)
@@ -173,11 +227,9 @@ const LineDuBaoPhong = ({ isActive }) => {
   // Thứ tự ưu tiên trạng thái
   const STATUS_PRIORITY = [
     'ĐANG Ở',
-    'CHECK-OUT TRỄ',
     'SẼ ĐI TRONG HÔM NAY',
     'SẼ ĐẾN TRONG HÔM NAY',
     'ĐÃ ĐẶT',
-    'CHECK-IN TRỄ',
     'TRỐNG',
   ]
 
@@ -260,33 +312,61 @@ const LineDuBaoPhong = ({ isActive }) => {
       {/* Phần chọn ngày */}
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <CCol sm={12} md={3}>
-          <CRow>
-            <CFormLabel htmlFor="inputPassword" className="col-sm-4 col-form-label labelcustome">
-              Ngày đến
-            </CFormLabel>
-            <CCol sm={8}>
-              <CDatePicker
-                locale="en-GB"
-                date={valueNgayDen}
-                onDateChange={handleDateChangeNgayDen}
-                // minDate={new Date(new Date().setDate(new Date().getDate() - 1))}
-              />
-            </CCol>
-          </CRow>
+          <CFormLabel htmlFor="inputPassword" className="labelcustome mb-2">
+            Ngày đến
+          </CFormLabel>
+          <CDatePicker
+            locale="en-GB"
+            date={valueNgayDen}
+            onDateChange={handleDateChangeNgayDen}
+            // minDate={new Date(new Date().setDate(new Date().getDate() - 1))}
+          />
         </CCol>
         <CCol sm={12} md={3}>
-          <CRow>
-            <CFormLabel htmlFor="inputPassword" className="col-sm-4 col-form-label labelcustome">
-              Ngày đi
-            </CFormLabel>
-            <CCol sm={8}>
-              <CDatePicker
-                locale="en-GB"
-                date={valueNgayDi}
-                onDateChange={handleDateChangeNgayDi}
-              />
-            </CCol>
-          </CRow>
+          <CFormLabel htmlFor="inputPassword" className="labelcustome mb-2">
+            Ngày đi
+          </CFormLabel>
+          <CDatePicker
+            locale="en-GB"
+            date={valueNgayDi}
+            onDateChange={handleDateChangeNgayDi}
+          />
+        </CCol>
+        <CCol sm={12} md={3}>
+          <CFormLabel htmlFor="loaiPhongSelect" className="labelcustome mb-2">
+            Hạng phòng
+          </CFormLabel>
+          <CFormSelect
+            id="loaiPhongSelect"
+            value={selectedLoaiPhong}
+            onChange={handleLoaiPhongChange}
+            className="border-2 border-blue-400 focus:border-blue-600"
+          >
+            <option value="">-- Chọn --</option>
+            {loaiPhongList.map((loaiPhong) => (
+              <option key={loaiPhong.maLoaiPhong} value={loaiPhong.maLoaiPhong}>
+                {loaiPhong.tenLoaiPhong}
+              </option>
+            ))}
+          </CFormSelect>
+        </CCol>
+        <CCol sm={12} md={2}>
+          <CFormLabel htmlFor="tangSelect" className="labelcustome mb-2">
+            Lọc tầng
+          </CFormLabel>
+          <CFormSelect
+            id="tangSelect"
+            value={selectedTang}
+            onChange={handleTangChange}
+            className="border-2 border-green-400 focus:border-green-600"
+          >
+            <option value="">-- Tất cả --</option>
+            {[ 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((tang) => (
+              <option key={tang} value={tang}>
+                Tầng {tang}
+              </option>
+            ))}
+          </CFormSelect>
         </CCol>
       </div>
 
@@ -347,7 +427,7 @@ const LineDuBaoPhong = ({ isActive }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {groupRoomsByMaPhong(roomData).map(({ maPhong, bookings }) => {
+                  {groupRoomsByMaPhong(filterRoomData(roomData)).map(({ maPhong, bookings }) => {
                     const roomInfo = bookings[0]
                     // Gom các đoạn liên tiếp cùng booking (tenkhachhang + trạng thái)
                     const cells = []
@@ -389,20 +469,17 @@ const LineDuBaoPhong = ({ isActive }) => {
                       // Tô màu theo trạng thái và ngày
                       const cellClass = getCellStyle(booking, days[i].date)
 
-                      // Render 1 ô colSpan cho đoạn này với border rõ ràng
+                      // Render 1 ô colSpan cho đoạn này không có border
                       cells.push(
                         <td
                           key={`${maPhong}-${days[i].date}`}
                           colSpan={j - i}
-                          className={`p-0 relative ${cellClass} cursor-pointer`}
+                          className={`p-0 relative ${cellClass} cursor-pointer border-0`}
                           onClick={() => {
                             handleClick(booking.maxepphongbooking)
                           }}
                           style={{
-                            borderLeft: isFirstDayOfBooking(bookings, days[i].date)
-                              ? '2px solid white'
-                              : 'none',
-                            borderRight: j < days.length ? '2px solid white' : 'none',
+                            borderWidth: 0,
                             clipPath:
                               j < days.length
                                 ? 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%)'

@@ -12,6 +12,10 @@ export const redirectToLogin = () => {
   if (navigateRef) {
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
+    
+    // Dispatch event để thông báo token refresh thất bại
+    window.dispatchEvent(new Event('authFailed'))
+    
     navigateRef('/login', { replace: true })
   }
 }

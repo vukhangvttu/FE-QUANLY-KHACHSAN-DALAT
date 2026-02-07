@@ -28,7 +28,6 @@ import { CChart } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 import { getDanhSachPhongAnSang, getThongKeAnSang } from 'src/service/ThongKeService'
 import { useNavigate } from 'react-router-dom'
-import { it } from 'date-fns/locale'
 import CapNhatAnSang from '../modal/CapNhatAnSang'
 import PropTypes from 'prop-types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -586,17 +585,18 @@ const ViewNhaHang = ({ isActive, refreshTrigger }) => {
                 <div className="bg-white rounded-lg shadow-lg p-6 w-full">
                   <div className="d-flex justify-content-between align-items-center mb-3 w-full">
                     <h4 className="m-0 font-bold ">THỐNG KÊ</h4>
-                    <select
+                    {/* <select
                       id="cars"
                       name="cars"
                       className="bg-transparent outline-none font-semibold text-blue-500"
                       // value={valueDTHomNay}
                       // onChange={onChangeThongKeDoanhThuTheoNgay}
                     >
+                      <option value="yesterday">Hôm qua</option>
                       <option value="today">Hôm nay</option>
-                      <option value="yesterday">Ngày mai</option>
-                      <option value="last_7_days">7 ngày qua</option>
-                    </select>
+                      <option value="tomorrow">Ngày mai</option>
+                     
+                    </select> */}
                   </div>
 
                   <div className="grid grid-cols-4 gap-2 mb-6">

@@ -47,6 +47,10 @@ const refreshToken = async () => {
       const newToken = response.data.result.token
       localStorage.setItem('token', newToken)
       console.log('Refresh token thành công')
+      
+      // Dispatch custom event để thông báo token đã được refresh
+      window.dispatchEvent(new Event('tokenRefreshed'))
+      
       return newToken
     }
     // Nếu refresh token thất bại, xóa token và chuyển về login

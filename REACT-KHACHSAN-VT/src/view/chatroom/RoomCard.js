@@ -234,10 +234,8 @@ const RoomCard = ({
           <CCol xs={5} sm={5} md={5}>
             <CRow>
               <CCol xs={5} sm={5} md={5} className="flex justify-center ">
-                {(room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' &&
-                  room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY') ||
-                (room.trangThaiHienTai === 'CHECK-OUT TRỄ' &&
-                  room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY') ? (
+                {room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' &&
+                room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ? (
                   <div className="flex items-center justify-center">
                     <FontAwesomeIcon icon={faPeopleArrows} className="text-xl" />
                   </div>
@@ -459,7 +457,7 @@ const RoomCard = ({
         </CCol>
       </CRow>
 
-      {room.tenkhachhang && !room.daTraPhong ? (
+      {room.tenkhachhang && !room.daTraPhong && room.trangThaiHienTai !== 'CHECK-OUT TRỄ' ? (
         <>
           <div
             className=" cursor-pointer"
