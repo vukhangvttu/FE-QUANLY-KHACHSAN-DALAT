@@ -626,7 +626,7 @@ const ThongKeDoanhThu = () => {
 
         {/* Biểu đồ */}
         <CRow className="mb-4">
-          <CCol md={8}>
+          <CCol md={6}>
             <CCard>
               <CCardBody>
                 <h5 className="card-title mb-4">Doanh thu theo tháng</h5>
@@ -634,18 +634,7 @@ const ThongKeDoanhThu = () => {
               </CCardBody>
             </CCard>
           </CCol>
-          <CCol md={4}>
-            <CCard>
-              <CCardBody>
-                <h5 className="card-title mb-4">Phân bố khách hàng</h5>
-                <Pie data={pieChartData} />
-              </CCardBody>
-            </CCard>
-          </CCol>
-        </CRow>
-
-        <CRow className="mb-4">
-          <CCol md={12}>
+         <CCol md={6}>
             <CCard>
               <CCardBody>
                 <h5 className="card-title mb-4">Khách lưu trú</h5>
@@ -654,6 +643,9 @@ const ThongKeDoanhThu = () => {
             </CCard>
           </CCol>
         </CRow>
+
+       
+  
         {/* <CRow className="mb-4">
           <CCol md={12}>
             <CCard>

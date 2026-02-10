@@ -33,13 +33,7 @@ import Select from 'react-select'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   getAllDanhXung,
-  getAllGiamGia,
-  getAllHinhThucThanhToan,
-  getAllKhuVuc,
   getAllLoaiThe,
-  getAllMucDichDen,
-  getAllNguonKhach,
-  getAllThiTruong,
   getAllTrangThaiBooKing,
   getAllYeuCau,
 } from 'src/service/APIService'
@@ -703,12 +697,6 @@ const EditBooKing = () => {
   // const [congTy, setCongTy] = useState([])
   const [danhXung, setDanhXung] = useState([])
   const [nhomKhachHang, setNhomKhachHang] = useState([])
-  const [khuVuc, setKhuVuc] = useState([])
-  const [thiTruong, setThiTruong] = useState([])
-  const [hinhThucThanhToan, setHinhThucThanhToan] = useState([])
-  const [sourceBooking, setSourceBooking] = useState([])
-  const [promotionName, setPromotionName] = useState([])
-  const [mucDichDen, setMucDichDen] = useState([])
   const [trangThaiBooKing, setTrangThaiBooKing] = useState([])
   const [loaiThe, setLoaiThe] = useState([])
   const [yeuCau, setyeuCau] = useState([])
@@ -723,12 +711,6 @@ const EditBooKing = () => {
       const [
         danhXung,
         nhomKhachHang,
-        khuVuc,
-        thiTruong,
-        hinhThucThanhToan,
-        sourceBooking,
-        mucDichDen,
-        giamgia,
         trangThaiBooKing,
         loaiThe,
         yeuCau,
@@ -738,12 +720,6 @@ const EditBooKing = () => {
       ] = await Promise.all([
         getAllDanhXung(navigate),
         getAllNhomKhachHang(navigate),
-        getAllKhuVuc(navigate),
-        getAllThiTruong(navigate),
-        getAllHinhThucThanhToan(navigate),
-        getAllNguonKhach(navigate),
-        getAllMucDichDen(navigate),
-        getAllGiamGia(navigate),
         getAllTrangThaiBooKing(navigate),
         getAllLoaiThe(navigate),
         getAllYeuCau(navigate),
@@ -756,12 +732,6 @@ const EditBooKing = () => {
       if (
         danhXung &&
         nhomKhachHang &&
-        khuVuc &&
-        thiTruong &&
-        hinhThucThanhToan &&
-        sourceBooking &&
-        mucDichDen &&
-        giamgia &&
         trangThaiBooKing &&
         loaiThe &&
         yeuCau &&
@@ -770,14 +740,7 @@ const EditBooKing = () => {
         giaPhong
       ) {
         setDanhXung(danhXung)
-        setNhomKhachHang(nhomKhachHang) // Set state cho nguonKhach
-        // Nếu cần set state cho khuVuc và thiTruong, thêm vào đây
-        setKhuVuc(khuVuc)
-        setThiTruong(thiTruong)
-        setHinhThucThanhToan(hinhThucThanhToan)
-        setSourceBooking(sourceBooking)
-        setMucDichDen(mucDichDen)
-        setPromotionName(giamgia)
+        setNhomKhachHang(nhomKhachHang)
         setTrangThaiBooKing(trangThaiBooKing)
         setLoaiThe(loaiThe)
         setyeuCau(yeuCau)
@@ -920,24 +883,6 @@ const EditBooKing = () => {
 
     nhomKhachHang: {
       maNhomKhachHang: '',
-    },
-    hinhThucThanhToan: {
-      maHinhThucThanhToan: 1,
-    },
-    nguonKhach: {
-      maNguonKhach: 1,
-    },
-    thiTruong: {
-      maThiTruong: 1,
-    },
-    khuVuc: {
-      maKhuVuc: 1,
-    },
-    mucDichDen: {
-      maMucDich: 1,
-    },
-    giamGia: {
-      maGiamGia: 1,
     },
     trangThaiBooKing: {
       maTrangThaiBooKing: 1,

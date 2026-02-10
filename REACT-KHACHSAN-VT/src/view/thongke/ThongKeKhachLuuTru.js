@@ -178,8 +178,6 @@ export const ThongKeKhachLuuTru = () => {
 
   return (
     <>
-      <CToaster className="p-3" placement="top-end" push={toast} ref={toaster} />
-
       <CChart type="line" data={processedData} options={options} ref={chartRef} />
     </>
   )

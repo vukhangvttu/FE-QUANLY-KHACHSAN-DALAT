@@ -33,13 +33,7 @@ import Select from 'react-select'
 import { useNavigate } from 'react-router-dom'
 import {
   getAllDanhXung,
-  getAllGiamGia,
-  getAllHinhThucThanhToan,
-  getAllKhuVuc,
   getAllLoaiThe,
-  getAllMucDichDen,
-  getAllNguonKhach,
-  getAllThiTruong,
   getAllTrangThaiBooKing,
   getAllYeuCau,
 } from 'src/service/APIService'
@@ -871,7 +865,7 @@ const ThemDatPhong = () => {
       }
     })
 
-    setBooKing((prev) => ({ ...prev, chiTietBooKings, tongTien: tongTien - prev.tienCoc }))
+    setBooKing((prev) => ({ ...prev, chiTietBooKings, tongTien: tongTien }))
   }
 
   const [tongSoLuong, setTongSoLuong] = useState(0)
@@ -885,12 +879,6 @@ const ThemDatPhong = () => {
   // const [congTy, setCongTy] = useState([])
   const [danhXung, setDanhXung] = useState([])
   const [nhomKhachHang, setNhomKhachHang] = useState([])
-  const [khuVuc, setKhuVuc] = useState([])
-  const [thiTruong, setThiTruong] = useState([])
-  const [hinhThucThanhToan, setHinhThucThanhToan] = useState([])
-  const [sourceBooking, setSourceBooking] = useState([])
-  const [promotionName, setPromotionName] = useState([])
-  const [mucDichDen, setMucDichDen] = useState([])
   const [trangThaiBooKing, setTrangThaiBooKing] = useState([])
   const [loaiThe, setLoaiThe] = useState([])
   const [yeuCau, setYeuCau] = useState([])
@@ -904,12 +892,6 @@ const ThemDatPhong = () => {
       const [
         danhXung,
         nhomKhachHang,
-        khuVuc,
-        thiTruong,
-        hinhThucThanhToan,
-        sourceBooking,
-        mucDichDen,
-        giamgia,
         trangThaiBooKing,
         loaiThe,
         yeuCau,
@@ -919,12 +901,6 @@ const ThemDatPhong = () => {
       ] = await Promise.all([
         getAllDanhXung(navigate),
         getAllNhomKhachHang(navigate),
-        getAllKhuVuc(navigate),
-        getAllThiTruong(navigate),
-        getAllHinhThucThanhToan(navigate),
-        getAllNguonKhach(navigate),
-        getAllMucDichDen(navigate),
-        getAllGiamGia(navigate),
         getAllTrangThaiBooKing(navigate),
         getAllLoaiThe(navigate),
         getAllYeuCau(navigate),
@@ -937,12 +913,6 @@ const ThemDatPhong = () => {
       if (
         danhXung &&
         nhomKhachHang &&
-        khuVuc &&
-        thiTruong &&
-        hinhThucThanhToan &&
-        sourceBooking &&
-        mucDichDen &&
-        giamgia &&
         trangThaiBooKing &&
         loaiThe &&
         yeuCau &&
@@ -951,14 +921,7 @@ const ThemDatPhong = () => {
         giaPhong
       ) {
         setDanhXung(danhXung)
-        setNhomKhachHang(nhomKhachHang) // Set state cho nguonKhach
-        // Nếu cần set state cho khuVuc và thiTruong, thêm vào đây
-        setKhuVuc(khuVuc)
-        setThiTruong(thiTruong)
-        setHinhThucThanhToan(hinhThucThanhToan)
-        setSourceBooking(sourceBooking)
-        setMucDichDen(mucDichDen)
-        setPromotionName(giamgia)
+        setNhomKhachHang(nhomKhachHang)
         setTrangThaiBooKing(trangThaiBooKing)
         setLoaiThe(loaiThe)
         setYeuCau(yeuCau)
@@ -1025,24 +988,6 @@ const ThemDatPhong = () => {
 
     nhomKhachHang: {
       maNhomKhachHang: 'NKH2024040306',
-    },
-    hinhThucThanhToan: {
-      maHinhThucThanhToan: 1,
-    },
-    nguonKhach: {
-      maNguonKhach: 1,
-    },
-    thiTruong: {
-      maThiTruong: 1,
-    },
-    khuVuc: {
-      maKhuVuc: 1,
-    },
-    mucDichDen: {
-      maMucDich: 1,
-    },
-    giamGia: {
-      maGiamGia: 1,
     },
     trangThaiBooKing: {
       maTrangThaiBooKing: 1,
@@ -1257,7 +1202,7 @@ const ThemDatPhong = () => {
       // Cập nhật state tổng tiền khách trả
       setTongTienKhachCanTra(tongTienKhachTra)
 
-      return { ...prev, tienCoc: parseFloat(newTienCoc), tongTien: tongTienKhachTra }
+      return { ...prev, tienCoc: parseFloat(newTienCoc), tongTien: tongTienTatCa }
     })
   }
 
@@ -2517,7 +2462,7 @@ const ThemDatPhong = () => {
                     //   .reduce((sum, row) => sum + (row.tongTienDong || 0) - booKing.tienCoc, 0)
                     //   .toLocaleString('vi-VN')}
                     //   onChange={handleChange}
-                    value={booKing.tongTien.toLocaleString('en-US')}
+                    value={(booKing.tongTien - booKing.tienCoc).toLocaleString('en-US')}
                   />
                 </div>
               </div>

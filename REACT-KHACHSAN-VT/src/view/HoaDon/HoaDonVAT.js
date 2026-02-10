@@ -73,6 +73,11 @@ const HoaDonVAT = () => {
 
       if (khachHangData) {
         setThongTinBooKing(khachHangData)
+        setHoaDonVat((prev) => ({
+          ...prev,
+          ngayDen: khachHangData.ngay_den,
+          ngayDi: khachHangData.ngay_di,
+        }))
       }
 
       if (hoadonvatdata) {
@@ -91,8 +96,8 @@ const HoaDonVAT = () => {
           setHoaDonVat((prev) => ({
             ...prev,
             tenKhach: thongtinkhachhangbooking.ten_khach,
-            tenCongTy: thongtinkhachhangbooking.loai_nguon_khach,
-            diaChi: thongtinkhachhangbooking.dia_chi_booking,
+            tenCongTy: thongtinkhachhangbooking.loai_nguon_khach || 'NGƯỜI MUA HÀNG KHÔNG LẤY HÓA ĐƠN',
+            diaChi: thongtinkhachhangbooking.dia_chi_booking || 'NGƯỜI MUA HÀNG KHÔNG LẤY HÓA ĐƠN',
             codeVat: thongtinkhachhangbooking.ma_so_thue,
             email: thongtinkhachhangbooking.email_booking,
             dienThoai: thongtinkhachhangbooking.sdt_booking,
@@ -116,16 +121,17 @@ const HoaDonVAT = () => {
 
   const [selectedVatId, setSelectedVatId] = useState('')
 
+
   const initialFormState = {
     maHoaDonVat: '',
     ngayDen: thongtinbooking.ngay_den,
-    ngayDi: thongtinbooking.ngay_dI,
-    tenKhach: '',
-    ngayLap: new Date(),
+    ngayDi: thongtinbooking.ngay_di,
+    tenKhach: thongtinbooking.ten_khach,
+    ngayLap: new Date().toLocaleDateString('en-CA'),
     mauHoaDon: '1/002',
     kiHieu: 'C25MHK',
-    diaChi: '',
-    tenCongTy: '',
+    diaChi: 'NGƯỜI MUA HÀNG KHÔNG LẤY HÓA ĐƠN',
+    tenCongTy: 'NGƯỜI MUA HÀNG KHÔNG LẤY HÓA ĐƠN',
     codeVat: '',
     soTaiKhoan: '',
     tong: 0.0,
@@ -161,23 +167,6 @@ const HoaDonVAT = () => {
     }))
   }
 
-  const onInputChangeTong = (value) => {
-    const newTong = value || 0 // Nếu giá trị rỗng, set về 0
-
-    setHoaDonVat((prev) => ({
-      ...prev,
-      tong: newTong,
-    }))
-  }
-
-  const onInputChangeTongVat = (value) => {
-    const newTong = value || 0 // Nếu giá trị rỗng, set về 0
-
-    setHoaDonVat((prev) => ({
-      ...prev,
-      tongVat: newTong,
-    }))
-  }
 
   const [trangthaiload, setTrangthaiload] = useState(false)
   const [tt_update, setTT_update] = useState(false)
@@ -185,29 +174,6 @@ const HoaDonVAT = () => {
   const [trangthaiprint, setTrangthaiprint] = useState(false)
   const [countdown, setCountdown] = useState(6)
 
-  const getInitialFormState = () => ({
-    maHoaDonVat: '',
-    ngayDen: thongtinbooking.ngayDen,
-    ngayDi: thongtinbooking.ngayDi,
-    tenKhach: '',
-    ngayLap: new Date(),
-    mauHoaDon: '1/679',
-    kiHieu: 'C25TZC',
-    diaChi: '',
-    tenCongTy: '',
-    codeVat: '',
-    soTaiKhoan: '',
-    tong: 0.0,
-    tongVat: 0.0,
-    email: '',
-    dienThoai: '',
-    cccd: '',
-    ghiChu: '',
-    noiDungThayThe: '',
-    booKing: {
-      maBooking: ma_booking,
-    },
-  })
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -436,6 +402,7 @@ const HoaDonVAT = () => {
       } else {
         setTrangThaiInVAT(false)
         setTrangThaiHoaDonNhap(true)
+        setTrangThaiHuyHoaDonXacNhanVAT(false)
       }
 
       if (hoaDonTimDuoc.daHuy) {
@@ -446,7 +413,11 @@ const HoaDonVAT = () => {
       }
     } else {
       console.warn('Không tìm thấy hóa đơn với mã:', mahoadonvat)
-      setSelectedVatId(null) // hoặc giữ nguyên state
+      setSelectedVatId(null)
+      setTrangThaiXacNhan(false)
+      setTrangThaiInVAT(false)
+      setTrangThaiHoaDonNhap(false)
+      setTrangThaiHuyHoaDonXacNhanVAT(false)
     }
   }
 
@@ -803,14 +774,20 @@ const HoaDonVAT = () => {
                               <Select
                                 getOptionValue={(option) => option.code_vat}
                                 getOptionLabel={(option) => option.ten_cong_ty}
-                                // value={nhomKhachHang.find(
-                                //   (option) =>
-                                //     option.maNhomKhachHang === booKing.nhomKhachHang.maNhomKhachHang,
-                                // )}
                                 options={danhSachCodeVat}
                                 onChange={handleChangeTimKiemCodeVat}
-                                placeholder={'Nhập mã số thuế'}
-                                //  value={valueTinh}
+                                placeholder={'Nhập tên công ty, mã số thuế hoặc CCCD'}
+                                filterOption={(option, inputValue) => {
+                                  const searchValue = inputValue.toLowerCase()
+                                  const tenCongTy = (option.data.ten_cong_ty || '').toLowerCase()
+                                  const codeVat = (option.data.code_vat || '').toLowerCase()
+                                  const cccd = (option.data.cccd || '').toLowerCase()
+                                  return (
+                                    tenCongTy.includes(searchValue) ||
+                                    codeVat.includes(searchValue) ||
+                                    cccd.includes(searchValue)
+                                  )
+                                }}
                               />
                             </CCol>
                           </CRow>
@@ -1175,15 +1152,15 @@ const HoaDonVAT = () => {
                                 </CCol>
                               </CRow>
                             </CCol>
-                            <CCol md={3}>
+                            <CCol md={6}>
                               <CRow className="mb-1">
                                 <CFormLabel
                                   htmlFor="inputPassword"
-                                  className="col-sm-4 col-form-label labelcustome"
+                                  className="col-sm-2 col-form-label labelcustome"
                                 >
                                   Ghi chú <span className="text-danger"></span>
                                 </CFormLabel>
-                                <CCol sm={8}>
+                                <CCol sm={10}>
                                   <CFormTextarea
                                     type="text"
                                     className="peer border border-gray-300  hover:!border-green-500 transition-colors duration-300"

@@ -19,6 +19,7 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { useDuBaoRooms, useRooms } from './hooks'
 import ViewBuonPhong from '../buonphong/ViewBuonPhong'
+import ImportHangHoa from '../buonphong/ImportHangHoa'
 import ViewNhaHang from '../NhaHang/ViewNhaHang'
 import DuBaoLoaiPhong from '../dubao/DuBaoLoaiPhong'
 import LineDuBaoPhong from '../dubao/LineDuBaoPhong'
@@ -124,6 +125,9 @@ const HotelManagement = () => {
     setActiveTab(key)
     sessionStorage.setItem('activeTab', key.toString())
   }, [])
+
+  // State cho sub-tab của Buồng phòng
+  const [activeBuonPhongTab, setActiveBuonPhongTab] = useState('rooms') // 'rooms': Rooms, 'import': Import
 
   const handleStatusClick = (status) => {
     console.log('status', status)
@@ -627,65 +631,100 @@ const HotelManagement = () => {
             {/* Tab Buồng phòng */}
             {canAccessTab(3) && (
               <CTabPanel className="p-3" aria-labelledby="home-tab-pane" itemKey={3}>
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-wrap gap-2 items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
-                      <StatusButtonBuonPhong
-                        icon={faCircle}
-                        color="red"
-                        label="Dơ"
-                        count={getRoomCountsBuonPhong().dirty}
-                        active={statusFilterBuonPhong === 'DƠ'}
-                        onClick={() => handleStatusBuonPhongClick('DƠ')}
-                      />
-                      <StatusButtonBuonPhong
-                        icon={faCircle}
-                        color="white"
-                        label="Sạch"
-                        count={getRoomCountsBuonPhong().clean}
-                        active={statusFilterBuonPhong === 'SẠCH'}
-                        onClick={() => handleStatusBuonPhongClick('SẠCH')}
-                      />
-                      <StatusButtonBuonPhong
-                        icon={faCircle}
-                        color="pink"
-                        label="Sắp nhận"
-                        count={getRoomCounts().upcoming}
-                        active={statusFilterBuonPhong === 'SẼ ĐẾN TRONG HÔM NAY'}
-                        onClick={() => handleStatusBuonPhongClick('SẼ ĐẾN TRONG HÔM NAY')}
-                      />
-                      <StatusButton
-                        icon={faCircle}
-                        color="green"
-                        label="Đang sử dụng"
-                        count={getRoomCounts().occupied}
-                        active={statusFilter === 'ĐANG Ở'}
-                        onClick={() => handleStatusBuonPhongClick('ĐANG Ở')}
-                      />
-                      <StatusButtonBuonPhong
-                        icon={faCircle}
-                        color="yellow"
-                        label="Sắp trả"
-                        count={getRoomCounts().leaving}
-                        active={statusFilterBuonPhong === 'SẼ ĐI TRONG HÔM NAY'}
-                        onClick={() => handleStatusBuonPhongClick('SẼ ĐI TRONG HÔM NAY')}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9 gap-1">
-                    {filteredRoomsBuonPhong.map((room) => (
-                      <div key={room.maPhong} className="w-full">
-                        <ViewBuonPhong
-                          room={room}
-                          updateRoomStatus={updateRoomStatus}
-                          updateRoomCheckIn={updateRoomCheckIn}
-                          isActive={activeTab === 3}
-                        />
-                      </div>
-                    ))}
+                {/* Custom tabs cho Buồng phòng */}
+                <div className="mb-3">
+                  <div className="flex gap-2 border-b">
+                    <button
+                      className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
+                        activeBuonPhongTab === 'rooms'
+                          ? 'border-blue-500 text-blue-600 font-semibold'
+                          : 'border-transparent text-gray-600 hover:text-blue-500'
+                      }`}
+                      onClick={() => setActiveBuonPhongTab('rooms')}
+                    >
+                      <i className="fa-solid fa-bed-front"></i>
+                      Rooms
+                    </button>
+                    <button
+                      className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
+                        activeBuonPhongTab === 'import'
+                          ? 'border-blue-500 text-blue-600 font-semibold'
+                          : 'border-transparent text-gray-600 hover:text-blue-500'
+                      }`}
+                      onClick={() => setActiveBuonPhongTab('import')}
+                    >
+                      <i className="fa-solid fa-file-import"></i>
+                      Import
+                    </button>
                   </div>
                 </div>
+
+                {/* Tab content */}
+                {activeBuonPhongTab === 'rooms' && (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-wrap gap-2 items-center justify-between">
+                      <div className="flex flex-wrap gap-2">
+                        <StatusButtonBuonPhong
+                          icon={faCircle}
+                          color="red"
+                          label="Dơ"
+                          count={getRoomCountsBuonPhong().dirty}
+                          active={statusFilterBuonPhong === 'DƠ'}
+                          onClick={() => handleStatusBuonPhongClick('DƠ')}
+                        />
+                        <StatusButtonBuonPhong
+                          icon={faCircle}
+                          color="white"
+                          label="Sạch"
+                          count={getRoomCountsBuonPhong().clean}
+                          active={statusFilterBuonPhong === 'SẠCH'}
+                          onClick={() => handleStatusBuonPhongClick('SẠCH')}
+                        />
+                        <StatusButtonBuonPhong
+                          icon={faCircle}
+                          color="pink"
+                          label="Sắp nhận"
+                          count={getRoomCounts().upcoming}
+                          active={statusFilterBuonPhong === 'SẼ ĐẾN TRONG HÔM NAY'}
+                          onClick={() => handleStatusBuonPhongClick('SẼ ĐẾN TRONG HÔM NAY')}
+                        />
+                        <StatusButton
+                          icon={faCircle}
+                          color="green"
+                          label="Đang sử dụng"
+                          count={getRoomCounts().occupied}
+                          active={statusFilter === 'ĐANG Ở'}
+                          onClick={() => handleStatusBuonPhongClick('ĐANG Ở')}
+                        />
+                        <StatusButtonBuonPhong
+                          icon={faCircle}
+                          color="yellow"
+                          label="Sắp trả"
+                          count={getRoomCounts().leaving}
+                          active={statusFilterBuonPhong === 'SẼ ĐI TRONG HÔM NAY'}
+                          onClick={() => handleStatusBuonPhongClick('SẼ ĐI TRONG HÔM NAY')}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9 gap-1">
+                      {filteredRoomsBuonPhong.map((room) => (
+                        <div key={room.maPhong} className="w-full">
+                          <ViewBuonPhong
+                            room={room}
+                            updateRoomStatus={updateRoomStatus}
+                            updateRoomCheckIn={updateRoomCheckIn}
+                            isActive={activeTab === 3}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeBuonPhongTab === 'import' && (
+                  <ImportHangHoa />
+                )}
               </CTabPanel>
             )}
 

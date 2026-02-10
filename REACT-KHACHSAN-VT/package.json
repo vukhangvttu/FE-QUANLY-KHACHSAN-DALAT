@@ -73,7 +73,8 @@
     "react-select": "^5.10.0",
     "redux": "5.0.1",
     "simplebar-react": "^3.2.4",
-    "tailwind-scrollbar-hide": "^2.0.0"
+    "tailwind-scrollbar-hide": "^2.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",

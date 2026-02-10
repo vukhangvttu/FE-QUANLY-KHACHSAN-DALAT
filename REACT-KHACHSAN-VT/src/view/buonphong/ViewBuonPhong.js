@@ -13,7 +13,6 @@ const ViewBuonPhong = ({ room, updateRoomStatus, updateRoomCheckIn }) => {
   const [visibleTrangThaiVeSinh, setVisibleTrangThaiVeSinh] = useState(false)
 
   const [ma_xepphong_bookking, setMa_xepphong_bookking] = useState('')
-  const [tenphong, setTenphong] = useState('')
   const [valueDaDo, setValueDaDo] = useState(false)
   const [maPhong, setMaPhong] = useState('')
   const [visibleDichVuMienPhi, setVisibleDichVuMienPhi] = useState(false)
