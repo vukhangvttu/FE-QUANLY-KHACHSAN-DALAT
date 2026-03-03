@@ -1,0 +1,52 @@
+---
+alwaysApply: true
+---
+
+### Rule 5: `hooks-patterns.mdc`
+
+---
+description: Patterns for custom hooks in src/hooks/
+globs: src/hooks/**/*.js
+alwaysApply: false
+---
+
+# Custom Hook Patterns
+
+## Data Fetching Hook
+import { useState, useEffect, useCallback } from 'react'
+import axiosInstance from '../service/axiosConfig'
+
+export const useDataFetch = (endpoint) => {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await axiosInstance.get(endpoint)
+      if (response.data?.code === 200) {
+        setData(response.data.result || [])
+      }
+    } catch (err) {
+      setError(err)
+      console.log(`Lỗi fetch ${endpoint}:`, err)
+    } finally {
+      setLoading(false)
+    }
+  }, [endpoint])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  return { data, setData, loading, error, refetch: fetchData }
+}
+```
+
+## Existing Hooks Reference
+- `useAuthRedirect` - Redirect to login when no token
+- `usePermissions` - JWT-based permission checking (canAccessTab, canAccessButton)
+- `useRooms` - Fetch and manage rooms data
+
+## Permission Scopes
+Available: SODOPHONG, BUONGPHONG, LINEPHONG, DUBAOLOAIPHONG, DUBAOKHACH, NHAHANG, THONGKE, DANHSACHDATPHONG, DATPHONG

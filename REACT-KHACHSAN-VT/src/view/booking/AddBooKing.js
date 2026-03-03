@@ -657,7 +657,7 @@ const ThemDatPhong = () => {
   // 6. Các hàm xử lý thay đổi loại phòng và giá
   // Helper function kiểm tra loại phòng hội nghị
   const isLoaiPhongHoiNghi = (maLoaiPhong) => {
-    const loaiPhongHoiNghi = ['HOI-TRUONG', 'HOI-THAO', 'GALA', 'BREAK']
+    const loaiPhongHoiNghi = ['HOI-TRUONG', 'HOI-THAO', 'GA-LA', 'PHONG-HOP']
     return loaiPhongHoiNghi.includes(maLoaiPhong)
   }
 

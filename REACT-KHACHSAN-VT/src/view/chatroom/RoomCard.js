@@ -327,7 +327,7 @@ const RoomCard = ({
                               >
                                 Phụ thu
                               </div>
-                              <div
+                              {/* <div
                                 onClick={() => {
                                   handleClickDichVuMienPhi(
                                     room.maxepphongbooking,
@@ -341,7 +341,7 @@ const RoomCard = ({
                                 className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500"
                               >
                                 Dịch vụ miễn phí
-                              </div>
+                              </div> */}
                               <Link
                                 to={`/dashboard/pos/dich-vu/${room.maPhong}/${room.maBooking}/${room.maxepphongbooking}`}
                                 className="block px-4 py-1  hover:bg-gray-100 hover:text-blue-500"
@@ -374,13 +374,13 @@ const RoomCard = ({
                                 {ROOM_ACTIONS.ADD_GUEST}
                               </Link>
 
-                              <Link
+                              {/* <Link
                                 to={`/dashboard/pos/thanh-toan/${room.maBooking}/${room.maxepphongbooking}`}
                                 className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500"
                                 onClick={() => handlePopoverClose()}
                               >
                                 {ROOM_ACTIONS.CHECKOUT}
-                              </Link>
+                              </Link> */}
                             </>
                           ) : null
                           // <div

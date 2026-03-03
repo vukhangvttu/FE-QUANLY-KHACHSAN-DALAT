@@ -1,0 +1,25 @@
+---
+alwaysApply: true
+---
+
+---
+description: Core project architecture and conventions for Golden Era Hotel Management System
+alwaysApply: true
+---
+
+# Golden Era Hotel Management - Project Architecture
+
+## Tech Stack (THỰC TẾ - KHÔNG thay đổi)
+- React 18.2 + Create React App (react-scripts)
+- CoreUI Pro React 5.0 (CButton, CModal, CTable, CSmartTable, CCard, CForm...)
+- React Router DOM 6.21 (HashRouter)
+- Redux 5.0.1 (chỉ dùng cho UI state: sidebarShow, asideShow, theme)
+- Axios 1.7.9 với interceptors (JWT auth + refresh token)
+- TailwindCSS 3.4 + Flowbite React
+- FontAwesome icons
+- date-fns cho xử lý ngày
+- i18next cho đa ngôn ngữ
+- jspdf + @react-pdf/renderer cho xuất PDF
+- xlsx cho import/export Excel
+
+## Project Structure

@@ -1,0 +1,81 @@
+---
+alwaysApply: true
+---
+
+### Rule 3: `service-layer.mdc`
+
+---
+description: Patterns for API service layer in src/service/
+globs: src/service/**/*.js
+alwaysApply: false
+---
+
+# API Service Layer Patterns
+
+## Service File Structure
+import axiosInstance from './axiosConfig'
+
+export const getAllItems = async () => {
+  try {
+    const response = await axiosInstance.get('/items')
+    if (response.status === 200) {
+      return response.data.result
+    }
+    return null
+  } catch (error) {
+    console.log('Lỗi getAllItems:', error)
+    return null
+  }
+}
+
+export const getItemById = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/items/${id}`)
+    if (response.status === 200) {
+      return response.data.result
+    }
+    return null
+  } catch (error) {
+    console.log('Lỗi getItemById:', error)
+    return null
+  }
+}
+
+export const createItem = async (data) => {
+  try {
+    const response = await axiosInstance.post('/items', data)
+    return response.data
+  } catch (error) {
+    console.log('Lỗi createItem:', error)
+    throw error
+  }
+}
+
+export const updateItem = async (id, data) => {
+  try {
+    const response = await axiosInstance.put(`/items/${id}`, data)
+    return response.data
+  } catch (error) {
+    console.log('Lỗi updateItem:', error)
+    throw error
+  }
+}
+
+export const deleteItem = async (id) => {
+  try {
+    const response = await axiosInstance.delete(`/items/${id}`)
+    return response.data
+  } catch (error) {
+    console.log('Lỗi deleteItem:', error)
+    throw error
+  }
+}
+```
+
+## Rules
+- LUÔN dùng `axiosInstance` từ `./axiosConfig`, KHÔNG dùng axios trực tiếp
+- KHÔNG dùng `fetch()` trong service files
+- GET requests trả về `response.data.result` hoặc `null`
+- POST/PUT/DELETE trả về `response.data` hoặc throw error
+- Base URL đã được config trong `Config.js`, chỉ cần path tương đối
+- API base: `/khachsan-service` (đã set trong axiosInstance)

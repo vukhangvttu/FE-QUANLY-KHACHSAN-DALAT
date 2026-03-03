@@ -773,7 +773,7 @@ const HoaDonVAT = () => {
                               </CFormLabel>
                               <Select
                                 getOptionValue={(option) => option.code_vat}
-                                getOptionLabel={(option) => option.ten_cong_ty}
+                                getOptionLabel={(option) => `${option.code_vat} - ${option.ten_cong_ty}`}
                                 options={danhSachCodeVat}
                                 onChange={handleChangeTimKiemCodeVat}
                                 placeholder={'Nhập tên công ty, mã số thuế hoặc CCCD'}

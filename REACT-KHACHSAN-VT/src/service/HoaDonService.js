@@ -1,8 +1,7 @@
-import axios from 'axios'
-import config from './Config'
+
 import axiosInstance from './axiosConfig'
 
-export async function createHoaDon(ma_booking, ma_xepphong_booking, hoaDonData, navigate) {
+export async function createHoaDon(ma_booking, ma_xepphong_booking, hoaDonData) {
   try {
     const response = await axiosInstance.post(
       `/hoa-don/add-hoa-don/${ma_booking}/${ma_xepphong_booking}`,
@@ -16,7 +15,7 @@ export async function createHoaDon(ma_booking, ma_xepphong_booking, hoaDonData, 
   }
 }
 
-export async function createAllThongTinThanhToan(ma_booking, hoaDonData, navigate) {
+export async function createAllThongTinThanhToan(ma_booking, hoaDonData) {
   try {
     const response = await axiosInstance.post(
       `/hoa-don/add-all-thong-tin-thanh-toan/${ma_booking}`,

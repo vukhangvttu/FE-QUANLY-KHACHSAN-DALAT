@@ -74,21 +74,14 @@ const ViewBuonPhong = ({ room, updateRoomStatus, updateRoomCheckIn }) => {
     >
       <div className="flex justify-between items-start ">
         <div 
-          className="flex flex-col min-h-[90px] cursor-pointer"
+          className="flex flex-col min-h-[90px] cursor-pointer relative z-10"
           onClick={handleCardClick}
         >
           <h3 className="text-xl font-bold flex items-center gap-2">{room.tenPhong}</h3>
-          {room.ten_khachhang && !room.daTraPhong ? (
-            <>
-              <span className="font-medium">{room.ten_khachhang}</span>
-            </>
-          ) : (
-            <>
-              <div className="flex ">
+         
+             
                 <div className="text-current opacity-60 text-xs">{room.tenLoaiPhong}</div>
-              </div>
-            </>
-          )}
+              
         </div>
       </div>
       <div className="relative h-full">
@@ -102,6 +95,7 @@ const ViewBuonPhong = ({ room, updateRoomStatus, updateRoomCheckIn }) => {
             status={room.trangThaiVeSinh}
             trangThaiHienTai={room.trangThaiHienTai}
           />
+          
         </div>
       </div>
 

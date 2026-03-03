@@ -75,7 +75,7 @@ const DichVuMienPhi = ({
 
   const fetchAllDichVuMienPhi = async () => {
     try {
-      const response = await getAllDichVuMienPhi(navigate)
+      const response = await getAllDichVuMienPhi()
       if (response) {
         setAllDichVuMienPhi(response)
       }
@@ -89,7 +89,7 @@ const DichVuMienPhi = ({
     try {
       setLoading(true)
 
-      const response = await getListDichVuMienPhi(ma_xepphong, navigate)
+      const response = await getListDichVuMienPhi(ma_xepphong)
       if (response) {
         // Lấy ngày được chọn theo định dạng YYYY-MM-DD
         const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
@@ -159,10 +159,19 @@ const DichVuMienPhi = ({
       return addToast(exampleToast('⚠️ Mã xếp phòng không hợp lệ'))
     }
 
+    const fullList = Object.entries(soLuongDichVu)
+      .filter(([, soLuong]) => soLuong > 0)
+      .map(([maDichVu, soLuong]) => ({
+        xepPhongBooking: { maChiTietBooking: ma_xepphong },
+        dichVuMienPhi: { maDichVuMienPhi: maDichVu },
+        soLuong: soLuong,
+        ngayBoSung: format(selectedDate, 'yyyy-MM-dd'),
+      }))
+
     try {
       setTrangthaiload(true)
       const response = await createDichVuMienPhi(
-        dichVuMienPhiList,
+        fullList,
         ma_xepphong,
         format(selectedDate, 'yyyy-MM-dd'),
         navigate

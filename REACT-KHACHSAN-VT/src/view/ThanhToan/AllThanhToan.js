@@ -23,7 +23,6 @@ import {
 } from '@coreui/react-pro'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faFileInvoiceDollar,
   faPrint,
   faChevronRight,
   faCheck,
@@ -588,7 +587,7 @@ const AllThanhToan = () => {
       try {
         setLoadSubmit(true)
         // 5. Gọi API nếu dữ liệu hợp lệ
-        const response = await createAllThongTinThanhToan(ma_booking, thanhToanRequest, navigate)
+        const response = await createAllThongTinThanhToan(ma_booking, thanhToanRequest)
         // const response = []
         console.log('createHoaDon successfully:', response)
         // setLoadSubmit(false)
@@ -1513,7 +1512,7 @@ const AllThanhToan = () => {
                     </div> */}
 
                     {/* Danh sách dịch vụ miễn phí */}
-                    {!selectedPhong.daThanhToan && (
+                    {/* {!selectedPhong.daThanhToan && (
                       <div className="relative mb-3 mt-4">
                         <span className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold">
                           Danh sách dịch vụ miễn phí
@@ -1597,7 +1596,7 @@ const AllThanhToan = () => {
                           </CTable>
                         </div>
                       </div>
-                    )}
+                    )} */}
                   </div>
                 )}
               </CModalBody>

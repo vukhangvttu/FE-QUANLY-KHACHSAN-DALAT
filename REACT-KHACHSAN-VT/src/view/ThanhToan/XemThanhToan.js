@@ -675,7 +675,7 @@ const XemThanhToan = () => {
                       </CTable>
 
                       {/* Bảng danh sách dịch vụ miễn phí */}
-                      {selectedPhong.danhSachDichVuMienPhi &&
+                      {/* {selectedPhong.danhSachDichVuMienPhi &&
                         selectedPhong.danhSachDichVuMienPhi.length > 0 && (
                           <div className="mt-4">
                             <h5 className="mb-3 text-blue-600 fw-bold">
@@ -710,7 +710,7 @@ const XemThanhToan = () => {
                               </CTableBody>
                             </CTable>
                           </div>
-                        )}
+                        )} */}
                     </div>
                   )}
                 </CModalBody>

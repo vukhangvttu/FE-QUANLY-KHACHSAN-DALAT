@@ -19,7 +19,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDeleteLeft, faFloppyDisk, faCirclePlus } from '@fortawesome/free-solid-svg-icons'
 
-const ChiTietPhieuNhapModal = ({ visible, onClose, chiTietPhieu, dichVuList, onSave, onDeleteRow }) => {
+const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu, dichVuList, onSave, onDeleteRow }) => {
   const [editedRows, setEditedRows] = useState([])
 
   // Load dữ liệu vào state khi modal mở
@@ -111,8 +111,13 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, chiTietPhieu, dichVuList, onS
 
   // Xử lý lưu
   const handleSaveChanges = () => {
+    
+    if (!maPhieuNhapHang) {
+      alert('Không tìm thấy mã phiếu nhập hàng')
+      return
+    }
 
-    const dataToSave = editedRows
+    const danhSachChiTiet = editedRows
       .filter(row => !row.daXoa) // Chỉ lưu các dòng chưa bị xóa
       .map(row => ({
         maNhapHang: row.maNhapHang ? row.maNhapHang : '', // Nếu có maNhapHang thì giữ nguyên, không thì để ""
@@ -122,9 +127,10 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, chiTietPhieu, dichVuList, onS
         ghiChu: row.ghiChu,
       }))
 
-    console.log('Danh sách toàn bộ chi tiết phiếu nhập hàng:', dataToSave)
+    console.log('Mã phiếu nhập hàng:', maPhieuNhapHang)
+    console.log('Danh sách chi tiết:', danhSachChiTiet)
     
-    onSave(dataToSave)
+    onSave(maPhieuNhapHang, danhSachChiTiet)
   }
   return (
     <CModal size="xl" visible={visible} onClose={onClose} backdrop="static" >
@@ -266,9 +272,11 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, chiTietPhieu, dichVuList, onS
 ChiTietPhieuNhapModal.propTypes = {
   visible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+    maPhieuNhapHang: PropTypes.string,
   chiTietPhieu: PropTypes.shape({
     result: PropTypes.arrayOf(PropTypes.shape({
       maNhapHang: PropTypes.number,
+      maPhieuNhapHang: PropTypes.string,
       dichVuMienPhi: PropTypes.shape({
         maDichVuMienPhi: PropTypes.string,
         tenDichVuMienPhi: PropTypes.string,

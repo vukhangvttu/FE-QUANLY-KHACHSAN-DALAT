@@ -20,6 +20,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useDuBaoRooms, useRooms } from './hooks'
 import ViewBuonPhong from '../buonphong/ViewBuonPhong'
 import ImportHangHoa from '../buonphong/ImportHangHoa'
+import TonKho from '../buonphong/TonKho'
+import ThongKeNhapXuat from '../buonphong/ThongKeNhapXuat'
 import ViewNhaHang from '../NhaHang/ViewNhaHang'
 import DuBaoLoaiPhong from '../dubao/DuBaoLoaiPhong'
 import LineDuBaoPhong from '../dubao/LineDuBaoPhong'
@@ -656,6 +658,28 @@ const HotelManagement = () => {
                       <i className="fa-solid fa-file-import"></i>
                       Import
                     </button>
+                    <button
+                      className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
+                        activeBuonPhongTab === 'tonkho'
+                          ? 'border-blue-500 text-blue-600 font-semibold'
+                          : 'border-transparent text-gray-600 hover:text-blue-500'
+                      }`}
+                      onClick={() => setActiveBuonPhongTab('tonkho')}
+                    >
+                      <i className="fa-solid fa-warehouse"></i>
+                      Tồn kho
+                    </button>
+                    <button
+                      className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
+                        activeBuonPhongTab === 'thongke'
+                          ? 'border-blue-500 text-blue-600 font-semibold'
+                          : 'border-transparent text-gray-600 hover:text-blue-500'
+                      }`}
+                      onClick={() => setActiveBuonPhongTab('thongke')}
+                    >
+                      <i className="fa-solid fa-chart-line"></i>
+                      Thống kê
+                    </button>
                   </div>
                 </div>
 
@@ -724,6 +748,14 @@ const HotelManagement = () => {
 
                 {activeBuonPhongTab === 'import' && (
                   <ImportHangHoa />
+                )}
+
+                {activeBuonPhongTab === 'tonkho' && (
+                  <TonKho />
+                )}
+
+                {activeBuonPhongTab === 'thongke' && (
+                  <ThongKeNhapXuat />
                 )}
               </CTabPanel>
             )}

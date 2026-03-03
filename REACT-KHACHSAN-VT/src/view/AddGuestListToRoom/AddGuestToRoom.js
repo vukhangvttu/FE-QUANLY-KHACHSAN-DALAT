@@ -29,9 +29,8 @@ import {
   faPenToSquare,
   faRotateLeft,
   faTrash,
-  faQrcode,
-  faStop,
   faPlus,
+  faImage,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
@@ -55,7 +54,7 @@ import {
   updateKhachHangPhong,
 } from 'src/service/KhacHangPhongService'
 import XoaThongTinKhach_Phong from '../modal/XoaThongTinKhach_Phong'
-import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode'
+import axiosInstance from '../../service/axiosConfig'
 import PhuongXaModal from '../modal/PhuongXaModal'
 
 const AddGuestToRoom = () => {
@@ -757,51 +756,127 @@ const AddGuestToRoom = () => {
     </CToast>
   )
 
-  const [isScanning, setIsScanning] = useState(false)
-  const [scannedData, setScannedData] = useState('')
-  const scannerRef = useRef(null)
+  const fileInputRef = useRef(null)
+  const [fileUploading, setFileUploading] = useState(false)
+  const [previewImage, setPreviewImage] = useState(null)
 
-  useEffect(() => {
-    // Cleanup function to stop scanner when component unmounts
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear()
-      }
-    }
-  }, [])
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
-  useEffect(() => {
-    // Khởi tạo scanner khi isScanning thay đổi thành true
-    if (isScanning && !scannerRef.current) {
-      const scanner = new Html5QrcodeScanner('qr-reader', {
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
-        fps: 10,
-        aspectRatio: 1.0,
-        formatsToSupport: ['QR_CODE'],
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_FILE],
-        showTorchButtonIfSupported: false,
-        hideVideoElement: true,
-        verbose: false,
+    // Hiển thị preview ảnh
+    const imageUrl = URL.createObjectURL(file)
+    setPreviewImage(imageUrl)
+
+    // Reset form về trạng thái mặc định trước khi xử lý ảnh mới
+    setKhachHangPhong(initialFormState)
+    setDisplayDate('')
+    setIscheck('0')
+    setValueTinh(null)
+    setValueHuyen(null)
+    setValuePhungXa(null)
+    setDataQR(null)
+    setAn(true)
+
+    setFileUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const response = await axiosInstance.post('/cccd', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000,
       })
 
-      scanner.render(onScanSuccess, onScanError)
-      scannerRef.current = scanner
+      const data = response.data
+      if (data && data.soCccd) {
+        addToast(exampleToast('✔️ Đã đọc thành công thông tin từ CCCD'))
+        await fillFormFromCCCDApi(data)
+      } else {
+        addToast(exampleToast('❌ Không nhận diện được thông tin CCCD từ ảnh.'))
+      }
+    } catch (err) {
+      console.warn('Lỗi gọi API CCCD:', err)
+      const msg = err.response?.data?.message || 'Không thể đọc thông tin từ ảnh CCCD.'
+      addToast(exampleToast('❌ ' + msg))
+    } finally {
+      setFileUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
-  }, [isScanning])
-
-  const startScanner = () => {
-    setIsScanning(true)
   }
 
-  const stopScanner = () => {
-    if (scannerRef.current) {
-      scannerRef.current.clear()
-      scannerRef.current = null
+  const fillFormFromCCCDApi = async (data) => {
+    try {
+      const hoVaTen = data.hoVaTen || ''
+      const nameParts = hoVaTen.trim().split(/\s+/)
+      const ten = nameParts.pop() || ''
+      const ho = nameParts.join(' ')
+
+      let ngaySinhFormatted = ''
+      if (data.ngaySinh) {
+        const parts = data.ngaySinh.split('/')
+        if (parts.length === 3) {
+          ngaySinhFormatted = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
+        }
+      }
+
+      const cccdType = loaiGiayTo.find((type) =>
+        type.tenLoaiGiaTo.toLowerCase().includes('cccd'),
+      )
+
+      const queQuan = data.queQuan || ''
+      const queQuanParts = queQuan.split(',').map((p) => p.trim())
+      const tenTinh = queQuanParts[queQuanParts.length - 1] || ''
+      const rawHuyen = queQuanParts[queQuanParts.length - 2] || ''
+      const tenHuyen = rawHuyen
+        .replace(/^(H\.|Q\.|Huyện|Quận|TX\.|Thị xã|TP\.|Thành phố)\s*/i, '')
+        .trim()
+      const rawXa = queQuanParts[queQuanParts.length - 3] || ''
+      const tenXa = rawXa
+        .replace(/^(X\.|P\.|Xã|Phường|TT\.|Thị trấn)\s*/i, '')
+        .trim()
+
+      const isNam = data.gioiTinh === 'Nam'
+
+      setKhachHangPhong((prev) => ({
+        ...prev,
+        ho: ho,
+        ten: ten,
+        ngaySinh: ngaySinhFormatted || prev.ngaySinh,
+        diaChi: queQuan,
+        soGiayTo: data.soCccd || '',
+        gioiTinh: isNam ? '1' : '2',
+        loaiGiayTo: cccdType || prev.loaiGiayTo,
+        danhXung: {
+          maDanhXung: isNam ? 'Mr' : 'Miss',
+        },
+      }))
+
+      setIscheck(isNam ? '1' : '2')
+
+      if (ngaySinhFormatted) {
+        const dateObj = new Date(ngaySinhFormatted)
+        if (!isNaN(dateObj.getTime())) {
+          setDisplayDate(format(dateObj, 'dd/MM/yyyy'))
+        }
+      }
+
+      if (tenTinh) {
+        const tinhResult = await findAndSelectTinh(tenTinh)
+        if (tinhResult?.tinh && tenHuyen) {
+          const huyenResult = await findAndSelectHuyen(tenHuyen, tinhResult.tinh.maTinh)
+          if (huyenResult?.huyen && tenXa) {
+            await findAndSelectPhuongXa(tenXa, huyenResult.huyen.maHuyen)
+          }
+        }
+      }
+
+      addToast(exampleToast('✔️ Đã điền thành công thông tin từ CCCD'))
+      setDataQR('')
+    } catch (error) {
+      console.error('Lỗi xử lý dữ liệu CCCD từ API:', error)
+      addToast(exampleToast('❌ Lỗi khi điền dữ liệu CCCD vào form.'))
     }
-    setIsScanning(false)
   }
 
   const formatDate = (dateStr) => {
@@ -1034,33 +1109,10 @@ const AddGuestToRoom = () => {
   const [dataQR, setDataQR] = useState(null)
   const inputRef = useRef(null) // Tạo tham chiếu đến ô input
 
-  const onScanSuccess = async (decodedText) => {
-    console.log('QR Code decoded:', decodedText)
-    console.log('bắt đầu format dữ liệu')
-    stopScanner()
-
-    if (decodedText !== '') addToast(exampleToast('✔️ Đã quét thành công thông tin từ CCCD'))
-    setDataQR(decodedText)
-    // Đợi state cập nhật xong, sau đó focus vào input
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus()
-      }
-    }, 100) // Đợi 100ms để đảm bảo state cập nhật
-  }
-
-  const onScanError = (error) => {
-    // Chỉ log lỗi nghiêm trọng, bỏ qua lỗi không đọc được QR
-    if (error?.name !== 'NotFoundException') {
-      console.warn(error)
-    }
-  }
-
   const handleScanInputKeyPress = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault()
       onScanSuccessDataQR(dataQR)
-      setScannedData('')
     }
   }
 
@@ -1209,19 +1261,29 @@ const AddGuestToRoom = () => {
                   <span className="text-red-500">Phòng: {tenPhong}</span>
                 </span>
                 <div className="border-2 border-gray-500 rounded-md p-4">
-                  <div className="mb-4 flex justify-start gap-2">
+                  <div className="mb-4 flex flex-wrap justify-start gap-2 items-center">
                     <CButton
                       color="primary"
                       variant="outline"
-                      onClick={isScanning ? stopScanner : startScanner}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={fileUploading}
                     >
-                      <FontAwesomeIcon icon={isScanning ? faStop : faQrcode} className="me-2" />
-                      {isScanning ? 'Dừng quét' : 'Quét CCCD từ ảnh'}
+                      <FontAwesomeIcon icon={faImage} className="me-2" />
+                      {fileUploading ? 'Đang xử lý...' : 'Chọn ảnh CCCD'}
                     </CButton>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      disabled={fileUploading}
+                    />
+
                     <CInputGroup className="max-w-4xl">
                       <CFormInput
                         type="text"
-                        placeholder="Dữ liệu QR CCCD"
+                        placeholder="Dữ liệu QR CCCD (nhập thủ công)"
                         value={dataQR}
                         ref={inputRef}
                         onChange={(e) => setDataQR(e.target.value)}
@@ -1231,76 +1293,35 @@ const AddGuestToRoom = () => {
                     </CInputGroup>
                   </div>
 
-                  {isScanning && (
-                    <div className="mb-4 qr-container">
-                      <div className="text-center mb-3">
-                        <p className="text-lg font-semibold mb-2">Hướng dẫn quét mã QR:</p>
-                        <ul className="text-left list-disc list-inside">
-                          <li>Chọn ảnh chụp mã QR từ CCCD</li>
-                          <li>Đảm bảo ảnh rõ nét và mã QR không bị mờ</li>
-                          <li>Định dạng ảnh hỗ trợ: JPG, PNG</li>
-                        </ul>
-                      </div>
-                      <div id="qr-reader" className="qr-reader"></div>
-                      <style>
-                        {`
-                          .qr-container {
-                            max-width: 600px;
-                            margin: 0 auto;
-                            padding: 20px;
-                            background: #f8f9fa;
-                            border-radius: 8px;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                          }
-                          .qr-reader {
-                            width: 100% !important;
-                            border: none !important;
-                            box-shadow: none !important;
-                          }
-                          #qr-reader__dashboard {
-                            padding: 10px;
-                            background: white;
-                            border-radius: 8px;
-                            margin-top: 10px;
-                          }
-                          #qr-reader__dashboard button {
-                            background: #321fdb;
-                            color: white;
-                            border: none;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            margin: 5px;
-                          }
-                          #qr-reader__dashboard button:hover {
-                            background: #1b2e4b;
-                          }
-                          #qr-reader__dashboard input[type="file"] {
-                            display: none;
-                          }
-                          #qr-reader__dashboard label {
-                            background: #321fdb;
-                            color: white;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            margin: 5px;
-                            display: inline-block;
-                          }
-                          #qr-reader__dashboard label:hover {
-                            background: #1b2e4b;
-                          }
-                          #qr-reader__status_span {
-                            color: #664d03;
-                            background-color: #fff3cd;
-                            border: 1px solid #ffecb5;
-                            padding: 10px;
-                            border-radius: 4px;
-                            margin: 10px 0;
-                            display: block;
-                          }
-                        `}
-                      </style>
+                  {(fileUploading || previewImage) && (
+                    <div className="mb-4 flex gap-4 items-start">
+                      {previewImage && (
+                        <div className="relative">
+                          <img
+                            src={previewImage}
+                            alt="Ảnh CCCD"
+                            className="rounded-lg border shadow-sm"
+                            style={{ maxWidth: '300px', maxHeight: '200px', objectFit: 'contain' }}
+                          />
+                          {!fileUploading && (
+                            <button
+                              type="button"
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                              onClick={() => setPreviewImage(null)}
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {fileUploading && (
+                        <div className="flex items-center gap-2 py-4">
+                          <CSpinner color="primary" size="sm" />
+                          <span className="text-sm text-gray-600">
+                            Đang nhận diện thông tin CCCD...
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
 

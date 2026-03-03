@@ -8,7 +8,7 @@ const AppFooter = () => {
         <a href="https://vttu.edu.vn/" target="_blank" rel="noopener noreferrer">
           VTTU
         </a>
-        <span className="ms-1">&copy; 2025</span>
+        <span className="ms-1">&copy; 2026</span>
       </div>
       {/* <div className="ms-auto">
         <span className="me-1">Powered by</span>

@@ -27,20 +27,14 @@ const ImportHangHoa = () => {
   const [invalidRows, setInvalidRows] = useState([]) // Các dòng có mã hàng không hợp lệ
   const [dichVuList, setDichVuList] = useState([]) // Danh sách dịch vụ từ API
   const [phieuNhapList, setPhieuNhapList] = useState([]) // Danh sách phiếu nhập hàng
+  const [maPhieuNhapHang, setMaPhieuNhapHang] = useState(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [chiTietPhieu, setChiTietPhieu] = useState(null)
   const [toast, addToast] = useState(0)
   const toaster = useRef()
   const fileInputRef = useRef(null)
 
-  // Hàm loại bỏ dấu tiếng Việt để so sánh
-  const removeVietnameseTones = (str) => {
-    return str
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd')
-      .replace(/Đ/g, 'D')
-  }
+
 
   const exampleToast = (message) => (
     <CToast>
@@ -82,6 +76,7 @@ const ImportHangHoa = () => {
     }
   }
 
+  // Load danh sách tồn kho
   // Xem chi tiết phiếu nhập hàng
   const handleViewDetail = async (maPhieuNhap) => {
     try {
@@ -90,6 +85,7 @@ const ImportHangHoa = () => {
       console.log('Chi tiết data:', response.data)
       
       setChiTietPhieu(response.data)
+      setMaPhieuNhapHang(maPhieuNhap)
       setModalVisible(true)
     } catch (error) {
       console.error('Lỗi load chi tiết phiếu nhập hàng:', error)
@@ -124,9 +120,13 @@ const ImportHangHoa = () => {
   }
 
   // Lưu thay đổi chi tiết phiếu nhập hàng
-  const handleSaveDetailChanges = async (dataToSave) => {
+  const handleSaveDetailChanges = async (maPhieuNhapHang, danhSach) => {
     try {
-      const response = await axiosInstance.put('/phieu-nhap-hang/cap-nhat', dataToSave)
+      console.log('Gửi PUT request tới:', `/phieu-nhap-hang/${maPhieuNhapHang}`)
+      console.log('Danh sách chi tiết (RequestBody):', danhSach)
+      
+      // Backend nhận List<NhapHangRequest> trực tiếp trong body, không cần wrap object
+      const response = await axiosInstance.put(`/phieu-nhap-hang/${maPhieuNhapHang}`, danhSach)
       
       if (response.data && response.data.code === 200) {
         addToast(exampleToast('✔️ Cập nhật phiếu nhập hàng thành công'))
@@ -389,83 +389,83 @@ const ImportHangHoa = () => {
     <>
       <CToaster className="p-3" placement="top-end" push={toast} ref={toaster} />
       
-     
-
-      {/* Form nhập hàng */}
-      <CCard className='mb-4'>
+      {/* Tabs Navigation */}
+      <CCard className="mb-4">
         <CCardBody>
           <div className="mb-3">
             <h5 className="mb-3">Nhập hàng vào kho</h5>
-            
-            <div className="d-flex gap-2 mb-3">
-              <CButton
-                color="success"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <FontAwesomeIcon icon={faFileExcel} className="me-2" />
-                Import từ Excel
-              </CButton>
-              
-              <CButton
-                color="info"
-                variant="outline"
-                onClick={handleExportTemplate}
-              >
-                <FontAwesomeIcon icon={faFileExcel} className="me-2" />
-                Tải template Excel
-              </CButton>
-              
-              <CButton
-                color="primary"
-                variant="outline"
-                onClick={handleAddRow}
-              >
-                <FontAwesomeIcon icon={faCirclePlus} className="me-2" />
-                Thêm dòng
-              </CButton>
-            </div>
+                
+                <div className="d-flex gap-2 mb-3">
+                  <CButton
+                    color="success"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <FontAwesomeIcon icon={faFileExcel} className="me-2" />
+                    Import từ Excel
+                  </CButton>
+                  
+                  <CButton
+                    color="info"
+                    variant="outline"
+                    onClick={handleExportTemplate}
+                  >
+                    <FontAwesomeIcon icon={faFileExcel} className="me-2" />
+                    Tải template Excel
+                  </CButton>
+                  
+                  <CButton
+                    color="primary"
+                    variant="outline"
+                    onClick={handleAddRow}
+                  >
+                    <FontAwesomeIcon icon={faCirclePlus} className="me-2" />
+                    Thêm dòng
+                  </CButton>
+                </div>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx, .xls"
-              style={{ display: 'none' }}
-              onChange={handleImportExcel}
-            />
-          </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx, .xls"
+                  style={{ display: 'none' }}
+                  onChange={handleImportExcel}
+                />
+              </div>
 
-          {/* Bảng cảnh báo các mã hàng không hợp lệ */}
-          <InvalidRowsAlert 
-            invalidRows={invalidRows}
-            onRemoveRow={handleRemoveInvalidRow}
-          />
+              {/* Bảng cảnh báo các mã hàng không hợp lệ */}
+              <InvalidRowsAlert 
+                invalidRows={invalidRows}
+                onRemoveRow={handleRemoveInvalidRow}
+              />
 
-          {/* Bảng nhập hàng */}
-          <TableNhapHang
-            rows={rows}
-            dichVuList={dichVuList}
-            onMaHangChange={handleMaHangChange}
-            onCellChange={handleCellChange}
-            onRemoveRow={handleRemoveRow}
-          />
+              {/* Bảng nhập hàng */}
+              <TableNhapHang
+                rows={rows}
+                dichVuList={dichVuList}
+                onMaHangChange={handleMaHangChange}
+                onCellChange={handleCellChange}
+                onRemoveRow={handleRemoveRow}
+              />
 
-          <div className="d-flex justify-content-end mt-3">
-            <CButton color="primary" onClick={handleSave}>
-              <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
-              Lưu
-            </CButton>
-          </div>
+              <div className="d-flex justify-content-end mt-3">
+                <CButton color="primary" onClick={handleSave}>
+                  <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+                  Lưu
+                </CButton>
+              </div>
+
+              {/* Danh sách phiếu nhập hàng */}
+              <div className="mt-4">
+                <DanhSachPhieuNhap
+                  phieuNhapList={phieuNhapList}
+                  onRefresh={loadPhieuNhapHang}
+                  onViewDetail={handleViewDetail}
+                  onDelete={handleDelete}
+                />
+              </div>
         </CCardBody>
       </CCard>
-
-       {/* Danh sách phiếu nhập hàng */}
-      <DanhSachPhieuNhap
-        phieuNhapList={phieuNhapList}
-        onRefresh={loadPhieuNhapHang}
-        onViewDetail={handleViewDetail}
-        onDelete={handleDelete}
-      />
 
       {/* Modal chi tiết phiếu nhập hàng */}
       <ChiTietPhieuNhapModal
@@ -474,6 +474,7 @@ const ImportHangHoa = () => {
           setModalVisible(false)
           setChiTietPhieu(null)
         }}
+        maPhieuNhapHang={maPhieuNhapHang}
         chiTietPhieu={chiTietPhieu}
         dichVuList={dichVuList}
         onSave={handleSaveDetailChanges}

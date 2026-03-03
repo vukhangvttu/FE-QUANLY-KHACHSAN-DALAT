@@ -1,0 +1,67 @@
+---
+alwaysApply: true
+---
+
+---
+description: Patterns for modal components in src/view/modal/
+globs: src/view/modal/**/*.js
+alwaysApply: false
+---
+
+# Modal Component Patterns
+
+## Standard Modal Structure
+import React, { useState, useEffect } from 'react'
+import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
+  CButton, CForm, CFormInput, CFormLabel, CRow, CCol } from '@coreui/react-pro'
+import PropTypes from 'prop-types'
+
+const FeatureModal = ({ visible, onClose, itemId, onSuccess }) => {
+  const [formData, setFormData] = useState({})
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (visible && itemId) {
+      // Load data when modal opens
+    }
+  }, [visible, itemId])
+
+  const handleSave = async () => {
+    setLoading(true)
+    try {
+      // API call
+      onSuccess?.()
+      onClose()
+    } catch (error) {
+      console.log('Lỗi:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <CModal visible={visible} onClose={onClose} backdrop="static" size="lg">
+      <CModalHeader>
+        <CModalTitle>Modal Title</CModalTitle>
+      </CModalHeader>
+      <CModalBody>
+        {/* Form content */}
+      </CModalBody>
+      <CModalFooter>
+        <CButton color="secondary" onClick={onClose}>Đóng</CButton>
+        <CButton color="primary" onClick={handleSave} disabled={loading}>
+          {loading ? 'Đang lưu...' : 'Lưu'}
+        </CButton>
+      </CModalFooter>
+    </CModal>
+  )
+}
+
+FeatureModal.propTypes = {
+  visible: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  itemId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onSuccess: PropTypes.func,
+}
+
+export default FeatureModal

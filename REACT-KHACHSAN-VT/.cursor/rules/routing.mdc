@@ -1,0 +1,23 @@
+---
+alwaysApply: true
+---
+
+---
+description: Routing conventions for adding new routes
+globs: src/routes.js
+alwaysApply: false
+---
+
+# Routing Conventions
+
+## Adding New Routes
+// 1. Lazy import ở đầu file
+const NewFeature = React.lazy(() => import('./view/feature-folder/FeatureName'))
+
+// 2. Thêm vào mảng routes
+{
+  path: '/dashboard/pos/new-feature',
+  name: 'Tên hiển thị',
+  element: NewFeature,
+  exact: true,
+}

@@ -25,25 +25,6 @@ import { ROOM_ACTIONS } from '../chatroom/constants'
 import { Popover } from 'flowbite-react'
 import XuatPhieuChiTietDatPhongModal from '../modal/XuatPhieuChiTietDatPhongModal'
 
-const getBadge = (status) => {
-  switch (status) {
-    case 'Active': {
-      return 'success'
-    }
-    case 'Inactive': {
-      return 'secondary'
-    }
-    case 'Pending': {
-      return 'warning'
-    }
-    case 'Banned': {
-      return 'danger'
-    }
-    default: {
-      return 'primary'
-    }
-  }
-}
 
 const getStatusColor = (maTrangThai) => {
   switch (maTrangThai) {
@@ -267,19 +248,12 @@ const DanhSachDatPhong = () => {
                       letterSpacing: '0.5px',
                     }}
                   >
-                    {item.so_phong_da_thanh_toan !== 0 &&
-                    item.so_phong_da_thanh_toan !== item.tong_so_phong
-                      ? 'Thanh toán ' + item.trang_thai_thanh_toan
-                      : item.ten_trang_thai}
+                    {item.ten_trang_thai}
                   </CBadge>
                 </td>
               ),
               tongtien: (item) => <td>{(item?.tong_tien).toLocaleString('en-US')}</td>,
-              status: (item) => (
-                <td>
-                  <CBadge color={getBadge(item.status)}>{item.status}</CBadge>
-                </td>
-              ),
+              
               show_details: (item) => {
                 // if (item.trang_thai === 4) {
                 //   return <td></td>
