@@ -1,6 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Buffer } from 'buffer'
-import { Document, Page, Text, View, StyleSheet, PDFViewer, Image, Font } from '@react-pdf/renderer'
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFViewer,
+  Image,
+  Font,
+  pdf,
+} from '@react-pdf/renderer'
 import { AllThongTinKhachHang } from 'src/service/ThanhToanService'
 import { useParams } from 'react-router-dom'
 import PropTypes from 'prop-types'
@@ -9,12 +19,14 @@ import contactImg from 'src/assets/images/contact.png'
 import { format, parseISO } from 'date-fns'
 
 import logoImg from 'src/assets/images/logovaddresmoi.jpg.png'
-
+import * as pdfjsLib from 'pdfjs-dist/build/pdf'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry'
 import {
   getThongTinXuatPhieuChiTietBooking,
   getThongTinXuatPhieuChiTietPhuThuBooking,
 } from 'src/service/APIService'
 window.Buffer = Buffer
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 // Đăng ký font
 Font.register({
   family: 'Times New Roman',
@@ -473,7 +485,7 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
               Người liên hệ:
             </Text>
             <Text style={[styles.cell, styles.colNote, { borderTopWidth: 1, paddingTop: 4 }]}>
-              Mr/Ms/Mss {thongTinKhachHang?.ten}
+              Mr/Ms/Mss {thongTinKhachHang?.ten || thongTinKhachHang?.tenkhachhang || ''}
             </Text>
           </View>
           <View style={styles.tableRow}>
@@ -676,6 +688,7 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
   const ma_booking = maBookingProp || ma_booking_param
 
   const [loading, setLoading] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [thongTinKhachHang, setThongTinKhachHang] = useState(null)
   const [thongTinThanhToan, setThongTinThanhToan] = useState(null)
   const [thongTinPhuThu, setThongTinPhuThu] = useState(null)
@@ -711,21 +724,111 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
       fetchData()
     }
   }, [ma_booking])
+  const handleDownloadImage = useCallback(async () => {
+    if (!thongTinKhachHang || !thongTinThanhToan) return
+    setDownloading(true)
+    try {
+      const blob = await pdf(
+        <HotelRegistrationForm
+          thongTinKhachHang={thongTinKhachHang}
+          thongTinThanhToan={thongTinThanhToan}
+          thongTinPhuThu={thongTinPhuThu}
+        />,
+      ).toBlob()
+
+      const arrayBuffer = await blob.arrayBuffer()
+      const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+      const scale = 3
+
+      if (pdfDoc.numPages === 1) {
+        const page = await pdfDoc.getPage(1)
+        const viewport = page.getViewport({ scale })
+        const canvas = document.createElement('canvas')
+        canvas.width = viewport.width
+        canvas.height = viewport.height
+        const ctx = canvas.getContext('2d')
+        await page.render({ canvasContext: ctx, viewport }).promise
+
+        const link = document.createElement('a')
+        link.download = `ChiTietDatPhong_${thongTinKhachHang.ma_booking}.png`
+        link.href = canvas.toDataURL('image/png')
+        link.click()
+      } else {
+        let totalHeight = 0
+        let maxWidth = 0
+
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i)
+          const viewport = page.getViewport({ scale })
+          totalHeight += viewport.height
+          if (viewport.width > maxWidth) {
+            maxWidth = viewport.width
+          }
+        }
+
+        const bigCanvas = document.createElement('canvas')
+        bigCanvas.width = maxWidth
+        bigCanvas.height = totalHeight
+        const bigCtx = bigCanvas.getContext('2d')
+
+        let currentY = 0
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i)
+          const viewport = page.getViewport({ scale })
+          const pageCanvas = document.createElement('canvas')
+          pageCanvas.width = viewport.width
+          pageCanvas.height = viewport.height
+          const pageCtx = pageCanvas.getContext('2d')
+
+          await page.render({ canvasContext: pageCtx, viewport }).promise
+          bigCtx.drawImage(pageCanvas, 0, currentY)
+          currentY += pageCanvas.height
+        }
+
+        const link = document.createElement('a')
+        link.download = `ChiTietDatPhong_${thongTinKhachHang.ma_booking}_all.png`
+        link.href = bigCanvas.toDataURL('image/png')
+        link.click()
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải ảnh:', error)
+    } finally {
+      setDownloading(false)
+    }
+  }, [thongTinKhachHang, thongTinThanhToan, thongTinPhuThu])
 
   return (
-    <div className="w-full flex justify-center items-center" style={{ height: '90vh' }}>
-      <PDFViewer style={{ width: '60vh', height: '90vh' }}>
-        {thongTinKhachHang && thongTinThanhToan ? (
-          <HotelRegistrationForm
-            thongTinKhachHang={thongTinKhachHang}
-            thongTinThanhToan={thongTinThanhToan}
-            thongTinPhuThu={thongTinPhuThu}
-          />
-        ) : (
-          <p>Đang tải dữ liệu...</p>
-        )}
-      </PDFViewer>
-      {/* You can also add a download button that uses ReactPDF.pdf(HotelRegistrationPDFDownload).toBlob().then(...) */}
+    <div className="w-full flex flex-col items-center" style={{ height: '90vh' }}>
+      <div style={{ marginBottom: 10, display: 'flex', gap: 10 }}>
+        <button
+          onClick={handleDownloadImage}
+          disabled={downloading || !thongTinKhachHang || !thongTinThanhToan}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: downloading ? '#ccc' : '#198754',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            cursor: downloading ? 'not-allowed' : 'pointer',
+            fontSize: 14,
+          }}
+        >
+          {downloading ? 'Đang tải...' : 'Tải ảnh PNG'}
+        </button>
+      </div>
+      <div className="w-full flex justify-center items-center" style={{ flex: 1 }}>
+        <PDFViewer style={{ width: '60vh', height: '90vh' }}>
+          {thongTinKhachHang && thongTinThanhToan ? (
+            <HotelRegistrationForm
+              thongTinKhachHang={thongTinKhachHang}
+              thongTinThanhToan={thongTinThanhToan}
+              thongTinPhuThu={thongTinPhuThu}
+            />
+          ) : (
+            <p>Đang tải dữ liệu...</p>
+          )}
+        </PDFViewer>
+      </div>
     </div>
   )
 }

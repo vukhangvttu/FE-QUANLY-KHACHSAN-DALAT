@@ -1,7 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Buffer } from 'buffer'
-import { Document, Page, Text, View, StyleSheet, PDFViewer, Image, Font } from '@react-pdf/renderer'
-
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFViewer,
+  Image,
+  Font,
+  pdf,
+} from '@react-pdf/renderer'
+import * as pdfjsLib from 'pdfjs-dist/build/pdf'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry'
 import myImage from 'src/assets/images/Picture1.png'
 import imageMacDinh from 'src/assets/images/Picture2.png'
 import { AllThongTinKhachHang, getThongTinXuatPhieuDangKy } from 'src/service/ThanhToanService'
@@ -9,7 +20,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { format, parseISO } from 'date-fns'
 import { getThongTinXuatPhieuChiTietPhuThuBooking } from 'src/service/APIService'
+
 window.Buffer = Buffer
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 // Đăng ký font
 Font.register({
   family: 'Times New Roman',
@@ -44,25 +57,20 @@ const styles = StyleSheet.create({
     // fontFamily: 'Helvetica',
   },
   outerBorder: {
-    // border: '2 solid #B71C1C',
-    // padding: 0.4,
-
-    // width: '100%',
-    // height: '100%',
     border: '2 solid #B71C1C',
     width: '100%',
-    height: '100%',
+    minHeight: '100%',
     padding: 0,
     margin: 0,
   },
   innerBorder: {
     border: '2 solid #B71C1C',
     width: '100%',
-    height: '100%',
+    minHeight: '100%',
     paddingLeft: 10,
     paddingTop: 10,
     paddingRight: 3,
-    paddingBottom: 0, // Để sát đáy
+    paddingBottom: 10,
     margin: 0,
     boxSizing: 'border-box',
   },
@@ -518,7 +526,7 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
                           <Text>{row.so_dem}</Text>
                         </View>
                         <View style={[styles.emptyCell, { width: '17%' }]}>
-                          <Text>{formatCurrency(row.gia)}</Text>
+                          <Text>{formatCurrency(row.don_gia)}</Text>
                         </View>
                         <View style={[styles.emptyCell, { width: '12%' }]}>
                           <Text>{formatCurrency(row.tong_tien)}</Text>
@@ -798,6 +806,7 @@ const App = () => {
   const { ma_booking } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [thongTinKhachHang, setThongTinKhachHang] = useState(null)
   const [thongTinThanhToan, setThongTinThanhToan] = useState(null)
   const [thongTinPhuThu, setThongTinPhuThu] = useState(null)
@@ -812,11 +821,9 @@ const App = () => {
       ])
 
       if (khachHangData) {
-        console.log('khachHangData', khachHangData)
         setThongTinKhachHang(khachHangData)
       }
       if (thanhToanData) {
-        console.log('thanhToanData', thanhToanData)
         setThongTinThanhToan(thanhToanData)
       }
       if (phuThuData) {
@@ -829,16 +836,107 @@ const App = () => {
     }
   }
 
-  console.log('thongTinKhachHang', thongTinKhachHang)
-
   useEffect(() => {
     if (ma_booking) {
       fetchData()
     }
   }, [ma_booking])
 
+  const handleDownloadImage = useCallback(async () => {
+    if (!thongTinKhachHang || !thongTinThanhToan) return
+    setDownloading(true)
+    try {
+      const blob = await pdf(
+        <HotelRegistrationForm
+          thongTinKhachHang={thongTinKhachHang}
+          thongTinThanhToan={thongTinThanhToan}
+          thongTinPhuThu={thongTinPhuThu}
+        />,
+      ).toBlob()
+
+      const arrayBuffer = await blob.arrayBuffer()
+      const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+      const scale = 3
+
+      // Nếu chỉ có 1 trang thì render trực tiếp
+      if (pdfDoc.numPages === 1) {
+        const page = await pdfDoc.getPage(1)
+        const viewport = page.getViewport({ scale })
+        const canvas = document.createElement('canvas')
+        canvas.width = viewport.width
+        canvas.height = viewport.height
+        const ctx = canvas.getContext('2d')
+        await page.render({ canvasContext: ctx, viewport }).promise
+
+        const link = document.createElement('a')
+        link.download = `PhieuDangKy_${thongTinKhachHang.ma_booking}.png`
+        link.href = canvas.toDataURL('image/png')
+        link.click()
+      } else {
+        // Gom nhiều trang thành 1 ảnh duy nhất (nối dọc)
+        let totalHeight = 0
+        let maxWidth = 0
+
+        // Tính tổng chiều cao và chiều rộng lớn nhất
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i)
+          const viewport = page.getViewport({ scale })
+          totalHeight += viewport.height
+          if (viewport.width > maxWidth) {
+            maxWidth = viewport.width
+          }
+        }
+
+        const bigCanvas = document.createElement('canvas')
+        bigCanvas.width = maxWidth
+        bigCanvas.height = totalHeight
+        const bigCtx = bigCanvas.getContext('2d')
+
+        let currentY = 0
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i)
+          const viewport = page.getViewport({ scale })
+          const pageCanvas = document.createElement('canvas')
+          pageCanvas.width = viewport.width
+          pageCanvas.height = viewport.height
+          const pageCtx = pageCanvas.getContext('2d')
+
+          await page.render({ canvasContext: pageCtx, viewport }).promise
+          bigCtx.drawImage(pageCanvas, 0, currentY)
+          currentY += pageCanvas.height
+        }
+
+        const link = document.createElement('a')
+        link.download = `PhieuDangKy_${thongTinKhachHang.ma_booking}_all.png`
+        link.href = bigCanvas.toDataURL('image/png')
+        link.click()
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải ảnh:', error)
+    } finally {
+      setDownloading(false)
+    }
+  }, [thongTinKhachHang, thongTinThanhToan, thongTinPhuThu])
+
   return (
     <div>
+      <div style={{ marginBottom: 10, display: 'flex', gap: 10 }}>
+        <button
+          onClick={handleDownloadImage}
+          disabled={downloading || !thongTinKhachHang || !thongTinThanhToan}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: downloading ? '#ccc' : '#198754',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            cursor: downloading ? 'not-allowed' : 'pointer',
+            fontSize: 14,
+          }}
+        >
+          {downloading ? 'Đang tải...' : 'Tải ảnh PNG'}
+        </button>
+      </div>
       <PDFViewer style={{ width: '100%', height: '700px' }}>
         {thongTinKhachHang && thongTinThanhToan ? (
           <HotelRegistrationForm
@@ -850,7 +948,6 @@ const App = () => {
           <p>Đang tải dữ liệu...</p>
         )}
       </PDFViewer>
-      {/* You can also add a download button that uses ReactPDF.pdf(HotelRegistrationPDFDownload).toBlob().then(...) */}
     </div>
   )
 }

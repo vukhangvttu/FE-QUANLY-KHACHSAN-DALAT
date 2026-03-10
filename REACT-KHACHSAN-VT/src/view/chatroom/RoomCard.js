@@ -24,6 +24,7 @@ import DichVuMienPhi from '../modal/DichVuMienPhi'
 import ThongTinKhachHangTrenLine from '../modal/ThongTinKhachHangTrenLine'
 import { Popover } from 'flowbite-react'
 import GoCheckIn from '../modal/GoCheckIn'
+import CapNhatTraPhong from '../modal/CapNhatTraPhong'
 
 const RoomCard = ({
   room,
@@ -32,6 +33,7 @@ const RoomCard = ({
   updateRoomNgayDi,
   updateRoomChuyenPhong,
   updateRoomPhuThuTienGiuong,
+  updateRoomTraPhong,
 }) => {
   const [visibleCheckInBooKing, setVisibleCheckInBooKing] = useState(false)
   const [visibleGoCheckIn, setVisibleGoCheckIn] = useState(false)
@@ -184,6 +186,19 @@ const RoomCard = ({
     }
   }
 
+  const [visibleCapNhatTraPhong, setVisibleCapNhatTraPhong] = useState(false)
+  const handleClickUpdateTraPhong = (maXepPhong, maphong) => {
+    setMa_xepphong_bookking(maXepPhong)
+    setMaPhong(maphong)
+    setVisibleCapNhatTraPhong(true)
+  }
+  const handleTraPhongComplete = (success) => {
+    if (success && updateRoomTraPhong) {
+      updateRoomTraPhong(maPhong)
+    }
+    setVisibleCapNhatTraPhong(false)
+  }
+
   const [visibleNgayDi, setVisibleNgayDi] = useState(false)
 
   const [soLuongKhach, setSoLuongKhach] = useState(0)
@@ -234,7 +249,7 @@ const RoomCard = ({
           <CCol xs={5} sm={5} md={5}>
             <CRow>
               <CCol xs={5} sm={5} md={5} className="flex justify-center ">
-                {room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' &&
+                {(room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' || room.trangThaiHienTai === 'CHECK-OUT TRỄ') &&
                 room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ? (
                   <div className="flex items-center justify-center">
                     <FontAwesomeIcon icon={faPeopleArrows} className="text-xl" />
@@ -374,6 +389,15 @@ const RoomCard = ({
                                 {ROOM_ACTIONS.ADD_GUEST}
                               </Link>
 
+                              <div
+                                onClick={() => {
+                                  handleClickUpdateTraPhong(room.maxepphongbooking, room.maPhong)
+                                  handlePopoverClose()
+                                }}
+                                className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500"
+                              >
+                                {ROOM_ACTIONS.CHECKOUT}
+                              </div>
                               {/* <Link
                                 to={`/dashboard/pos/thanh-toan/${room.maBooking}/${room.maxepphongbooking}`}
                                 className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500"
@@ -457,7 +481,7 @@ const RoomCard = ({
         </CCol>
       </CRow>
 
-      {room.tenkhachhang && !room.daTraPhong && room.trangThaiHienTai !== 'CHECK-OUT TRỄ' ? (
+      {room.tenkhachhang && !room.daTraPhong ? (
         <>
           <div
             className=" cursor-pointer"
@@ -575,6 +599,14 @@ const RoomCard = ({
         ma_xepphong={ma_xepphong_bookking}
       />
 
+      <CapNhatTraPhong
+        visible={visibleCapNhatTraPhong}
+        onClose={() => setVisibleCapNhatTraPhong(false)}
+        maPhong={maPhong}
+        maXepPhong={ma_xepphong_bookking}
+        onSubmit={handleTraPhongComplete}
+      />
+
       {/* <GhiChuModal visible={visible} onClose={() => setVisible(false)} /> */}
     </div>
   )
@@ -613,6 +645,7 @@ RoomCard.propTypes = {
   updateRoomNgayDi: PropTypes.func.isRequired,
   updateRoomChuyenPhong: PropTypes.func.isRequired,
   updateRoomPhuThuTienGiuong: PropTypes.func.isRequired,
+  updateRoomTraPhong: PropTypes.func,
 }
 
 export default RoomCard

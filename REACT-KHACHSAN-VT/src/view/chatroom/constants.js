@@ -5,7 +5,8 @@ export const ROOM_STATUS_STYLES = {
   'SẼ ĐẾN TRONG HÔM NAY': 'bg-blue-600 text-white border border-blue-300',
   'SẼ ĐI TRONG HÔM NAY': 'bg-amber-600 text-white',
   'CHECK-IN TRỄ': 'bg-blue-600 text-white border border-blue-300',
-  'CHECK-OUT TRỄ': 'bg-white text-gray-800 border border-gray-300',
+  'CHECK-OUT TRỄ': 'bg-red-500 text-white border border-gray-300',
+  overdue: 'bg-blue-600 text-white border border-blue-300', // alias cho CHECK-IN TRỄ từ API
   default: 'bg-white text-gray-800 border border-gray-300',
 }
 export const ROOM_STATUS_BUON_PHONG_STYLES = {
@@ -15,7 +16,7 @@ export const ROOM_STATUS_BUON_PHONG_STYLES = {
   'ĐANG Ở': 'bg-green-500 text-white',
   'SẼ ĐI TRONG HÔM NAY': 'bg-amber-600 text-white',
   'CHECK-IN TRỄ': 'bg-blue-100 text-blue-800 border border-blue-300',
-  'CHECK-OUT TRỄ': 'bg-amber-600 text-white',
+  'CHECK-OUT TRỄ': 'bg-red-500 text-white',
   default: 'bg-white text-gray-800 border border-gray-300',
 }
 

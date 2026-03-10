@@ -1,5 +1,4 @@
 import axiosInstance from './axiosConfig'
-import config from './Config'
 
 export async function createXepPhongBooking(ma_booking, xepPhongData) {
   try {
@@ -242,6 +241,17 @@ export async function getAllDichVuMienPhi() {
     return response.data.result
   } catch (error) {
     console.log('Lỗi lấy danh sách dịch vụ miễn phí:', error)
+    throw error
+  }
+}
+
+  export async function updateTraPhong(ma_xepphong) {
+    try {
+    const response = await axiosInstance.put(`/xep-phong-booking/tra-phong-booking/${ma_xepphong}`, {})
+    console.log('Cập nhật trả phòng:', response)
+    return response.data
+  } catch (error) {
+    console.log('Lỗi cập nhật xếp phòng booking:', error)
     throw error
   }
 }

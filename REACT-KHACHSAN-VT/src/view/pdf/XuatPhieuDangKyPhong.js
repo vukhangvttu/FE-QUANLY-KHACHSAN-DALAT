@@ -1,10 +1,20 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Buffer } from 'buffer'
-import { Document, Page, Text, View, StyleSheet, PDFViewer, Image, Font } from '@react-pdf/renderer'
-
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFViewer,
+  Image,
+  Font,
+  pdf,
+} from '@react-pdf/renderer'
+import * as pdfjsLib from 'pdfjs-dist/build/pdf'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry'
 import myImage from 'src/assets/images/Picture1.png'
 import imageMacDinh from 'src/assets/images/Picture2.png'
-
 import { useNavigate, useParams } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { format, parseISO } from 'date-fns'
@@ -15,6 +25,7 @@ import {
 import { CSpinner } from '@coreui/react-pro'
 
 window.Buffer = Buffer // Gán Buffer vào global window
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 // Đăng ký font
 Font.register({
   family: 'Times New Roman',
@@ -839,6 +850,7 @@ const App = () => {
   const { ma_xepphong } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [thongTinKhachHang, setThongTinKhachHang] = useState(null)
   const [thongTinThanhToan, setThongTinThanhToan] = useState(null)
 
@@ -851,11 +863,9 @@ const App = () => {
       ])
 
       if (khachHangData) {
-        console.log('khachHangData', khachHangData)
         setThongTinKhachHang(khachHangData)
       }
       if (thanhToanData) {
-        console.log('thanhToanData', thanhToanData)
         setThongTinThanhToan(thanhToanData)
       }
     } catch (error) {
@@ -865,16 +875,103 @@ const App = () => {
     }
   }
 
-  console.log('thongTinKhachHang', thongTinKhachHang)
-
   useEffect(() => {
     if (ma_xepphong) {
       fetchData()
     }
   }, [ma_xepphong])
 
+  const handleDownloadImage = useCallback(async () => {
+    if (!thongTinKhachHang || !thongTinThanhToan) return
+    setDownloading(true)
+    try {
+      const blob = await pdf(
+        <XuatPhieuDangKyPhong
+          thongTinKhachHang={thongTinKhachHang}
+          thongTinThanhToan={thongTinThanhToan}
+        />,
+      ).toBlob()
+
+      const arrayBuffer = await blob.arrayBuffer()
+      const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+      const scale = 3
+
+      if (pdfDoc.numPages === 1) {
+        const page = await pdfDoc.getPage(1)
+        const viewport = page.getViewport({ scale })
+        const canvas = document.createElement('canvas')
+        canvas.width = viewport.width
+        canvas.height = viewport.height
+        const ctx = canvas.getContext('2d')
+        await page.render({ canvasContext: ctx, viewport }).promise
+
+        const link = document.createElement('a')
+        link.download = `PhieuDangKyPhong_${thongTinKhachHang.ma_booking}.png`
+        link.href = canvas.toDataURL('image/png')
+        link.click()
+      } else {
+        let totalHeight = 0
+        let maxWidth = 0
+
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i)
+          const viewport = page.getViewport({ scale })
+          totalHeight += viewport.height
+          if (viewport.width > maxWidth) {
+            maxWidth = viewport.width
+          }
+        }
+
+        const bigCanvas = document.createElement('canvas')
+        bigCanvas.width = maxWidth
+        bigCanvas.height = totalHeight
+        const bigCtx = bigCanvas.getContext('2d')
+
+        let currentY = 0
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i)
+          const viewport = page.getViewport({ scale })
+          const pageCanvas = document.createElement('canvas')
+          pageCanvas.width = viewport.width
+          pageCanvas.height = viewport.height
+          const pageCtx = pageCanvas.getContext('2d')
+
+          await page.render({ canvasContext: pageCtx, viewport }).promise
+          bigCtx.drawImage(pageCanvas, 0, currentY)
+          currentY += pageCanvas.height
+        }
+
+        const link = document.createElement('a')
+        link.download = `PhieuDangKyPhong_${thongTinKhachHang.ma_booking}_all.png`
+        link.href = bigCanvas.toDataURL('image/png')
+        link.click()
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải ảnh:', error)
+    } finally {
+      setDownloading(false)
+    }
+  }, [thongTinKhachHang, thongTinThanhToan])
+
   return (
     <div>
+      <div style={{ marginBottom: 10, display: 'flex', gap: 10 }}>
+        <button
+          onClick={handleDownloadImage}
+          disabled={downloading || !thongTinKhachHang || !thongTinThanhToan}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: downloading ? '#ccc' : '#198754',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            cursor: downloading ? 'not-allowed' : 'pointer',
+            fontSize: 14,
+          }}
+        >
+          {downloading ? 'Đang tải...' : 'Tải ảnh PNG'}
+        </button>
+      </div>
       {loading ? (
         <div className="d-flex justify-content-center">
           <CSpinner color="primary" />
@@ -891,8 +988,6 @@ const App = () => {
           )}
         </PDFViewer>
       )}
-
-      {/* You can also add a download button that uses ReactPDF.pdf(HotelRegistrationPDFDownload).toBlob().then(...) */}
     </div>
   )
 }

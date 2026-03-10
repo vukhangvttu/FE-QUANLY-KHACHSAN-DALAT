@@ -50,7 +50,26 @@ const StatusButton = ({ icon, color, label, count, active, onClick }) => (
         <FontAwesomeIcon icon={icon} className="text-pink-500" />
         {label} ({count})
       </>
-    ) : (
+    ) :
+     label === 'Đang sử dụng' ? (
+    <>
+      <FontAwesomeIcon icon={icon} className="text-green-500" />
+      {label} ({count})
+    </>
+  ) :
+  label === 'Check-in trễ' ? (
+    <>
+      <FontAwesomeIcon icon={icon} className="text-blue-500" />
+      {label} ({count})
+    </>
+  ) :
+  label === 'Check-out trễ' ? (
+    <>
+      <FontAwesomeIcon icon={icon} className="text-amber-500" />
+      {label} ({count})
+    </>
+  ) :
+    (
       <>
         <FontAwesomeIcon icon={icon} className={`text-${color}-500`} />
         {label} ({count})
@@ -138,26 +157,27 @@ const HotelManagement = () => {
 
   const filteredRooms = useMemo(() => {
     if (!statusFilter) return rooms
-    
-    // Nếu lọc 'SẼ ĐẾN TRONG HÔM NAY' thì bao gồm cả 'CHECK-IN TRỄ'
+
+    // Lọc riêng Check-in trễ (bao gồm cả 'overdue' từ API)
+    if (statusFilter === 'CHECK-IN TRỄ') {
+      return rooms.filter(
+        (room) =>
+          room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
+      )
+    }
+    // Lọc riêng Check-out trễ (chỉ CHECK-OUT TRỄ)
+    if (statusFilter === 'CHECK-OUT TRỄ') {
+      return rooms.filter((room) => room.trangThaiHienTai === 'CHECK-OUT TRỄ')
+    }
+    // Sắp nhận: chỉ SẼ ĐẾN TRONG HÔM NAY (không gồm CHECK-IN TRỄ)
     if (statusFilter === 'SẼ ĐẾN TRONG HÔM NAY') {
       return rooms.filter(
-        (room) => 
-          room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' || 
-          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ||
-          room.trangThaiHienTai === 'CHECK-IN TRỄ'
+        (room) =>
+          room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' ||
+          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY',
       )
     }
-    
-    // Nếu lọc 'SẼ ĐI TRONG HÔM NAY' thì bao gồm cả 'CHECK-OUT TRỄ'
-    if (statusFilter === 'SẼ ĐI TRONG HÔM NAY') {
-      return rooms.filter(
-        (room) => 
-          room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
-          room.trangThaiHienTai === 'CHECK-OUT TRỄ'
-      )
-    }
-    
+
     return rooms.filter(
       (room) => room.trangThaiHienTai === statusFilter || room.trangThaiTuongLai === statusFilter,
     )
@@ -173,31 +193,36 @@ const HotelManagement = () => {
 
   const filteredRoomsBuonPhong = useMemo(() => {
     if (!statusFilterBuonPhong) return rooms
-    
+
     // Nếu lọc theo vệ sinh
     if (isVeSinhFilter) {
       return rooms.filter((room) => room.trangThaiVeSinh === statusFilterBuonPhong)
     }
-    
-    // Nếu lọc 'SẼ ĐẾN TRONG HÔM NAY' thì bao gồm cả 'CHECK-IN TRỄ'
+
+    // Lọc riêng Check-in trễ (bao gồm cả 'overdue' từ API)
+    if (statusFilterBuonPhong === 'CHECK-IN TRỄ') {
+      return rooms.filter(
+        (room) =>
+          room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
+      )
+    }
+    // Lọc riêng Check-out trễ (chỉ CHECK-OUT TRỄ)
+    if (statusFilterBuonPhong === 'CHECK-OUT TRỄ') {
+      return rooms.filter((room) => room.trangThaiHienTai === 'CHECK-OUT TRỄ')
+    }
+    // Sắp trả: chỉ SẼ ĐI TRONG HÔM NAY
+    if (statusFilterBuonPhong === 'SẼ ĐI TRONG HÔM NAY') {
+      return rooms.filter((room) => room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY')
+    }
+    // Sắp nhận: chỉ SẼ ĐẾN TRONG HÔM NAY
     if (statusFilterBuonPhong === 'SẼ ĐẾN TRONG HÔM NAY') {
       return rooms.filter(
-        (room) => 
-          room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' || 
-          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ||
-          room.trangThaiHienTai === 'CHECK-IN TRỄ'
+        (room) =>
+          room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' ||
+          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY',
       )
     }
-    
-    // Nếu lọc 'SẼ ĐI TRONG HÔM NAY' thì bao gồm cả 'CHECK-OUT TRỄ'
-    if (statusFilterBuonPhong === 'SẼ ĐI TRONG HÔM NAY') {
-      return rooms.filter(
-        (room) => 
-          room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
-          room.trangThaiHienTai === 'CHECK-OUT TRỄ'
-      )
-    }
-    
+
     return rooms.filter(
       (room) =>
         room.trangThaiHienTai === statusFilterBuonPhong ||
@@ -325,21 +350,45 @@ const HotelManagement = () => {
     )
   }
 
+  const updateRoomTraPhong = (maPhong) => {
+    setRooms((prevRooms) =>
+      prevRooms.map((room) =>
+        room.maPhong === maPhong
+          ? {
+              ...room,
+              trangThaiHienTai: 'TRỐNG',
+              trangThaiVeSinh: 'DƠ',
+              ngayDen: null,
+              ngayDi: null,
+              gioDen: null,
+              gioDi: null,
+              soGiuongDaSuDung: 0,
+              tenkhachhang: '',
+              maxepphongbooking: null,
+              daTraPhong: true,
+              danhanPhong: false,
+            }
+          : room,
+      ),
+    )
+    setRoomsUpdated((prev) => prev + 1)
+  }
+
   const getRoomCounts = () => {
     return {
       empty: rooms.filter((room) => room.trangThaiHienTai === 'TRỐNG').length,
       upcoming: rooms.filter(
         (room) =>
           room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' ||
-          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ||
-          room.trangThaiHienTai === 'CHECK-IN TRỄ',
+          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY',
       ).length,
       occupied: rooms.filter((room) => room.trangThaiHienTai === 'ĐANG Ở').length,
-      leaving: rooms.filter(
-        (room) => 
-          room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
-          room.trangThaiHienTai === 'CHECK-OUT TRỄ'
+      lateCheckIn: rooms.filter(
+        (room) =>
+          room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
       ).length,
+      leaving: rooms.filter((room) => room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY').length,
+      lateCheckOut: rooms.filter((room) => room.trangThaiHienTai === 'CHECK-OUT TRỄ').length,
     }
   }
 
@@ -350,14 +399,15 @@ const HotelManagement = () => {
       upcoming: rooms.filter(
         (room) =>
           room.trangThaiHienTai === 'SẼ ĐẾN TRONG HÔM NAY' ||
-          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ||
-          room.trangThaiHienTai === 'CHECK-IN TRỄ',
+          room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY',
       ).length,
-      leaving: rooms.filter(
-        (room) => 
-          room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
-          room.trangThaiHienTai === 'CHECK-OUT TRỄ'
+      occupied: rooms.filter((room) => room.trangThaiHienTai === 'ĐANG Ở').length,
+      lateCheckIn: rooms.filter(
+        (room) =>
+          room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
       ).length,
+      leaving: rooms.filter((room) => room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY').length,
+      lateCheckOut: rooms.filter((room) => room.trangThaiHienTai === 'CHECK-OUT TRỄ').length,
     }
   }
 
@@ -609,6 +659,22 @@ const HotelManagement = () => {
                         active={statusFilter === 'SẼ ĐI TRONG HÔM NAY'}
                         onClick={() => handleStatusClick('SẼ ĐI TRONG HÔM NAY')}
                       />
+                      <StatusButton
+                        icon={faCircle}
+                        color="blue"
+                        label="Check-in trễ"
+                        count={getRoomCounts().lateCheckIn}
+                        active={statusFilter === 'CHECK-IN TRỄ'}
+                        onClick={() => handleStatusClick('CHECK-IN TRỄ')}
+                      />
+                      <StatusButton
+                        icon={faCircle}
+                        color="amber"
+                        label="Check-out trễ"
+                        count={getRoomCounts().lateCheckOut}
+                        active={statusFilter === 'CHECK-OUT TRỄ'}
+                        onClick={() => handleStatusClick('CHECK-OUT TRỄ')}
+                      />
                     </div>
                   </div>
 
@@ -622,6 +688,7 @@ const HotelManagement = () => {
                           updateRoomNgayDi={updateRoomNgayDi}
                           updateRoomChuyenPhong={updateRoomChuyenPhong}
                           updateRoomPhuThuTienGiuong={updateRoomPhuThuTienGiuong}
+                          updateRoomTraPhong={updateRoomTraPhong}
                         />
                       </div>
                     ))}
@@ -708,7 +775,7 @@ const HotelManagement = () => {
                           icon={faCircle}
                           color="pink"
                           label="Sắp nhận"
-                          count={getRoomCounts().upcoming}
+                          count={getRoomCountsBuonPhong().upcoming}
                           active={statusFilterBuonPhong === 'SẼ ĐẾN TRONG HÔM NAY'}
                           onClick={() => handleStatusBuonPhongClick('SẼ ĐẾN TRONG HÔM NAY')}
                         />
@@ -716,17 +783,33 @@ const HotelManagement = () => {
                           icon={faCircle}
                           color="green"
                           label="Đang sử dụng"
-                          count={getRoomCounts().occupied}
-                          active={statusFilter === 'ĐANG Ở'}
+                          count={getRoomCountsBuonPhong().occupied}
+                          active={statusFilterBuonPhong === 'ĐANG Ở'}
                           onClick={() => handleStatusBuonPhongClick('ĐANG Ở')}
                         />
-                        <StatusButtonBuonPhong
+                        <StatusButton
                           icon={faCircle}
                           color="yellow"
                           label="Sắp trả"
-                          count={getRoomCounts().leaving}
+                          count={getRoomCountsBuonPhong().leaving}
                           active={statusFilterBuonPhong === 'SẼ ĐI TRONG HÔM NAY'}
                           onClick={() => handleStatusBuonPhongClick('SẼ ĐI TRONG HÔM NAY')}
+                        />
+                        <StatusButton
+                          icon={faCircle}
+                          color="blue"
+                          label="Check-in trễ"
+                          count={getRoomCountsBuonPhong().lateCheckIn}
+                          active={statusFilterBuonPhong === 'CHECK-IN TRỄ'}
+                          onClick={() => handleStatusBuonPhongClick('CHECK-IN TRỄ')}
+                        />
+                        <StatusButton
+                          icon={faCircle}
+                          color="amber"
+                          label="Check-out trễ"
+                          count={getRoomCountsBuonPhong().lateCheckOut}
+                          active={statusFilterBuonPhong === 'CHECK-OUT TRỄ'}
+                          onClick={() => handleStatusBuonPhongClick('CHECK-OUT TRỄ')}
                         />
                       </div>
                     </div>

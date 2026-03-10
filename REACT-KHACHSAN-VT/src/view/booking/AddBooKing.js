@@ -1316,6 +1316,15 @@ const ThemDatPhong = () => {
         (p) => p.soGiuongThem === 1,
       ).length
 
+      if (tongSoPhongDaChon === 0) {
+        addToast(
+          exampleToast(
+            `⚠️ Loại phòng ${item.loaiPhong.maLoaiPhong} chưa chọn phòng. Vui lòng chọn ${item.soLuong} phòng!`,
+          ),
+        )
+        return true
+      }
+
       if (tongSoPhongDaChon !== 0) {
         // Kiểm tra tổng số phòng đã chọn có khớp với số lượng không
         if (tongSoPhongDaChon !== item.soLuong) {

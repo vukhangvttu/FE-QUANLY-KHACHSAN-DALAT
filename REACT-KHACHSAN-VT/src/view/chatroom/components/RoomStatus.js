@@ -8,7 +8,7 @@ const RoomStatus = ({ status, trangThaiHienTai }) => {
   return (
     <div
       className={`flex items-center font-medium text-xs ${
-        trangThaiHienTai !== 'TRỐNG' && trangThaiHienTai !== 'CHECK-OUT TRỄ' ? 'text-white' : ''
+        trangThaiHienTai !== 'TRỐNG'  ? 'text-white' : ''
       }  gap-1 ${label.className} mb-1`}
     >
       <span className="text-sm border  rounded-full px-2">
