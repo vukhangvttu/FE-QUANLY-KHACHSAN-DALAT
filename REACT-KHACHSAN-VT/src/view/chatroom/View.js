@@ -65,7 +65,7 @@ const StatusButton = ({ icon, color, label, count, active, onClick }) => (
   ) :
   label === 'Check-out trễ' ? (
     <>
-      <FontAwesomeIcon icon={icon} className="text-amber-500" />
+      <FontAwesomeIcon icon={icon} className="text-red-500" />
       {label} ({count})
     </>
   ) :
