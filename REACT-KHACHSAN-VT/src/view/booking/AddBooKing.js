@@ -25,7 +25,7 @@ import {
   CToastHeader,
   CPopover,
 } from '@coreui/react-pro'
-import { faCirclePlus, faDeleteLeft, faFloppyDisk } from '@fortawesome/free-solid-svg-icons'
+import { faCirclePlus, faDeleteLeft, faFloppyDisk, faInfo, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
@@ -2383,8 +2383,9 @@ const ThemDatPhong = () => {
                                         </div>
                                       }
                                     >
-                                      <i className="text-xl ml-2 cursor-pointer text-blue-500 fa-regular fa-circle-info"></i>
+                                      <FontAwesomeIcon icon={faInfoCircle} className="text-xl ml-2 text-blue-500 cursor-pointer" />
                                     </CPopover>
+                                    
                                   </CTableDataCell>
                                   {/* <CTableDataCell className="text-center">{soDem}</CTableDataCell> */}
                                   <CTableDataCell className="text-right">

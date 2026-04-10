@@ -25,7 +25,7 @@ import {
   CToastHeader,
   CPopover,
 } from '@coreui/react-pro'
-import { faCirclePlus, faDeleteLeft, faFloppyDisk } from '@fortawesome/free-solid-svg-icons'
+import { faCirclePlus, faDeleteLeft, faFloppyDisk, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
@@ -123,7 +123,8 @@ const EditBooKing = () => {
       soNguoiLon: prevState.soNguoiLon + 1,
     }))
 
-    kiemTraPhongTrong(valueNgayDen, valueNgayDi)
+    // Kiểm tra phòng trống theo đúng ngày đến / ngày đi của dòng mới (YYYY-MM-DD)
+    kiemTraPhongTrongMotDong(maxIndex + 1, todayStr, tomorrowStr)
   }
 
   const [valueNgayDen, setValueNgayDen] = useState()
@@ -169,7 +170,10 @@ const EditBooKing = () => {
       })
       setRows(updatedRows)
       updateChiTietBooKings(updatedRows)
-      kiemTraPhongTrong(date, valueNgayDi)
+      const capNhat = updatedRows.find((r) => r.index === index)
+      if (capNhat) {
+        kiemTraPhongTrongMotDong(index, capNhat.ngayDen, capNhat.ngayDi)
+      }
     }
   }
 
@@ -198,7 +202,10 @@ const EditBooKing = () => {
     })
     setRows(updatedRows)
     updateChiTietBooKings(updatedRows)
-    kiemTraPhongTrong(valueNgayDen, date)
+    const capNhat = updatedRows.find((r) => r.index === index)
+    if (capNhat) {
+      kiemTraPhongTrongMotDong(index, capNhat.ngayDen, capNhat.ngayDi)
+    }
   }
 
   const syncGiaPhongTheoNgays = (rows, newNgayDen, newNgayDi) => {
@@ -257,8 +264,9 @@ const EditBooKing = () => {
       return
     }
 
-    // Tìm kiếm thông tin đầy đủ của loại phòng
-    const selectedLoaiPhong = listLoaiPhongTrong.find(
+    // Tìm kiếm thông tin đầy đủ của loại phòng (theo khoảng ngày của đúng dòng)
+    const loaiPhongCuaDong = listLoaiPhongTrongTheoDong[rowIndex] || []
+    const selectedLoaiPhong = loaiPhongCuaDong.find(
       (option) => option.maLoaiPhong === selectedMaLoaiPhong,
     )
 
@@ -368,7 +376,12 @@ const EditBooKing = () => {
     setRows(updatedRows)
     updateChiTietBooKings(updatedRows)
 
-    fetchPhongOptions(selectedLoaiPhong.maLoaiPhong, valueNgayDen, valueNgayDi)
+    fetchPhongOptions(
+      selectedLoaiPhong.maLoaiPhong,
+      createDateFromInput(rowToUpdate.ngayDen),
+      createDateFromInput(rowToUpdate.ngayDi),
+      rowIndex,
+    )
   }
 
   // Lọc giá theo mã loại phòng đã chọn
@@ -413,15 +426,14 @@ const EditBooKing = () => {
       : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
   }
 
-  const handleSoLuongChange = (event, maLoaiPhong, soLuongExtraBed) => {
+  const handleSoLuongChange = (event, rowIndex, maLoaiPhong, soLuongExtraBed) => {
     let value = event.target.value
 
-    if (maLoaiPhong === '0') {
+    if (!maLoaiPhong || maLoaiPhong.maLoaiPhong === '0') {
       return addToast(exampleToast('⚠️ Vui lòng chọn loại phòng trước khi thay đổi'))
     }
 
-    // Lấy thông tin loại phòng từ danh sách
-    const selectedLoaiPhong = rows.find((row) => row.loaiPhong === maLoaiPhong)
+    const selectedLoaiPhong = rows.find((row) => row.index === rowIndex)
 
     if (!selectedLoaiPhong) return
 
@@ -440,11 +452,10 @@ const EditBooKing = () => {
       return
     }
 
-    // Lấy số lượng phòng trống (soLuongDuBaoPhong) của loại phòng đó
-    const maxSoLuong =
-      listLoaiPhongTrong.find(
-        (item) => item.maLoaiPhong === (maLoaiPhong.maLoaiPhong || maLoaiPhong),
-      )?.soPhongTrong + selectedLoaiPhong.soLuongDuBaoPhong || 0
+    const loaiListTheoDong = listLoaiPhongTrongTheoDong[rowIndex] || []
+    const soPhongTrongTheoApi =
+      loaiListTheoDong.find((item) => item.maLoaiPhong === maLoaiPhong.maLoaiPhong)?.soPhongTrong ?? 0
+    const maxSoLuong = soPhongTrongTheoApi + (selectedLoaiPhong.soLuongDuBaoPhong || 0)
 
     // Kiểm tra nếu số lượng nhập vào vượt quá số lượng có sẵn
     if (value > maxSoLuong) {
@@ -468,7 +479,7 @@ const EditBooKing = () => {
 
     // Cập nhật số lượng và tính tổng tiền cho từng hàng
     const updatedRows = rows.map((row) => {
-      if (row.loaiPhong === maLoaiPhong) {
+      if (row.index === rowIndex) {
         const soDem = tinhSoDem(row.ngayDen, row.ngayDi)
 
         // Tính tổng tiền từ giaPhongTheoNgays
@@ -791,12 +802,6 @@ const EditBooKing = () => {
     }
   }
 
-  // Thêm state mới
-  const [isInitialLoad, setIsInitialLoad] = useState(true)
-
-  const [ngayDen, setNgayDen] = useState('')
-  const [ngayDi, setNgayDi] = useState('')
-
   const BooKing = async (ma_booking) => {
     try {
       const booking = await getBooKingByMaBooKing(ma_booking, navigate)
@@ -807,9 +812,6 @@ const EditBooKing = () => {
         setRowsHoiNghi(booking?.phongHoiNghis || [])
         if (chitietbooking) {
           setRows(chitietbooking)
-
-          setNgayDen(booking.ngayDen)
-          setNgayDi(booking.ngayDi)
 
           setBooKing(booking)
 
@@ -822,11 +824,8 @@ const EditBooKing = () => {
             chiTietBooKings: chitietbooking,
           }))
 
-          // Gọi kiemTraPhongTrong khi load lần đầu
-          if (isInitialLoad) {
-            kiemTraPhongTrong(booking.ngayDen, booking.ngayDi, navigate)
-            setIsInitialLoad(false)
-          }
+          // Mỗi dòng chi tiết có ngày đến/đi riêng — kiểm tra phòng trống theo đúng từng dòng
+          await kiemTraPhongTrongNhieuDong(chitietbooking)
         } else {
           addToast(exampleToast('Không thể tải chi tiết đặt phòng. Vui lòng thử lại sau!'))
         }
@@ -842,8 +841,6 @@ const EditBooKing = () => {
   useEffect(() => {
     DanhSach()
     BooKing(ma_booking)
-    // Set isInitialLoad thành false sau khi component mount
-    setIsInitialLoad(false)
   }, [ma_booking])
   // save thông tin đặt phòng
 
@@ -1199,7 +1196,6 @@ const EditBooKing = () => {
 
           // Reset phongOptions để load lại danh sách phòng
           setPhongOptions({})
-          setLoadingPhong(false)
         } catch (error) {
           console.error('Lỗi khi reload dữ liệu:', error)
           addToast(exampleToast('⚠️ Cập nhật thành công nhưng không thể tải lại dữ liệu'))
@@ -1228,11 +1224,24 @@ const EditBooKing = () => {
     }
   }
 
-  const [listLoaiPhongTrong, setListLoaiPhongTrong] = useState([])
-  const kiemTraPhongTrong = async (ngayDen, ngayDi) => {
-    const ngay_den = format(ngayDen, 'yyyy-MM-dd')
-    const ngay_di = format(ngayDi, 'yyyy-MM-dd')
-    // console.log('dã goi jvào')
+  /** Danh sách loại phòng trống theo từng dòng (key = row.index), vì mỗi dòng có khoảng ngày riêng */
+  const [listLoaiPhongTrongTheoDong, setListLoaiPhongTrongTheoDong] = useState({})
+
+  const parseNgayChoKiemTraPhong = (d) => {
+    if (!d) return new Date()
+    if (d instanceof Date) return new Date(d.getTime())
+    if (typeof d === 'string' && d.includes('/')) {
+      const [day, month, year] = d.split('/')
+      return new Date(`${year}-${month}-${day}`)
+    }
+    return new Date(d)
+  }
+
+  const kiemTraPhongTrongMotDong = async (rowIndex, ngayDenRaw, ngayDiRaw) => {
+    const ngayDenDate = parseNgayChoKiemTraPhong(ngayDenRaw)
+    const ngayDiDate = parseNgayChoKiemTraPhong(ngayDiRaw)
+    const ngay_den = format(ngayDenDate, 'yyyy-MM-dd')
+    const ngay_di = format(ngayDiDate, 'yyyy-MM-dd')
     try {
       const listloaiphong = await getAllLoaiPhongTrongTrongKhoanThoiGian(
         ngay_den,
@@ -1240,10 +1249,10 @@ const EditBooKing = () => {
         navigate,
       )
       if (listloaiphong) {
-        setListLoaiPhongTrong(listloaiphong)
-        // Đồng bộ lại rows với thông tin extra bed mới nhất
+        setListLoaiPhongTrongTheoDong((prev) => ({ ...prev, [rowIndex]: listloaiphong }))
         setRows((prevRows) =>
           prevRows.map((row) => {
+            if (row.index !== rowIndex) return row
             const found = listloaiphong.find(
               (item) => item.maLoaiPhong === row.loaiPhong.maLoaiPhong,
             )
@@ -1254,8 +1263,68 @@ const EditBooKing = () => {
             }
           }),
         )
-        addToast(exampleToast('✔️ Tải danh sách thành công'))
-      } else {
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách loại phòng trống (một dòng):', error)
+    }
+  }
+
+  const kiemTraPhongTrongNhieuDong = async (chitietRows) => {
+    if (!chitietRows?.length) return
+    try {
+      const results = await Promise.all(
+        chitietRows.map(async (row) => {
+          const ngayDenDate = parseNgayChoKiemTraPhong(row.ngayDen)
+          const ngayDiDate = parseNgayChoKiemTraPhong(row.ngayDi)
+          const ngay_den = format(ngayDenDate, 'yyyy-MM-dd')
+          const ngay_di = format(ngayDiDate, 'yyyy-MM-dd')
+          const listloaiphong = await getAllLoaiPhongTrongTrongKhoanThoiGian(
+            ngay_den,
+            ngay_di,
+            navigate,
+          )
+          return { rowIndex: row.index, listloaiphong }
+        }),
+      )
+
+      const mapTheoDong = {}
+      let coDuLieu = false
+      let loiHoanToan = true
+      results.forEach(({ rowIndex, listloaiphong }) => {
+        mapTheoDong[rowIndex] = listloaiphong
+        if (listloaiphong) {
+          coDuLieu = true
+          loiHoanToan = false
+        }
+      })
+
+      setListLoaiPhongTrongTheoDong(() => {
+        const next = {}
+        results.forEach(({ rowIndex, listloaiphong }) => {
+          if (listloaiphong) next[rowIndex] = listloaiphong
+        })
+        return next
+      })
+
+      setRows((prevRows) =>
+        prevRows.map((row) => {
+          const listloaiphong = mapTheoDong[row.index]
+          if (!listloaiphong) return row
+          const found = listloaiphong.find(
+            (item) => item.maLoaiPhong === row.loaiPhong.maLoaiPhong,
+          )
+          return {
+            ...row,
+            tongSoLuongExtraBed: found?.tongSoGiuongThem || 0,
+            tongSoLuongExtraBedDaSuDung: found?.tongSoGiuongDaSuDung || 0,
+          }
+        }),
+      )
+
+      if (coDuLieu) {
+        addToast(exampleToast('✔️ Tải danh sách loại phòng trống theo từng dòng thành công'))
+      }
+      if (loiHoanToan) {
         addToast(exampleToast('❌ Không thể tải danh sách loại phòng trống. Vui lòng thử lại sau!'))
       }
     } catch (error) {
@@ -1337,7 +1406,6 @@ const EditBooKing = () => {
 
         // Reset phongOptions để load lại danh sách phòng
         setPhongOptions({})
-        setLoadingPhong(false)
 
         addToast(exampleToast('✔️ Xóa loại phòng thành công và đã tải lại thông tin booking'))
       } catch (error) {
@@ -1466,15 +1534,27 @@ const EditBooKing = () => {
 
   // ngày 12-05-2025 bổ sung thêm cột phòng
   const [phongOptions, setPhongOptions] = useState({})
-  const fetchPhongOptions = async (maloaiphong, ngayDen, ngayDi) => {
-    if (!ngayDen || !ngayDi) {
-      console.warn('Dữ liệu chưa sẵn sàng, không gọi API.')
+  /** rowIndex: mỗi dòng có khoảng ngày riêng — cache danh sách phòng trống theo dòng, không gộp theo maLoaiPhong */
+  const fetchPhongOptions = async (maloaiphong, ngayDen, ngayDi, rowIndex) => {
+    if (
+      rowIndex === undefined ||
+      rowIndex === null ||
+      !maloaiphong ||
+      maloaiphong === '0' ||
+      ngayDen == null ||
+      ngayDen === '' ||
+      ngayDi == null ||
+      ngayDi === ''
+    ) {
+      console.warn('Dữ liệu chưa sẵn sàng, không gọi API phòng theo dòng.')
       return
     }
 
     try {
-      const ngayDenFormatted = format(new Date(ngayDen), 'yyyy-MM-dd')
-      const ngayDiFormatted = format(new Date(ngayDi), 'yyyy-MM-dd')
+      const ngayDenDate = ngayDen instanceof Date ? ngayDen : parseNgayChoKiemTraPhong(ngayDen)
+      const ngayDiDate = ngayDi instanceof Date ? ngayDi : parseNgayChoKiemTraPhong(ngayDi)
+      const ngayDenFormatted = format(ngayDenDate, 'yyyy-MM-dd')
+      const ngayDiFormatted = format(ngayDiDate, 'yyyy-MM-dd')
 
       const phong = await getListPhongTrongTheoKhoanThoiGianAndBooking(
         maloaiphong,
@@ -1488,7 +1568,7 @@ const EditBooKing = () => {
       if (phong) {
         setPhongOptions((prevOptions) => ({
           ...prevOptions,
-          [maloaiphong]: phong,
+          [rowIndex]: phong,
         }))
       }
     } catch (error) {
@@ -1497,20 +1577,20 @@ const EditBooKing = () => {
     }
   }
 
-  const [loadingPhong, setLoadingPhong] = useState(false)
-
   useEffect(() => {
-    // Chỉ fetch khi đã có rows và ngày đến/ngày đi hợp lệ
-    if (rows.length > 0 && ngayDen && ngayDi && loadingPhong === false) {
-      rows.forEach((row) => {
-        if (row.loaiPhong && row.loaiPhong.maLoaiPhong && row.loaiPhong.maLoaiPhong !== '0') {
-          fetchPhongOptions(row.loaiPhong.maLoaiPhong, ngayDen, ngayDi)
-          setLoadingPhong(true)
-        }
-      })
-    }
+    if (!rows.length) return
+    rows.forEach((row) => {
+      if (row.loaiPhong?.maLoaiPhong && row.loaiPhong.maLoaiPhong !== '0' && row.ngayDen && row.ngayDi) {
+        fetchPhongOptions(
+          row.loaiPhong.maLoaiPhong,
+          row.ngayDen,
+          row.ngayDi,
+          row.index,
+        )
+      }
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, ngayDen, ngayDi])
+  }, [rows])
 
   const handleSoPhongChange = async (selectedOptions, { rowIndex, maLoaiPhong, ma_chitiet }) => {
     console.log('selectedOptions', selectedOptions)
@@ -2805,7 +2885,7 @@ const EditBooKing = () => {
                                           }
                                         >
                                           <option value="0">Chọn loại phòng</option>
-                                          {listLoaiPhongTrong?.map((item) => {
+                                          {(listLoaiPhongTrongTheoDong[row.index] || []).map((item) => {
                                             return (
                                               <option
                                                 key={item.maLoaiPhong}
@@ -2826,6 +2906,7 @@ const EditBooKing = () => {
                                           onChange={(event) =>
                                             handleSoLuongChange(
                                               event,
+                                              row.index,
                                               row.loaiPhong,
                                               row.soLuongExtraBed,
                                             )
@@ -2956,7 +3037,7 @@ const EditBooKing = () => {
                                             }
                                             return labels.join(' ')
                                           }}
-                                          options={phongOptions[row.loaiPhong.maLoaiPhong] || []}
+                                          options={phongOptions[row.index] || []}
                                           menuPortalTarget={document.body}
                                           styles={{
                                             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -2976,7 +3057,7 @@ const EditBooKing = () => {
                                           value={
                                             row.danhSachPhongChiTiets &&
                                             row.danhSachPhongChiTiets.length > 0
-                                              ? phongOptions[row.loaiPhong.maLoaiPhong]?.filter(
+                                              ? phongOptions[row.index]?.filter(
                                                   (option) =>
                                                     row.danhSachPhongChiTiets.some(
                                                       (p) => p.maPhong === option.maPhong,
@@ -3166,7 +3247,7 @@ const EditBooKing = () => {
                                             </div>
                                           }
                                         >
-                                          <i className="text-xl ml-2 cursor-pointer text-blue-500 fa-regular fa-circle-info"></i>
+                                             <FontAwesomeIcon icon={faInfoCircle} className="text-xl ml-2 text-blue-500 cursor-pointer" />
                                         </CPopover>
                                       </CTableDataCell>
 

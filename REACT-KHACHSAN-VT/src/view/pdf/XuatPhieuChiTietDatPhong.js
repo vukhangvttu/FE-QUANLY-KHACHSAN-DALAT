@@ -569,6 +569,22 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
             </Text>
           </View>
           <View style={styles.tableRow}>
+            {/* <Text
+              style={[
+                styles.cell,
+                styles.colTotalMoneyRoom,
+                { borderBottomWidth: 1, borderRightWidth: 1 },
+              ]}
+            >
+              Tổng phụ thu gala dinner
+            </Text>
+            <Text
+              style={[styles.cell, styles.colLast, { borderBottomWidth: 1, borderRightWidth: 1 }]}
+            >
+               {formatCurrency(23560000)} 
+            </Text> */}
+          </View>
+          <View style={styles.tableRow}>
             <Text
               style={[
                 styles.cell,
