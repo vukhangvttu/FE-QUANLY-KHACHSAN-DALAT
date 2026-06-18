@@ -16,6 +16,9 @@ import {
 
 import ThongKeDoanhThu from './ThongKeDoanhThu'
 import KhachTruTru from './KhachTruTru'
+import ThongKeTiLeFullPhong from './ThongKeTiLeFullPhong'
+import ThongKeDoanhSoKPINhanVien from './ThongKeDoanhSoKPINhanVien'
+
 
 // Đăng ký các components của Chart.js
 ChartJS.register(
@@ -43,6 +46,12 @@ const ThongKe = () => {
           <CTab aria-controls="profile-tab-pane" itemKey={2} onClick={() => setActiveTab(2)}>
             Thông tin lưu trú
           </CTab>
+          <CTab aria-controls="profile-tab-pane" itemKey={3} onClick={() => setActiveTab(3)}>
+            Thống kê tỉ lệ FULL phòng
+          </CTab>
+          <CTab aria-controls="profile-tab-pane" itemKey={4} onClick={() => setActiveTab(4)}>
+            Thống kê doanh số KPI nhân viên
+          </CTab>
         </CTabList>
         <CTabContent>
           <CTabPanel aria-labelledby="profile-tab-pane" itemKey={1}>
@@ -50,6 +59,12 @@ const ThongKe = () => {
           </CTabPanel>
           <CTabPanel className="p-3" aria-labelledby="home-tab-pane" itemKey={2}>
             <KhachTruTru isActive={activeTab === 2} />
+          </CTabPanel>
+          <CTabPanel className="p-3" aria-labelledby="home-tab-pane" itemKey={3}>
+            <ThongKeTiLeFullPhong isActive={activeTab === 3} />
+          </CTabPanel>
+          <CTabPanel className="p-3" aria-labelledby="home-tab-pane" itemKey={4}>
+            <ThongKeDoanhSoKPINhanVien isActive={activeTab === 4} />
           </CTabPanel>
         </CTabContent>
       </CTabs>

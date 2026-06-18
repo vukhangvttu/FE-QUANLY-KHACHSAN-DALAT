@@ -1,5 +1,4 @@
 import axiosInstance from './axiosConfig'
-import config from './Config'
 
 // source booking
 export async function getAllNguonKhach(navigate) {
@@ -194,6 +193,20 @@ export async function getlPhuongXaByMaHuyen(maHuyen) {
     return null
   } catch (error) {
     console.log('Lỗi getlPhuongXaByMaHuyen:', error)
+    return null
+  }
+}
+
+export async function getlPhuongXaByMaTinh(maTinh) {
+  try {
+    const response = await axiosInstance.get(`/phuong-xa/${maTinh}`)
+    console.log(response)
+    if (response.status === 200) {
+      return response.data.result
+    }
+    return null
+  } catch (error) {
+    console.log('Lỗi getlPhuongXaByMaTinh:', error)
     return null
   }
 }

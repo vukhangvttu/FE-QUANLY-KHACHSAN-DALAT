@@ -82,7 +82,7 @@ const KhachTruTru = ({ isActive }) => {
       link.remove()
       window.URL.revokeObjectURL(url)
 
-      addToast(exampleToast('✅ Xuất báo cáo thành công!'))
+      addToast(exampleToast('✔ Xuất báo cáo thành công!'))
     } catch (error) {
       console.error('Lỗi khi xuất báo cáo:', error)
       addToast(exampleToast(`❌ Lỗi khi xuất báo cáo: ${error.message}`))

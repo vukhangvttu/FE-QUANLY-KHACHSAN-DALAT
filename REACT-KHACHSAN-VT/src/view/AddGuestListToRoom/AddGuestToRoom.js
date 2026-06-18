@@ -37,15 +37,14 @@ import React, { useEffect, useRef, useState } from 'react'
 import Select from 'react-select'
 import { useNavigate, useParams } from 'react-router-dom'
 import { format, parse, parseISO, isValid } from 'date-fns'
-import { vi } from 'date-fns/locale'
 import {
   getAllDanhXung,
   getAllLoaiGiayTo,
   getAllLoaiTreEm,
   getAllQuocGia,
   getAllTinhThanh,
-  getHuyenByMaTinh,
-  getlPhuongXaByMaHuyen,
+  getlPhuongXaByMaTinh,
+  // getlPhuongXaByMaHuyen,
 } from 'src/service/APIService'
 import {
   createKhachHangPhong,
@@ -61,7 +60,7 @@ const AddGuestToRoom = () => {
   const { tenPhong, ma_xepphong_booking } = useParams()
 
   const [trangthaiload, setTrangthaiload] = useState(false)
-  const [ischeck, setIscheck] = useState(0)
+  const [ischeck, setIscheck] = useState('1')
 
   const handleChangeGioTinh = (e) => {
     const value = e.target.value
@@ -78,12 +77,13 @@ const AddGuestToRoom = () => {
     ho: '',
     ten: '',
     ngaySinh: '',
-    gioiTinh: '0',
+    gioiTinh: '1',
     diaChi: '',
     soGiayTo: '',
     sdt: '',
     soTuoiTre: '',
     ghiChu: '',
+    lyDoLuuTru: 'DULICH',
     danhXung: {
       maDanhXung: '',
     },
@@ -92,6 +92,7 @@ const AddGuestToRoom = () => {
     },
     loaiGiayTo: {
       maLoaiGiayTo: 'CCCD',
+      tenLoaiGiaTo: 'CCCD',
     },
     tinhThanh: {
       maTinh: '',
@@ -208,16 +209,13 @@ const AddGuestToRoom = () => {
   const navigate = useNavigate()
 
   const [danhSachTinh, setDanhSachTinh] = useState([])
-
   const [danhSachHuyen, setDanhSachHuyen] = useState([])
+
+  const [danhSachPhuongXa, setDanhSachPhuongXa] = useState([])
   const DanhSachHuyen = async (maTinh) => {
     try {
-      // Gọi API lấy thông tin booking
-      const huyen = await getHuyenByMaTinh(maTinh, navigate)
-
+      const huyen = await getAllTinhThanh(navigate)
       if (huyen) {
-        // Gọi API lấy chi tiết booking
-
         setDanhSachHuyen(huyen)
       } else {
         addToast(exampleToast('Không thể tải danh sách huyện. Vui lòng thử lại sau!'))
@@ -228,15 +226,12 @@ const AddGuestToRoom = () => {
     }
   }
 
-  const [danhSachPhuongXa, setDanhSachPhuongXa] = useState([])
-  const DanhSacPhuongXa = async (maHuyen) => {
+  const DanhSacPhuongXa = async (maTinh) => {
     try {
-      // Gọi API lấy thông tin booking
-      const phuongxa = await getlPhuongXaByMaHuyen(maHuyen, navigate)
+      // Tạm thời lọc phường/xã theo tỉnh/thành theo dữ liệu mới từ backend
+      const phuongxa = await getlPhuongXaByMaTinh(maTinh, navigate)
 
       if (phuongxa) {
-        // Gọi API lấy chi tiết booking
-
         setDanhSachPhuongXa(phuongxa)
       } else {
         addToast(exampleToast('⚠️ Không thể tải danh sách phường xã. Vui lòng thử lại sau!'))
@@ -279,6 +274,14 @@ const AddGuestToRoom = () => {
   const [danhXung, setDanhXung] = useState([])
   const [quocGia, setQuocGia] = useState([])
   const [loaiGiayTo, setLoaiGiayTo] = useState([])
+  const loaiGiayToMacDinh = [
+    { maLoaiGiayTo: 'DULICH', tenLoaiGiaTo: 'Du lịch' },
+    { maLoaiGiayTo: 'CONGTAC', tenLoaiGiaTo: 'Công tác' },
+    { maLoaiGiayTo: 'HOCTAP', tenLoaiGiaTo: 'Học tập' },
+    { maLoaiGiayTo: 'HOINGHI', tenLoaiGiaTo: 'Hội nghị' },
+    { maLoaiGiayTo: 'KETHON', tenLoaiGiaTo: 'Kết hôn' },
+    { maLoaiGiayTo: 'MUCDICHKHAC', tenLoaiGiaTo: 'Mục đích khác' },
+  ]
   const [loaiTreEm, setLoaiTreEm] = useState([])
 
   const DanhSach = async () => {
@@ -311,38 +314,27 @@ const AddGuestToRoom = () => {
 
   const handleChangeTinhThanh = (e) => {
     console.log(e)
-    const maTinh = e.maTinh
+    const maTinh = e?.maTinh
 
     if (maTinh === '' || maTinh === undefined) {
       addToast(exampleToast('❌ Mã tỉnh hiện tại không hợp lệ'))
     } else {
-      DanhSachHuyen(maTinh)
+      DanhSacPhuongXa(maTinh)
       setValueTinh(e)
+      setValueHuyen(null)
       setKhachHangPhong((prev) => ({
         ...prev,
         tinhThanh: {
           maTinh: e.maTinh || '',
           tenTinh: e.tenTinh || '',
         },
-      }))
-    }
-  }
-
-  const handleChangeHuyen = (e) => {
-    console.log(e)
-    const maHuyen = e.maHuyen
-
-    if (maHuyen === '' || maHuyen === undefined) {
-      addToast(exampleToast('❌ Mã huyện hiện tại không hợp lệ'))
-    } else {
-      DanhSacPhuongXa(maHuyen)
-
-      setValueHuyen(e)
-      setKhachHangPhong((prev) => ({
-        ...prev,
         huyen: {
-          maHuyen: e.maHuyen || '',
-          tenhuyen: e.tenhuyen || '',
+          maHuyen: '',
+          tenhuyen: '',
+        },
+        phuongXa: {
+          maPhuongXa: '',
+          tenPhuongXa: '',
         },
       }))
     }
@@ -426,11 +418,6 @@ const AddGuestToRoom = () => {
       return addToast(exampleToast('⚠️ Vui lòng chọn Tỉnh/Thành phố'))
     }
 
-    // Kiểm tra quận/huyện
-    if (!khachHangPhong.huyen?.maHuyen || khachHangPhong.huyen.maHuyen === '') {
-      return addToast(exampleToast('⚠️ Vui lòng chọn Quận/Huyện'))
-    }
-
     // Kiểm tra phường/xã
     if (!khachHangPhong.phuongXa?.maPhuongXa || khachHangPhong.phuongXa.maPhuongXa === '') {
       return addToast(exampleToast('⚠️ Vui lòng chọn Phường/Xã'))
@@ -444,6 +431,9 @@ const AddGuestToRoom = () => {
       if (!khachHangPhong.soGiayTo) {
         return addToast(exampleToast('⚠️ Chưa Nhập Số giấy tờ'))
       }
+    }
+    if(!khachHangPhong.lyDoLuuTru) {
+      return addToast(exampleToast('⚠️ Lý do cư trú'))
     }
     try {
       setTrangthaiload(true)
@@ -558,11 +548,6 @@ const AddGuestToRoom = () => {
       return addToast(exampleToast('⚠️ Vui lòng chọn Tỉnh/Thành phố'))
     }
 
-    // Kiểm tra quận/huyện
-    if (!khachHangPhong.huyen?.maHuyen || khachHangPhong.huyen.maHuyen === '') {
-      return addToast(exampleToast('⚠️ Vui lòng chọn Quận/Huyện'))
-    }
-
     // Kiểm tra phường/xã
     if (!khachHangPhong.phuongXa?.maPhuongXa || khachHangPhong.phuongXa.maPhuongXa === '') {
       return addToast(exampleToast('⚠️ Vui lòng chọn Phường/Xã'))
@@ -663,18 +648,18 @@ const AddGuestToRoom = () => {
           tenTinh: thongtin.tinhThanh.tenTinh,
         })
 
-        const huyen = await getHuyenByMaTinh(thongtin.tinhThanh.maTinh, navigate)
-        setDanhSachHuyen(huyen)
-        huyen.forEach((h) => {
-          if (h.maHuyen === thongtin.huyen.maHuyen) {
-            setValueHuyen({
-              maHuyen: thongtin.huyen.maHuyen,
-              tenhuyen: thongtin.huyen.tenhuyen,
-            })
-          }
-        })
+        // const huyen = await getHuyenByMaTinh(thongtin.tinhThanh.maTinh, navigate)
+        // setDanhSachHuyen(huyen)
+        // huyen.forEach((h) => {
+        //   if (h.maHuyen === thongtin.huyen.maHuyen) {
+        //     setValueHuyen({
+        //       maHuyen: thongtin.huyen.maHuyen,
+        //       tenhuyen: thongtin.huyen.tenhuyen,
+        //     })
+        //   }
+        // })
 
-        const phuongxa = await getlPhuongXaByMaHuyen(thongtin.huyen.maHuyen, navigate)
+        const phuongxa = await getlPhuongXaByMaTinh(thongtin.tinhThanh.maTinh, navigate)
         setDanhSachPhuongXa(phuongxa)
 
         phuongxa.forEach((px) => {
@@ -861,15 +846,15 @@ const AddGuestToRoom = () => {
         }
       }
 
-      if (tenTinh) {
-        const tinhResult = await findAndSelectTinh(tenTinh)
-        if (tinhResult?.tinh && tenHuyen) {
-          const huyenResult = await findAndSelectHuyen(tenHuyen, tinhResult.tinh.maTinh)
-          if (huyenResult?.huyen && tenXa) {
-            await findAndSelectPhuongXa(tenXa, huyenResult.huyen.maHuyen)
-          }
-        }
-      }
+      // if (tenTinh) {
+      //   const tinhResult = await findAndSelectTinh(tenTinh)
+      //   if (tinhResult?.tinh && tenHuyen) {
+      //     const huyenResult = await findAndSelectHuyen(tenHuyen, tinhResult.tinh.maTinh)
+      //     if (huyenResult?.huyen && tenXa) {
+      //       await findAndSelectPhuongXa(tenXa, huyenResult.huyen.maHuyen)
+      //     }
+      //   }
+      // }
 
       addToast(exampleToast('✔️ Đã điền thành công thông tin từ CCCD'))
       setDataQR('')
@@ -1017,94 +1002,94 @@ const AddGuestToRoom = () => {
     }
   }
 
-  const findAndSelectHuyen = async (tenHuyen, maTinh) => {
-    try {
-      if (!tenHuyen || !maTinh) {
-        console.log('Thiếu thông tin tên huyện hoặc mã tỉnh:', { tenHuyen, maTinh })
-        return null
-      }
+  // const findAndSelectHuyen = async (tenHuyen, maTinh) => {
+  //   try {
+  //     if (!tenHuyen || !maTinh) {
+  //       console.log('Thiếu thông tin tên huyện hoặc mã tỉnh:', { tenHuyen, maTinh })
+  //       return null
+  //     }
 
-      // Lấy danh sách huyện dựa vào mã tỉnh
-      const huyenList = await getHuyenByMaTinh(maTinh, navigate)
-      if (!huyenList?.length) {
-        console.log('Không tìm thấy danh sách huyện cho mã tỉnh:', maTinh)
-        return null
-      }
+  //     // Lấy danh sách huyện dựa vào mã tỉnh
+  //     const huyenList = await getHuyenByMaTinh(maTinh, navigate)
+  //     if (!huyenList?.length) {
+  //       console.log('Không tìm thấy danh sách huyện cho mã tỉnh:', maTinh)
+  //       return null
+  //     }
 
-      setDanhSachHuyen(huyenList)
+  //     setDanhSachHuyen(huyenList)
 
-      // Tìm huyện trong danh sách dựa vào tên
-      const huyen = huyenList.find((h) => h.tenhuyen.toLowerCase().includes(tenHuyen.toLowerCase()))
+  //     // Tìm huyện trong danh sách dựa vào tên
+  //     const huyen = huyenList.find((h) => h.tenhuyen.toLowerCase().includes(tenHuyen.toLowerCase()))
 
-      if (huyen) {
-        console.log('Đã tìm thấy huyện:', huyen)
-        // Cập nhật select huyện
-        setValueHuyen(huyen)
-        // Cập nhật form
-        setKhachHangPhong((prev) => ({
-          ...prev,
-          huyen: {
-            maHuyen: huyen.maHuyen,
-            tenhuyen: huyen.tenhuyen,
-          },
-        }))
+  //     if (huyen) {
+  //       console.log('Đã tìm thấy huyện:', huyen)
+  //       // Cập nhật select huyện
+  //       setValueHuyen(huyen)
+  //       // Cập nhật form
+  //       setKhachHangPhong((prev) => ({
+  //         ...prev,
+  //         huyen: {
+  //           maHuyen: huyen.maHuyen,
+  //           tenhuyen: huyen.tenhuyen,
+  //         },
+  //       }))
 
-        // Lấy danh sách phường xã
-        const phuongXaList = await DanhSacPhuongXa(huyen.maHuyen)
-        return { huyen, phuongXaList }
-      } else {
-        console.log('Không tìm thấy huyện có tên:', tenHuyen)
-        return null
-      }
-    } catch (error) {
-      console.error('Lỗi khi tìm và chọn huyện:', error)
-      return null
-    }
-  }
+  //       // Lấy danh sách phường xã
+  //       const phuongXaList = await DanhSacPhuongXa(huyen.maHuyen)
+  //       return { huyen, phuongXaList }
+  //     } else {
+  //       console.log('Không tìm thấy huyện có tên:', tenHuyen)
+  //       return null
+  //     }
+  //   } catch (error) {
+  //     console.error('Lỗi khi tìm và chọn huyện:', error)
+  //     return null
+  //   }
+  // }
 
-  const findAndSelectPhuongXa = async (tenXa, maHuyen) => {
-    try {
-      if (!tenXa || !maHuyen) {
-        console.log('Thiếu thông tin tên xã hoặc mã huyện:', { tenXa, maHuyen })
-        return null
-      }
+  // const findAndSelectPhuongXa = async (tenXa, maHuyen) => {
+  //   try {
+  //     if (!tenXa || !maHuyen) {
+  //       console.log('Thiếu thông tin tên xã hoặc mã huyện:', { tenXa, maHuyen })
+  //       return null
+  //     }
 
-      // Lấy danh sách phường xã dựa vào mã huyện
-      const phuongXaList = await getlPhuongXaByMaHuyen(maHuyen, navigate)
-      if (!phuongXaList?.length) {
-        console.log('Không tìm thấy danh sách phường xã cho mã huyện:', maHuyen)
-        return null
-      }
+  //     // Lấy danh sách phường xã dựa vào mã huyện
+  //     const phuongXaList = await getlPhuongXaByMaHuyen(maHuyen, navigate)
+  //     if (!phuongXaList?.length) {
+  //       console.log('Không tìm thấy danh sách phường xã cho mã huyện:', maHuyen)
+  //       return null
+  //     }
 
-      setDanhSachPhuongXa(phuongXaList)
+  //     setDanhSachPhuongXa(phuongXaList)
 
-      // Tìm phường/xã trong danh sách dựa vào tên
-      const phuongXa = phuongXaList.find((px) =>
-        px.tenPhuongXa.toLowerCase().includes(tenXa.toLowerCase()),
-      )
+  //     // Tìm phường/xã trong danh sách dựa vào tên
+  //     const phuongXa = phuongXaList.find((px) =>
+  //       px.tenPhuongXa.toLowerCase().includes(tenXa.toLowerCase()),
+  //     )
 
-      if (phuongXa) {
-        console.log('Đã tìm thấy phường/xã:', phuongXa)
-        // Cập nhật select phường xã
-        setValuePhungXa(phuongXa)
-        // Cập nhật form
-        setKhachHangPhong((prev) => ({
-          ...prev,
-          phuongXa: {
-            maPhuongXa: phuongXa.maPhuongXa,
-            tenPhuongXa: phuongXa.tenPhuongXa,
-          },
-        }))
-        return phuongXa
-      } else {
-        console.log('Không tìm thấy phường/xã có tên:', tenXa)
-        return null
-      }
-    } catch (error) {
-      console.error('Lỗi khi tìm và chọn phường/xã:', error)
-      return null
-    }
-  }
+  //     if (phuongXa) {
+  //       console.log('Đã tìm thấy phường/xã:', phuongXa)
+  //       // Cập nhật select phường xã
+  //       setValuePhungXa(phuongXa)
+  //       // Cập nhật form
+  //       setKhachHangPhong((prev) => ({
+  //         ...prev,
+  //         phuongXa: {
+  //           maPhuongXa: phuongXa.maPhuongXa,
+  //           tenPhuongXa: phuongXa.tenPhuongXa,
+  //         },
+  //       }))
+  //       return phuongXa
+  //     } else {
+  //       console.log('Không tìm thấy phường/xã có tên:', tenXa)
+  //       return null
+  //     }
+  //   } catch (error) {
+  //     console.error('Lỗi khi tìm và chọn phường/xã:', error)
+  //     return null
+  //   }
+  // }
 
   const [dataQR, setDataQR] = useState(null)
   const inputRef = useRef(null) // Tạo tham chiếu đến ô input
@@ -1153,11 +1138,10 @@ const AddGuestToRoom = () => {
       // Tự động chọn tỉnh, huyện và phường xã
       if (cccdData.tenTinh) {
         const tinhResult = await findAndSelectTinh(cccdData.tenTinh)
-        if (tinhResult?.tinh && cccdData.tenHuyen) {
-          const huyenResult = await findAndSelectHuyen(cccdData.tenHuyen, tinhResult.tinh.maTinh)
-          if (huyenResult?.huyen && cccdData.tenXa) {
-            await findAndSelectPhuongXa(cccdData.tenXa, huyenResult.huyen.maHuyen)
-          }
+        if (tinhResult?.tinh) {
+        
+            await getlPhuongXaByMaTinh(cccdData.tenXa, tinhResult.tinh.maTinh)
+          
         }
       }
 
@@ -1625,6 +1609,34 @@ const AddGuestToRoom = () => {
                       </CRow>
 
                       <CRow className="mb-3">
+                        <CFormLabel className="col-sm-3 col-form-label labelcustome">
+                          Lý do cư trú{' '}
+                         
+                            <span className="text-danger"> *</span>
+                         
+                        </CFormLabel>
+                        <CCol sm={9}>
+                          <Select
+                            getOptionValue={(option) => option.maLoaiGiayTo}
+                            getOptionLabel={(option) => option.tenLoaiGiaTo}
+                            options={loaiGiayToMacDinh}
+                            placeholder={'Chọn lý do cư trú'}
+                            value={
+                              loaiGiayToMacDinh.find(
+                                (item) => item.maLoaiGiayTo === khachHangPhong.lyDoLuuTru,
+                              ) || loaiGiayToMacDinh[0]
+                            }
+                            onChange={(selectedOption) => {
+                              setKhachHangPhong((prev) => ({
+                                ...prev,
+                                lyDoLuuTru: selectedOption?.maLoaiGiayTo || loaiGiayToMacDinh[0].maLoaiGiayTo,
+                              }))
+                            }}
+                          />
+                        </CCol>
+                      </CRow>
+
+                      <CRow className="mb-3">
                         <CFormLabel
                           htmlFor="inputPassword"
                           className="col-sm-3 col-form-label labelcustome"
@@ -1665,7 +1677,7 @@ const AddGuestToRoom = () => {
                         value={valueTinh}
                       />
                     </CCol>
-                    <CCol sm={4}>
+                    <CCol sm={4} className="d-none">
                       <CFormLabel
                         htmlFor="inputPassword"
                         className="col-sm-4 col-form-label labelcustome"
@@ -1675,12 +1687,8 @@ const AddGuestToRoom = () => {
                       <Select
                         getOptionValue={(option) => option.maHuyen}
                         getOptionLabel={(option) => option.tenhuyen}
-                        // value={nhomKhachHang.find(
-                        //   (option) =>
-                        //     option.maNhomKhachHang === booKing.nhomKhachHang.maNhomKhachHang,
-                        // )}
                         options={danhSachHuyen}
-                        onChange={handleChangeHuyen}
+                        onChange={() => {}}
                         placeholder={'Chọn Quận/Huyện'}
                         value={valueHuyen}
                       />
@@ -1695,14 +1703,14 @@ const AddGuestToRoom = () => {
                             Phường xã <span className="text-danger"> *</span>
                           </CFormLabel>
                         </CCol>
-                        <CCol className="text-end " onClick={() => setVisiblePhuongXaModal(true)}>
+                        {/* <CCol className="text-end " onClick={() => setVisiblePhuongXaModal(true)}>
                           <CTooltip content="Thêm phường xã" placement="left">
                             <FontAwesomeIcon
                               icon={faPlus}
                               className="text-blue-500 font-bold cursor-pointer"
                             />
                           </CTooltip>
-                        </CCol>
+                        </CCol> */}
                       </CRow>
 
                       <Select

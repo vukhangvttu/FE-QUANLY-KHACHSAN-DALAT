@@ -126,7 +126,6 @@ const HotelManagement = () => {
   const {
     allowedTabs,
     isLoading: permissionsLoading,
-    isTokenValid,
     canAccessTab,
     canAccessButton,
     getDefaultActiveTab,
@@ -258,9 +257,6 @@ const HotelManagement = () => {
       const vietnamTime = new Date(
         new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }),
       )
-
-      // Lấy giờ hiện tại theo múi giờ Việt Nam
-      const currentHour = vietnamTime.getHours()
 
       // Format ngày hiện tại theo định dạng YYYY-MM-DD
       const currentDate =

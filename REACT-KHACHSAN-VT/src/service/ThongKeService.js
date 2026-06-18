@@ -185,3 +185,37 @@ export const exportExcelThongKeBuongPhong = async (ngayBatDau, ngayKetThuc) => {
     throw error
   }
 }
+
+export const exportExcelThongKePhongDaBanKhoanThoiGian = async (thangBD, namBD, thangKT, namKT) => {
+  try {
+    const response = await axiosInstance.get('/thong-ke/thong-ke-phong-da-ban-theo-khoan-thoi-gian', {
+      params: {
+        thangBD: thangBD,
+        namBD: namBD,
+        thangKT: thangKT,
+        namKT: namKT,
+      },
+    })
+    console.log(response)
+    return response.data
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+}
+
+export const exportExcelThongKeDoanhSoKPINhanVien = async (ngayDen, ngayDi) => {
+  try {
+    const response = await axiosInstance.get('/thong-ke/export/excel/bao-cao-doanh-so-kpi-nhan-vien', {
+      params: {
+        ngayDen: format(ngayDen, 'yyyy-MM-dd'),
+        ngayDi: format(ngayDi, 'yyyy-MM-dd'),
+      },
+      responseType: 'blob',
+    })
+    return response.data
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+}

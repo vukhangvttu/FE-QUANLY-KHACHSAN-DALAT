@@ -5,12 +5,8 @@ import {
   CCol,
   CDatePicker,
   CForm,
-  CFormCheck,
   CFormInput,
-  CFormLabel,
   CFormSelect,
-  CFormTextarea,
-  CInputGroup,
   CRow,
   CSpinner,
   CTable,
@@ -27,36 +23,45 @@ import {
 } from '@coreui/react-pro'
 import { faCirclePlus, faDeleteLeft, faFloppyDisk, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 import { format } from 'date-fns'
 import Select from 'react-select'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  getAllDanhXung,
-  getAllLoaiThe,
-  getAllTrangThaiBooKing,
-  getAllYeuCau,
-} from 'src/service/APIService'
-
-import { getAllLoaiPhongTrongTrongKhoanThoiGian } from 'src/service/LoaiPhongService'
-import { getAllNhomKhachHang } from 'src/service/NhomKhachHang'
-import {
-  getBooKingByMaBooKing,
-  getChiTietBooKingByMaBooKing,
-  updateBooking,
-} from 'src/service/BooKingService'
-
 import CurrencyInput from 'react-currency-input-field'
+
+import { useBookingState, useBookingData } from './hooks'
+import { toDateString, tinhSoDem, getDatesBetween, formatNgayThu, createDateFromInput, getToday } from './utils/dateHelpers'
+import { calculateRowTotal, calculateBookingTotal, isLoaiPhongHoiNghi, getGiaOptions, getGiaTheoLoaiNgay, calculateChiTietBookingData } from './utils/bookingCalculations'
+import { CustomerInfoSection, BookingStatusSection } from './components/BookingForm'
 import XoaLoaiPhongChiTiet from '../modal/XoaLoaiPhongChiTiet'
-import { getAllGiaPhongTheoThoiGian } from 'src/service/GiaPhongService'
 import XoaPhongHoiNghi from '../modal/XoaPhongHoiNghi'
-import { getListPhongTrongTheoKhoanThoiGianAndBooking } from 'src/service/PhongService'
 
 const EditBooKing = () => {
   const { ma_booking } = useParams()
+  const navigate = useNavigate()
+  const toaster = useRef()
+  const [toast, addToast] = React.useState(0)
 
-  const [rows, setRows] = useState([])
-  const [giaTheoNgay, setGiaTheoNgay] = useState({})
+  const exampleToast = (message) => (
+    <CToast>
+      <CToastHeader closeButton>
+        <svg className="rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img">
+          <rect width="100%" height="100%" fill="#007aff"></rect>
+        </svg>
+        <div className="fw-bold me-auto">Thông báo</div>
+        <small>Thông báo biến mất sau 5 giây</small>
+      </CToastHeader>
+      <CToastBody>{message}</CToastBody>
+    </CToast>
+  )
+
+  const { state, actions } = useBookingState()
+  const {
+    danhXung, nhomKhachHang, trangThaiBooKing, loaiThe, yeuCau, giaPhong,
+    fetchDanhSach, fetchBooKing, fetchLoaiPhongTrong, fetchPhongOptions, saveBooking
+  } = useBookingData(navigate, addToast, exampleToast)
+
+  const { booKing, rows, rowsHoiNghi, giaTheoNgay, listLoaiPhongTrongTheoDong, phongOptions, loading, isTableLoading, tongTienKhachCanTra } = state
 
   // Thêm dòng mới
   const handleAddRow = () => {
@@ -284,6 +289,7 @@ const EditBooKing = () => {
 
         // Tính toán giaPhongTheoNgays
         const ngayDen = new Date(row.ngayDen.split('/').reverse().join('-'))
+        const ngayDi = new Date(row.ngayDi.split('/').reverse().join('-'))
         let giaPhongTheoNgays = []
         let tongTienPhong = 0
 
@@ -646,7 +652,6 @@ const EditBooKing = () => {
     }))
   }
 
-  // eslint-disable-next-line no-unused-vars
   const handleGiaChange = (value, maLoaiPhong) => {
     const rawValue = value.replace(/[^0-9]/g, '')
     if (!isNaN(rawValue)) {
@@ -838,12 +843,10 @@ const EditBooKing = () => {
     }
   }
   // Sửa lại useEffect
-  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     DanhSach()
     BooKing(ma_booking)
   }, [ma_booking])
-  /* eslint-enable react-hooks/exhaustive-deps */
   // save thông tin đặt phòng
 
   const [booKing, setBooKing] = useState({
@@ -925,7 +928,6 @@ const EditBooKing = () => {
     }
   }
 
-  // eslint-disable-next-line no-unused-vars
   const [tongTienKhachCanTra, setTongTienKhachCanTra] = useState(0)
 
   const handleOnValueChange = (value) => {
@@ -1424,7 +1426,6 @@ const EditBooKing = () => {
   const [visibleXoaHoiNghi, setVisbleXoaHoiNghi] = useState(false)
   const [maPhongHoiNghi, setMaPhongHoiNghi] = useState('')
 
-  // eslint-disable-next-line no-unused-vars
   const handleHienThiXoaHoiNghi = (ma_phong_hoi_nghi) => {
     if (ma_phong_hoi_nghi === null || ma_phong_hoi_nghi === '' || ma_phong_hoi_nghi === undefined) {
       addToast(exampleToast('Mã hội nghị không hợp lệ vui lòng thử lại'))
@@ -1499,7 +1500,7 @@ const EditBooKing = () => {
   // State cho dòng hội nghị
   const [rowsHoiNghi, setRowsHoiNghi] = useState([])
 
-  // eslint-disable-next-line no-unused-vars
+  // Thêm dòng hội nghị
   const handleAddRowHoiNghi = () => {
     if (rowsHoiNghi.length === 0) {
       setRowsHoiNghi([
@@ -1515,6 +1516,26 @@ const EditBooKing = () => {
     }
   }
 
+  // Xóa dòng hội nghị
+  const handleRemoveRowHoiNghi = () => {
+    setRowsHoiNghi([])
+  }
+
+  // Khi thay đổi trường trong hội nghị, cập nhật rowsHoiNghi và cập nhật booKing.phongHoiNghis
+  const handleHoiNghiChange = (idx, field, value) => {
+    setRowsHoiNghi((rows) => {
+      const updated = rows.map((r, i) => (i === idx ? { ...r, [field]: value } : r))
+      // Đồng bộ với booking để khi Update gửi đúng dữ liệu mới nhất
+      setBooKing((prev) => ({ ...prev, phongHoiNghis: updated }))
+      return updated
+    })
+  }
+
+  // Tính tổng tiền hội nghị
+  const tongTienHoiNghi = rowsHoiNghi.reduce(
+    (sum, row) => sum + (parseFloat(row.donGia) || 0) * (parseInt(row.soLuong) || 0),
+    0,
+  )
 
   // ngày 12-05-2025 bổ sung thêm cột phòng
   const [phongOptions, setPhongOptions] = useState({})
@@ -2154,6 +2175,9 @@ const EditBooKing = () => {
     const updatedRows = rows.map((row) => {
       if (row.index === index) {
         const soDem = tinhSoDem(row.ngayDen, row.ngayDi)
+        const ngayDen = new Date(row.ngayDen.split('/').reverse().join('-'))
+        const ngayDi = new Date(row.ngayDi.split('/').reverse().join('-'))
+        ngayDi.setDate(ngayDi.getDate() - 1)
 
         // Cập nhật giá trong giaPhongTheoNgays
         const updatedGiaPhongTheoNgays = row.giaPhongTheoNgays.map((giaNgay) => {
@@ -2295,7 +2319,6 @@ const EditBooKing = () => {
   }
 
   // Đồng bộ ngày đến/đi tổng vào booking khi rows thay đổi
-  /* eslint-disable react-hooks/exhaustive-deps */
   React.useEffect(() => {
     const earliest = getEarliestNgayDen()
     const latest = getLatestNgayDi()
@@ -2310,7 +2333,6 @@ const EditBooKing = () => {
       return prev
     })
   }, [rows])
-  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Thêm biến today để disable ngày đến nhỏ hơn hôm nay
   const today = new Date()
