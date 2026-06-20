@@ -57,7 +57,6 @@ const AllThanhToan = () => {
   const [ngayDiMoi, setNgayDiMoi] = useState(null)
   const [showReport, setShowReport] = useState(false)
 
-  const [phuThuTreEm, setPhuThuTreEm] = useState([])
   const [maxNgayDi, setMaxNgayDi] = useState(null)
 
   const [hinhThucThanhToan, setHinhThucThanhToan] = useState([])
@@ -457,7 +456,7 @@ const AllThanhToan = () => {
               moTa: `Phụ thu tiền giường  - Phòng ${phong.maPhong}`,
               soLuong: phong.soGiuong,
               donGia: phong.phuThuTienGiuong,
-              thanhTien: phong.phuThuTienGiuong * phong.soGiuong,
+              thanhTien: phong.phuThuTienGiuong * phong.soGiuong * (phong.soNgayO || 1),
               donViTinh: 'Cái',
               ghiChu: 'Phụ thu tiền giường',
               xepPhongBooKing: {
@@ -471,7 +470,7 @@ const AllThanhToan = () => {
               moTa: `Phụ thu người lớn - Phòng ${phong.maPhong}`,
               soLuong: phong.soNguoiLon,
               donGia: phong.phuThuNguoiLon,
-              thanhTien: phong.phuThuNguoiLon * phong.soNguoiLon,
+              thanhTien: phong.phuThuNguoiLon * phong.soNguoiLon * (phong.soNgayO || 1),
               donViTinh: 'Người',
               ghiChu: 'Phụ thu tiền người lớn',
               xepPhongBooKing: {
@@ -485,7 +484,7 @@ const AllThanhToan = () => {
               moTa: `Phụ thu trẻ em - Phòng ${phong.maPhong}`,
               soLuong: phong.soTre,
               donGia: phong.phThuTreEm,
-              thanhTien: phong.phThuTreEm * phong.soTre,
+              thanhTien: phong.phThuTreEm * phong.soTre * (phong.soNgayO || 1),
               donViTinh: 'Người',
               ghiChu: 'Phụ thu tiền trẻ em',
               xepPhongBooKing: {
@@ -512,34 +511,41 @@ const AllThanhToan = () => {
         }
       })
 
-      // Thêm chi tiết phụ thu nếu có
-      if (phuThu > 0) {
-        chiTietHoaDon.push({
-          loaiKhoanMuc: 'PHU_THU_KHAC',
-          moTa: 'Phụ thu',
-          soLuong: 1,
-          donGia: phuThu,
-          thanhTien: phuThu,
-          xepPhongBooKing: {
-            maXepPhongBooking: selectedBooking.danhSachPhong[0].maXepPhongBooking,
-          },
-        })
-      }
-
-      if (phuThuTreEm.length > 0) {
-        phuThuTreEm.forEach((item) => {
-          chiTietHoaDon.push({
-            loaiKhoanMuc: 'PHU_THU_TRE_EM',
-            moTa: 'Phụ thu trẻ em',
-            soLuong: item.so_luong_phu_thu_tre_em,
-            donGia: item.gia_phu_thu_tre_em,
-            thanhTien: item.thanhtien,
-            donViTinh: 'Người',
-            ghiChu: 'Phụ thu tiền trẻ em',
-            xepPhongBooKing: {
-              maXepPhongBooking: selectedBooking.danhSachPhong[0].maXepPhongBooking,
-            },
-          })
+      // Thêm chi tiết phụ thu từ phuThu array (trẻ em + ăn sáng)
+      if (Array.isArray(phuThu) && phuThu.length > 0) {
+        phuThu.forEach((item) => {
+          if (item.so_luong_phu_thu_tre_em > 0) {
+            chiTietHoaDon.push({
+              loaiKhoanMuc: 'PHU_THU_TRE_EM',
+              moTa: 'Phụ thu trẻ em',
+              soLuong: item.so_luong_phu_thu_tre_em,
+              donGia: item.gia_phu_thu_tre_em,
+              thanhTien:
+                item.thanhtienphuthutreem ||
+                item.gia_phu_thu_tre_em * item.so_luong_phu_thu_tre_em * item.so_dem,
+              donViTinh: 'Người',
+              ghiChu: 'Phụ thu tiền trẻ em',
+              xepPhongBooKing: {
+                maXepPhongBooking: selectedBooking.danhSachPhong[0].maXepPhongBooking,
+              },
+            })
+          }
+          if (item.so_luong_phu_thu_an_sang > 0) {
+            chiTietHoaDon.push({
+              loaiKhoanMuc: 'PHU_THU_AN_SANG',
+              moTa: 'Phụ thu ăn sáng',
+              soLuong: item.so_luong_phu_thu_an_sang,
+              donGia: item.gia_phu_thu_an_sang,
+              thanhTien:
+                item.thanhtienphuthuansang ||
+                item.gia_phu_thu_an_sang * item.so_luong_phu_thu_an_sang * item.so_dem,
+              donViTinh: 'Người',
+              ghiChu: 'Phụ thu ăn sáng',
+              xepPhongBooKing: {
+                maXepPhongBooking: selectedBooking.danhSachPhong[0].maXepPhongBooking,
+              },
+            })
+          }
         })
       }
 
@@ -587,8 +593,8 @@ const AllThanhToan = () => {
       try {
         setLoadSubmit(true)
         // 5. Gọi API nếu dữ liệu hợp lệ
-        const response = await createAllThongTinThanhToan(ma_booking, thanhToanRequest)
-        // const response = []
+        // const response = await createAllThongTinThanhToan(ma_booking, thanhToanRequest)
+        const response = []
         console.log('createHoaDon successfully:', response)
         // setLoadSubmit(false)
         // 6. Kiểm tra mã phản hồi từ server
@@ -1098,37 +1104,76 @@ const AllThanhToan = () => {
                                   <CTableHeaderCell>Thành tiền</CTableHeaderCell>
                                 </CTableRow>
                                 {Array.isArray(phuThu) && phuThu.length > 0
-                                  ? phuThu.map((item, index) => (
-                                      <CTableRow key={index}>
-                                        <CTableDataCell>{index + 1}</CTableDataCell>
-                                        <CTableDataCell>
-                                          {' '}
-                                          {(item.so_luong_phu_thu_tre_em > 0 && 'Phụ thu trẻ em') ||
-                                            (item.so_luong_phu_thu_an_sang > 0 &&
-                                              'Phụ thu ăn sáng') ||
-                                            'Phụ thu khác'}
-                                        </CTableDataCell>
-                                        <CTableDataCell>
-                                          {item.so_luong_phu_thu_tre_em ||
-                                            item.so_luong_phu_thu_an_sang}
-                                        </CTableDataCell>
-
-                                        <CTableDataCell>{item.so_dem}</CTableDataCell>
-                                        <CTableDataCell>
-                                          {formatCurrency(
-                                            item.gia_phu_thu_tre_em || item.gia_phu_thu_an_sang,
-                                          )}
-                                        </CTableDataCell>
-                                        <CTableDataCell>
-                                          {formatCurrency(
-                                            item.thanhtien ||
-                                              item.gia_phu_thu_an_sang *
-                                                item.so_luong_phu_thu_an_sang *
-                                                item.so_dem,
-                                          )}
-                                        </CTableDataCell>
-                                      </CTableRow>
-                                    ))
+                                  ? (() => {
+                                      const rows = []
+                                      let stt = 1
+                                      phuThu.forEach((item, index) => {
+                                        if (item.so_luong_phu_thu_tre_em > 0) {
+                                          rows.push(
+                                            <CTableRow key={`${index}-tre-em`}>
+                                              <CTableDataCell>{stt++}</CTableDataCell>
+                                              <CTableDataCell>Phụ thu trẻ em</CTableDataCell>
+                                              <CTableDataCell>
+                                                {item.so_luong_phu_thu_tre_em}
+                                              </CTableDataCell>
+                                              <CTableDataCell>{item.so_dem}</CTableDataCell>
+                                              <CTableDataCell>
+                                                {formatCurrency(item.gia_phu_thu_tre_em)}
+                                              </CTableDataCell>
+                                              <CTableDataCell>
+                                                {formatCurrency(
+                                                  item.thanhtienphuthutreem ||
+                                                    item.gia_phu_thu_tre_em *
+                                                      item.so_luong_phu_thu_tre_em *
+                                                      item.so_dem,
+                                                )}
+                                              </CTableDataCell>
+                                            </CTableRow>,
+                                          )
+                                        }
+                                        if (item.so_luong_phu_thu_an_sang > 0) {
+                                          rows.push(
+                                            <CTableRow key={`${index}-an-sang`}>
+                                              <CTableDataCell>{stt++}</CTableDataCell>
+                                              <CTableDataCell>Phụ thu ăn sáng</CTableDataCell>
+                                              <CTableDataCell>
+                                                {item.so_luong_phu_thu_an_sang}
+                                              </CTableDataCell>
+                                              <CTableDataCell>{item.so_dem}</CTableDataCell>
+                                              <CTableDataCell>
+                                                {formatCurrency(item.gia_phu_thu_an_sang)}
+                                              </CTableDataCell>
+                                              <CTableDataCell>
+                                                {formatCurrency(
+                                                  item.thanhtienphuthuansang ||
+                                                    item.gia_phu_thu_an_sang *
+                                                      item.so_luong_phu_thu_an_sang *
+                                                      item.so_dem,
+                                                )}
+                                              </CTableDataCell>
+                                            </CTableRow>,
+                                          )
+                                        }
+                                        if (
+                                          !(item.so_luong_phu_thu_tre_em > 0) &&
+                                          !(item.so_luong_phu_thu_an_sang > 0)
+                                        ) {
+                                          rows.push(
+                                            <CTableRow key={`${index}-khac`}>
+                                              <CTableDataCell>{stt++}</CTableDataCell>
+                                              <CTableDataCell>Phụ thu khác</CTableDataCell>
+                                              <CTableDataCell></CTableDataCell>
+                                              <CTableDataCell>{item.so_dem}</CTableDataCell>
+                                              <CTableDataCell></CTableDataCell>
+                                              <CTableDataCell>
+                                                {formatCurrency(item.thanhtien)}
+                                              </CTableDataCell>
+                                            </CTableRow>,
+                                          )
+                                        }
+                                      })
+                                      return rows
+                                    })()
                                   : null}
                               </CTableBody>
                             </CTable>
@@ -1437,20 +1482,64 @@ const AllThanhToan = () => {
                           </CTableRow>
                         ))}
 
-                        {selectedPhong.danhSachPhuThu.map((phThu, index) => (
-                          <CTableRow key={index}>
-                            <CTableDataCell>{phThu.moTa}</CTableDataCell>
+                        {selectedPhong?.phuThuTienGiuong > 0 && (
+                          <CTableRow>
+                            <CTableDataCell>Phụ thu tiền giường</CTableDataCell>
                             <CTableDataCell className="text-end">
-                              {formatCurrency(phThu.donGia)}
+                              {formatCurrency(selectedPhong.phuThuTienGiuong)}
                             </CTableDataCell>
-                            <CTableDataCell className="text-end">{phThu.soLuong}</CTableDataCell>
                             <CTableDataCell className="text-end">
-                              {formatCurrency(phThu.thanhTien)}
+                              {selectedPhong.soGiuong} giường / {selectedPhong.soNgayO} đêm
+                            </CTableDataCell>
+                            <CTableDataCell className="text-end">
+                              {formatCurrency(
+                                selectedPhong.phuThuTienGiuong *
+                                  selectedPhong.soGiuong *
+                                  selectedPhong.soNgayO,
+                              )}
                             </CTableDataCell>
                           </CTableRow>
-                        ))}
+                        )}
 
-                        {selectedPhong?.phuThuCheckinSom ? (
+                        {selectedPhong?.phuThuNguoiLon > 0 && (
+                          <CTableRow>
+                            <CTableDataCell>Phụ thu người lớn</CTableDataCell>
+                            <CTableDataCell className="text-end">
+                              {formatCurrency(selectedPhong.phuThuNguoiLon)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-end">
+                              {selectedPhong.soNguoiLon} người lớn / {selectedPhong.soNgayO} đêm
+                            </CTableDataCell>
+                            <CTableDataCell className="text-end">
+                              {formatCurrency(
+                                selectedPhong.phuThuNguoiLon *
+                                  selectedPhong.soNguoiLon *
+                                  selectedPhong.soNgayO,
+                              )}
+                            </CTableDataCell>
+                          </CTableRow>
+                        )}
+
+                        {selectedPhong?.phThuTreEm > 0 && (
+                          <CTableRow>
+                            <CTableDataCell>Phụ thu trẻ em</CTableDataCell>
+                            <CTableDataCell className="text-end">
+                              {formatCurrency(selectedPhong.phThuTreEm)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-end">
+                              {selectedPhong.soTre} trẻ em / {selectedPhong.soNgayO} đêm
+                            </CTableDataCell>
+                            <CTableDataCell className="text-end">
+                              {formatCurrency(
+                                selectedPhong.phThuTreEm *
+                                  selectedPhong.soTre *
+                                  selectedPhong.soNgayO,
+                              )}
+                            </CTableDataCell>
+                          </CTableRow>
+                        )}
+
+                        {selectedPhong?.phuThuCheckinSom > 0 && (
                           <CTableRow>
                             <CTableDataCell>Phụ thu check-in sớm</CTableDataCell>
                             <CTableDataCell className="text-end">
@@ -1458,13 +1547,9 @@ const AllThanhToan = () => {
                             </CTableDataCell>
                             <CTableDataCell className="text-end">1</CTableDataCell>
                             <CTableDataCell className="text-end">
-                              {formatCurrency(
-                                tinhTongPhuThuCheckInTreBooking(selectedBooking.danhSachPhong),
-                              )}
+                              {formatCurrency(selectedPhong.phuThuCheckinSom)}
                             </CTableDataCell>
                           </CTableRow>
-                        ) : (
-                          ''
                         )}
 
                         <CTableRow>

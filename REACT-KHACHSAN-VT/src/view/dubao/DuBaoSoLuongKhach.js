@@ -151,7 +151,7 @@ const DuBaoSoLuongKhach = ({ isActive }) => {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-8">
-          <CSpinner size="xl" aria-hidden="true" />
+          <CSpinner  aria-hidden="true" />
           <span role="status">Loading...</span>
         </div>
       ) : (

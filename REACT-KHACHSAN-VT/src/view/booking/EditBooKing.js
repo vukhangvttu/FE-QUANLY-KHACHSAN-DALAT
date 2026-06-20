@@ -3267,40 +3267,43 @@ const EditBooKing = () => {
                                 })
                             )}
                           </CTableBody>
-                          <CTableRow color="secondary">
-                            <CTableDataCell className="text-center">
-                              {getEarliestNgayDen() || ''}
-                            </CTableDataCell>
-                            <CTableDataCell className="text-center">
-                              {getLatestNgayDi() || ''}
-                            </CTableDataCell>
+                          <CTableBody>
+                            <CTableRow>
+                              <CTableDataCell className="text-center">
+                                {getEarliestNgayDen() || ''}
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center">
+                                {getLatestNgayDi() || ''}
+                              </CTableDataCell>
 
-                            <CTableDataCell
-                              colSpan={2}
-                              className="text-center"
-                              scope="col"
-                            ></CTableDataCell>
+                              <CTableDataCell
+                                colSpan={2}
+                                className="text-center"
+                                scope="col"
+                              ></CTableDataCell>
 
-                            <CTableDataCell className="text-center" scope="col">
-                              {booKing.tongSoLuong}
-                            </CTableDataCell>
+                              <CTableDataCell className="text-center" scope="col">
+                                {booKing.tongSoLuong}
+                              </CTableDataCell>
 
-                            <CTableDataCell scope="col" className="text-center">
-                              {booKing.soNguoiLon}
-                            </CTableDataCell>
-                            <CTableDataCell scope="col" className="text-center">
-                              {booKing.soTreEm}
-                            </CTableDataCell>
+                              <CTableDataCell scope="col" className="text-center">
+                                {booKing.soNguoiLon}
+                              </CTableDataCell>
+                              <CTableDataCell scope="col" className="text-center">
+                                {booKing.soTreEm}
+                              </CTableDataCell>
 
-                            <CTableDataCell
-                              colSpan={9}
-                              scope="col"
-                              className="text-center"
-                            ></CTableDataCell>
-                            <CTableDataCell className="text-center font-bold">
-                              {booKing.tongTien.toLocaleString('en-US')}
-                            </CTableDataCell>
-                          </CTableRow>
+                              <CTableDataCell
+                                colSpan={9}
+                                scope="col"
+                                className="text-center"
+                              ></CTableDataCell>
+                              <CTableDataCell className="text-center font-bold">
+                                {booKing.tongTien.toLocaleString('en-US')}
+                              </CTableDataCell>
+                              <CTableDataCell colSpan={2} className="text-center"></CTableDataCell>
+                            </CTableRow>
+                          </CTableBody>
                         </CTable>
                       </div>
                     </div>
@@ -3429,6 +3432,7 @@ const EditBooKing = () => {
                     type="text"
                     className="outline-none w-28 flex-1 border-b-2 border-gray-300 rounded-none text-right text-green-500"
                     value={(booKing.tongTien - booKing.tienCoc).toLocaleString('en-US')}
+                    readOnly
                   />
                 </div>
               </div>

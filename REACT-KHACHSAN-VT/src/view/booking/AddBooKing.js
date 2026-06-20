@@ -269,20 +269,20 @@ const ThemDatPhong = () => {
 
           let giaPhongTheoNgays = []
 
-          // for (let i = 0; i < soDem; i++) {
-          //   const currentDate = new Date(ngayDen)
-          //   currentDate.setDate(currentDate.getDate() + i)
-          //   const ngayStr = currentDate.toISOString().split('T')[0]
+          for (let i = 0; i < soDem; i++) {
+            const currentDate = new Date(ngayDen)
+            currentDate.setDate(currentDate.getDate() + i)
+            const ngayStr = currentDate.toISOString().split('T')[0]
 
-          //   const giaDaSet = row.giaPhongTheoNgays?.find((g) => g.ngay === ngayStr)?.gia
-          //   const giaNgay = giaDaSet || getGiaTheoLoaiNgay(row.loaiPhong, currentDate)
+            const giaDaSet = row.giaPhongTheoNgays?.find((g) => g.ngay === ngayStr)?.gia
+            const giaNgay = giaDaSet || getGiaTheoLoaiNgay(row.loaiPhong, currentDate)
 
-          //   giaPhongTheoNgays.push({
-          //     maLoaiPhong: row.loaiPhong,
-          //     ngay: ngayStr,
-          //     gia: giaNgay,
-          //   })
-          // }
+            giaPhongTheoNgays.push({
+              maLoaiPhong: row.loaiPhong,
+              ngay: ngayStr,
+              gia: giaNgay,
+            })
+          }
 
           return {
             ...row,
@@ -901,7 +901,7 @@ const ThemDatPhong = () => {
       ] = await Promise.all([
         getAllDanhXung(navigate),
         getAllNhomKhachHang(navigate),
-        getAllTrangThaiBooKing(navigate),
+        getAllTrangThaiBooKing(),
         getAllLoaiThe(navigate),
         getAllYeuCau(navigate),
         // getAllLoaiPhongBooKing(navigate),
@@ -2304,7 +2304,7 @@ const ThemDatPhong = () => {
                                         </option>
 
                                       ))}
-                                        <option value="41">Giá Booking Online </option>
+                                      <option key="41" value="41">Giá Booking Online </option>
                                     </CFormSelect>
                                   </CTableDataCell>
                                   <CTableDataCell>
@@ -2411,31 +2411,34 @@ const ThemDatPhong = () => {
                             })}
                           </CTableBody>
 
-                          <CTableRow color="secondary">
-                            <CTableDataCell className="text-center">
-                              {getEarliestNgayDen() || ''}
-                            </CTableDataCell>
-                            <CTableDataCell className="text-center">
-                              {getLatestNgayDi() || ''}
-                            </CTableDataCell>
-                            <CTableDataCell colSpan={2} className="text-center"></CTableDataCell>
-                            <CTableDataCell className="text-center" scope="col">
-                              {tongSoLuong}
-                            </CTableDataCell>
+                          <CTableBody>
+                            <CTableRow>
+                              <CTableDataCell className="text-center">
+                                {getEarliestNgayDen() || ''}
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center">
+                                {getLatestNgayDi() || ''}
+                              </CTableDataCell>
+                              <CTableDataCell colSpan={2} className="text-center"></CTableDataCell>
+                              <CTableDataCell className="text-center" scope="col">
+                                {tongSoLuong}
+                              </CTableDataCell>
 
-                            <CTableDataCell scope="col" className="text-center">
-                              {tongNguoiLon}
-                            </CTableDataCell>
-                            <CTableDataCell scope="col" className="text-center">
-                              {tongTreEm}
-                            </CTableDataCell>
-                            <CTableDataCell colSpan={7} className="text-center"></CTableDataCell>
-                            <CTableDataCell className="text-right font-bold">
-                              {rows
-                                .reduce((sum, row) => sum + (row.tongTienDong || 0), 0)
-                                .toLocaleString('en-US')}
-                            </CTableDataCell>
-                          </CTableRow>
+                              <CTableDataCell scope="col" className="text-center">
+                                {tongNguoiLon}
+                              </CTableDataCell>
+                              <CTableDataCell scope="col" className="text-center">
+                                {tongTreEm}
+                              </CTableDataCell>
+                              <CTableDataCell colSpan={9} className="text-center"></CTableDataCell>
+                              <CTableDataCell className="text-right font-bold">
+                                {rows
+                                  .reduce((sum, row) => sum + (row.tongTienDong || 0), 0)
+                                  .toLocaleString('en-US')}
+                              </CTableDataCell>
+                                <CTableDataCell colSpan={2} className="text-center"></CTableDataCell>
+                            </CTableRow>
+                          </CTableBody>
                         </CTable>
                       </div>
                     </div>
@@ -2473,6 +2476,7 @@ const ThemDatPhong = () => {
                     //   .toLocaleString('vi-VN')}
                     //   onChange={handleChange}
                     value={(booKing.tongTien - booKing.tienCoc).toLocaleString('en-US')}
+                    readOnly
                   />
                 </div>
               </div>

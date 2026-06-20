@@ -289,35 +289,78 @@ const XemThanhToan = () => {
                                 <CTableHeaderCell>Đơn giá</CTableHeaderCell>
                                 <CTableHeaderCell>Thành tiền</CTableHeaderCell>
                               </CTableRow>
-                              {phuThuTreEm.map((item, index) => (
-                                <CTableRow key={index}>
-                                  <CTableDataCell>{index + 1}</CTableDataCell>
-                                  <CTableDataCell>
-                                    {' '}
-                                    {(item.so_luong_phu_thu_tre_em > 0 && 'Phụ thu trẻ em') ||
-                                      (item.so_luong_phu_thu_an_sang > 0 && 'Phụ thu ăn sáng') ||
-                                      'Phụ thu khác'}
-                                  </CTableDataCell>
-                                  <CTableDataCell>
-                                    {item.so_luong_phu_thu_tre_em || item.so_luong_phu_thu_an_sang}
-                                  </CTableDataCell>
-
-                                  <CTableDataCell>{item.so_dem}</CTableDataCell>
-                                  <CTableDataCell>
-                                    {formatCurrency(
-                                      item.gia_phu_thu_tre_em || item.gia_phu_thu_an_sang,
-                                    )}
-                                  </CTableDataCell>
-                                  <CTableDataCell>
-                                    {formatCurrency(
-                                      item.thanhtien ||
-                                        item.gia_phu_thu_an_sang *
-                                          item.so_luong_phu_thu_an_sang *
-                                          item.so_dem,
-                                    )}
-                                  </CTableDataCell>
-                                </CTableRow>
-                              ))}
+                              {Array.isArray(phuThuTreEm) && phuThuTreEm.length > 0
+                                ? (() => {
+                                    const rows = []
+                                    let stt = 1
+                                    phuThuTreEm.forEach((item, index) => {
+                                      if (item.so_luong_phu_thu_tre_em > 0) {
+                                        rows.push(
+                                          <CTableRow key={`${index}-tre-em`}>
+                                            <CTableDataCell>{stt++}</CTableDataCell>
+                                            <CTableDataCell>Phụ thu trẻ em</CTableDataCell>
+                                            <CTableDataCell>
+                                              {item.so_luong_phu_thu_tre_em}
+                                            </CTableDataCell>
+                                            <CTableDataCell>{item.so_dem}</CTableDataCell>
+                                            <CTableDataCell>
+                                              {formatCurrency(item.gia_phu_thu_tre_em)}
+                                            </CTableDataCell>
+                                            <CTableDataCell>
+                                              {formatCurrency(
+                                                item.thanhtienphuthutreem ||
+                                                  item.gia_phu_thu_tre_em *
+                                                    item.so_luong_phu_thu_tre_em *
+                                                    item.so_dem,
+                                              )}
+                                            </CTableDataCell>
+                                          </CTableRow>,
+                                        )
+                                      }
+                                      if (item.so_luong_phu_thu_an_sang > 0) {
+                                        rows.push(
+                                          <CTableRow key={`${index}-an-sang`}>
+                                            <CTableDataCell>{stt++}</CTableDataCell>
+                                            <CTableDataCell>Phụ thu ăn sáng</CTableDataCell>
+                                            <CTableDataCell>
+                                              {item.so_luong_phu_thu_an_sang}
+                                            </CTableDataCell>
+                                            <CTableDataCell>{item.so_dem}</CTableDataCell>
+                                            <CTableDataCell>
+                                              {formatCurrency(item.gia_phu_thu_an_sang)}
+                                            </CTableDataCell>
+                                            <CTableDataCell>
+                                              {formatCurrency(
+                                                item.thanhtienphuthuansang ||
+                                                  item.gia_phu_thu_an_sang *
+                                                    item.so_luong_phu_thu_an_sang *
+                                                    item.so_dem,
+                                              )}
+                                            </CTableDataCell>
+                                          </CTableRow>,
+                                        )
+                                      }
+                                      if (
+                                        !(item.so_luong_phu_thu_tre_em > 0) &&
+                                        !(item.so_luong_phu_thu_an_sang > 0)
+                                      ) {
+                                        rows.push(
+                                          <CTableRow key={`${index}-khac`}>
+                                            <CTableDataCell>{stt++}</CTableDataCell>
+                                            <CTableDataCell>Phụ thu khác</CTableDataCell>
+                                            <CTableDataCell></CTableDataCell>
+                                            <CTableDataCell>{item.so_dem}</CTableDataCell>
+                                            <CTableDataCell></CTableDataCell>
+                                            <CTableDataCell>
+                                              {formatCurrency(item.thanhtien)}
+                                            </CTableDataCell>
+                                          </CTableRow>,
+                                        )
+                                      }
+                                    })
+                                    return rows
+                                  })()
+                                : null}
                             </CTableBody>
                           </CTable>
                         </div>

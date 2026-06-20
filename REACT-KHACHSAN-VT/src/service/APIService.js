@@ -4,7 +4,7 @@ import axiosInstance from './axiosConfig'
 export async function getAllNguonKhach(navigate) {
   try {
     const response = await axiosInstance.get(`/nguon-khach`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -18,7 +18,7 @@ export async function getAllNguonKhach(navigate) {
 export async function getAllKhuVuc(navigate) {
   try {
     const response = await axiosInstance.get(`/khu-vuc`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -32,7 +32,7 @@ export async function getAllKhuVuc(navigate) {
 export async function getAllThiTruong(navigate) {
   try {
     const response = await axiosInstance.get(`/thi-truong`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -46,7 +46,7 @@ export async function getAllThiTruong(navigate) {
 export async function getAllHinhThucThanhToan(navigate) {
   try {
     const response = await axiosInstance.get(`/hinh-thuc-thanh-toan`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -60,7 +60,7 @@ export async function getAllHinhThucThanhToan(navigate) {
 export async function getAllMucDichDen(navigate) {
   try {
     const response = await axiosInstance.get(`/muc-dich-den`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -74,7 +74,7 @@ export async function getAllMucDichDen(navigate) {
 export async function getAllGiamGia(navigate) {
   try {
     const response = await axiosInstance.get(`/giam-gia`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -85,10 +85,10 @@ export async function getAllGiamGia(navigate) {
   }
 }
 
-export async function getAllTrangThaiBooKing(navigate) {
+export async function getAllTrangThaiBooKing() {
   try {
     const response = await axiosInstance.get(`/trang-thai-booking`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -102,7 +102,7 @@ export async function getAllTrangThaiBooKing(navigate) {
 export async function getAllLoaiThe(navigate) {
   try {
     const response = await axiosInstance.get(`/loai-the`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -116,7 +116,7 @@ export async function getAllLoaiThe(navigate) {
 export async function getAllYeuCau(navigate) {
   try {
     const response = await axiosInstance.get(`/yeu-cau`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -130,7 +130,7 @@ export async function getAllYeuCau(navigate) {
 export async function getAllLoaiGia(navigate) {
   try {
     const response = await axiosInstance.get(`/loai-gia`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -144,7 +144,7 @@ export async function getAllLoaiGia(navigate) {
 export async function getAllDanhXung(navigate) {
   try {
     const response = await axiosInstance.get(`/danh-xung`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -158,7 +158,7 @@ export async function getAllDanhXung(navigate) {
 export async function getAllTinhThanh(navigate) {
   try {
     const response = await axiosInstance.get(`/tinh-thanh`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -172,7 +172,7 @@ export async function getAllTinhThanh(navigate) {
 export async function getHuyenByMaTinh(maTinh, navigate) {
   try {
     const response = await axiosInstance.get(`/huyen/${maTinh}`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -186,7 +186,7 @@ export async function getHuyenByMaTinh(maTinh, navigate) {
 export async function getlPhuongXaByMaHuyen(maHuyen) {
   try {
     const response = await axiosInstance.get(`/phuong-xa/${maHuyen}`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -200,7 +200,7 @@ export async function getlPhuongXaByMaHuyen(maHuyen) {
 export async function getlPhuongXaByMaTinh(maTinh) {
   try {
     const response = await axiosInstance.get(`/phuong-xa/${maTinh}`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -214,7 +214,7 @@ export async function getlPhuongXaByMaTinh(maTinh) {
 export async function getAllQuocGia() {
   try {
     const response = await axiosInstance.get(`/quoc-gia`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -228,7 +228,7 @@ export async function getAllQuocGia() {
 export async function getAllLoaiGiayTo(navigate) {
   try {
     const response = await axiosInstance.get(`/loai-giay-to`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -242,7 +242,7 @@ export async function getAllLoaiGiayTo(navigate) {
 export async function getAllLoaiTreEm(navigate) {
   try {
     const response = await axiosInstance.get(`/loai-tre-em`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -256,7 +256,7 @@ export async function getAllLoaiTreEm(navigate) {
 export async function deleteChiTietBooKing(ma_chitiet, ma_booking, navigate) {
   try {
     const response = await axiosInstance.delete(`/chi-tiet-booking/${ma_chitiet}/${ma_booking}`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data
     }
@@ -273,7 +273,7 @@ export async function deletePhongHoiNghi(ma_booking, ma_phong_hoi_nghi, navigate
     const response = await axiosInstance.delete(
       `/phong-hoi-nghi/${ma_booking}/${ma_phong_hoi_nghi}`,
     )
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -294,7 +294,7 @@ export async function getKiemTraPhongHoiNghi(ngayBD, ngayKT, navigate) {
         ngayKT: ngayKT,
       },
     })
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -310,7 +310,7 @@ export async function getKiemTraPhongHoiNghi(ngayBD, ngayKT, navigate) {
 export async function getThongTinKhachHangBooKing(ma_xepphong, navigate) {
   try {
     const response = await axiosInstance.get(`/phong/thong-tin-khach-hang-booking/${ma_xepphong}`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -349,7 +349,7 @@ export async function getPhuongXaUserTuThem() {
 export async function getAllHinhThucThanhToanByMa() {
   try {
     const response = await axiosInstance.get(`/hinh-thuc-thanh-toan/theo-danh-sach`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -363,7 +363,7 @@ export async function getAllHinhThucThanhToanByMa() {
 export async function getGiaPhongTheoMaLoaiPhong(maLoaiPhong) {
   try {
     const response = await axiosInstance.get(`/gia-phong/theo-loai-phong/${maLoaiPhong}`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -377,7 +377,7 @@ export async function getGiaPhongTheoMaLoaiPhong(maLoaiPhong) {
 export async function getListGiaPhongTheoNgay(maXepPhong, navigate) {
   try {
     const response = await axiosInstance.get(`/gia-phong/theo-xep-phong/${maXepPhong}`)
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -393,7 +393,7 @@ export async function getThongTinXuatPhieuChiTietBooking(ma_booking) {
     const response = await axiosInstance.get(
       `/chi-tiet-booking/xuat-phieu-chi-tiet-dat-phong/${ma_booking}`,
     )
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }
@@ -404,12 +404,26 @@ export async function getThongTinXuatPhieuChiTietBooking(ma_booking) {
   }
 }
 
+export async function updateTrangThaiBooking(maBooking, maTrangThai) {
+  try {
+    const response = await axiosInstance.put(`/booking/update-trang-thai/${maBooking}/${maTrangThai}`)
+    
+    if (response.status === 200) {
+      return response.data
+    }
+    return null
+  } catch (error) {
+    console.log('Lỗi updateTrangThaiBooking:', error)
+    throw error
+  }
+}
+
 export async function getThongTinXuatPhieuChiTietPhuThuBooking(ma_booking) {
   try {
     const response = await axiosInstance.get(
       `/chi-tiet-booking/xuat-phieu-chi-tiet-dat-phong-phu-thu/${ma_booking}`,
     )
-    console.log(response)
+    
     if (response.status === 200) {
       return response.data.result
     }

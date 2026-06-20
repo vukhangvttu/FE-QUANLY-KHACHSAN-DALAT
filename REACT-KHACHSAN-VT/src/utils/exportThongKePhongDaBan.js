@@ -64,7 +64,7 @@ const copyTemplateBlock = (ws, srcStart, srcEnd, dstStart) => {
     const r2 = parseInt(match[4])
     if (r1 >= srcStart && r2 <= srcEnd) {
       const newMerge = `${match[1]}${r1 + rowOffset}:${match[3]}${r2 + rowOffset}`
-      try { ws.mergeCells(newMerge) } catch (_) {}
+      try { ws.mergeCells(newMerge) } catch (_) { }
     }
   })
 }
@@ -87,12 +87,15 @@ export const exportThongKePhongDaBan = async (rawData, thangBD, namBD, thangKT, 
   }
 
   // ── Nhóm dữ liệu theo nam-thang ─────────────────────────────────────────────
-  // grouped[nam][thang][ngay] = so_phong_da_ban
+  // grouped[nam][thang][ngay] = { so_phong_da_ban, ti_le_full }
   const grouped = {}
   data.forEach((item) => {
     if (!grouped[item.nam]) grouped[item.nam] = {}
     if (!grouped[item.nam][item.thang]) grouped[item.nam][item.thang] = {}
-    grouped[item.nam][item.thang][item.ngay] = item.so_phong_da_ban
+    grouped[item.nam][item.thang][item.ngay] = {
+      so_phong_da_ban: item.so_phong_da_ban,
+      ti_le_full: item.ti_le_full
+    }
   })
 
   // ── Danh sách năm cần xuất ───────────────────────────────────────────────────
@@ -142,9 +145,20 @@ export const exportThongKePhongDaBan = async (rawData, thangBD, namBD, thangKT, 
 
       for (let ngay = 1; ngay <= 31; ngay++) {
         const colNum = COL_NGAY_START - 1 + ngay  // col 4=Ngày1 .. col 34=Ngày31
-        const cell = ws.getRow(rowNum).getCell(colNum)
-        const val = dayMap[ngay]
-        cell.value = val !== undefined ? val : null
+        const valObj = dayMap[ngay]
+
+        const cellBan = ws.getRow(rowNum).getCell(colNum)
+        const cellTiLe = ws.getRow(rowNum + 1).getCell(colNum)
+
+        if (valObj !== undefined) {
+          cellBan.value = valObj.so_phong_da_ban
+          // Ghi đè công thức template bằng tỉ lệ từ API. 
+          // Chia 100 để định dạng % của Excel hiển thị đúng (vd API trả 1 -> 0.01 -> 1%)
+          cellTiLe.value = valObj.ti_le_full != null ? valObj.ti_le_full / 100 : null
+        } else {
+          cellBan.value = null
+          cellTiLe.value = null
+        }
       }
     }
   })
