@@ -593,8 +593,8 @@ const AllThanhToan = () => {
       try {
         setLoadSubmit(true)
         // 5. Gọi API nếu dữ liệu hợp lệ
-        // const response = await createAllThongTinThanhToan(ma_booking, thanhToanRequest)
-        const response = []
+        const response = await createAllThongTinThanhToan(ma_booking, thanhToanRequest)
+        // const response = []
         console.log('createHoaDon successfully:', response)
         // setLoadSubmit(false)
         // 6. Kiểm tra mã phản hồi từ server
