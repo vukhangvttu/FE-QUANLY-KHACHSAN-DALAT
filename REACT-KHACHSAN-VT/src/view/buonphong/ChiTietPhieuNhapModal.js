@@ -19,7 +19,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDeleteLeft, faFloppyDisk, faCirclePlus } from '@fortawesome/free-solid-svg-icons'
 
-const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu, dichVuList, onSave, onDeleteRow }) => {
+const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu, dichVuList, onSave, onDeleteRow, isDeleted }) => {
   const [editedRows, setEditedRows] = useState([])
 
   // Load dữ liệu vào state khi modal mở
@@ -140,12 +140,19 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu
       <CModalBody>
         {chiTietPhieu ? (
           <>
-            <div className="d-flex justify-content-end mb-3">
-              <CButton color="success" variant="outline" size="sm" onClick={handleAddRow}>
-                <FontAwesomeIcon icon={faCirclePlus} className="me-2" />
-                Thêm dòng
-              </CButton>
-            </div>
+            {isDeleted && (
+              <div className="alert alert-danger py-2 mb-3">
+                ⚠️ Phiếu nhập hàng này đã bị xóa. Không thể thực hiện thay đổi.
+              </div>
+            )}
+            {!isDeleted && (
+              <div className="d-flex justify-content-end mb-3">
+                <CButton color="success" variant="outline" size="sm" onClick={handleAddRow}>
+                  <FontAwesomeIcon icon={faCirclePlus} className="me-2" />
+                  Thêm dòng
+                </CButton>
+              </div>
+            )}
             
             <div className="table-responsive" style={{ maxHeight: '600px', overflowY: 'auto' }}>
             <CTable hover bordered>
@@ -159,9 +166,9 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu
                   <CTableHeaderCell style={{ width: '120px' }}>
                     Số lượng <span className="text-danger">*</span>
                   </CTableHeaderCell>
-                  <CTableHeaderCell style={{ width: '100px' }}>ĐVT</CTableHeaderCell>
+                  <CTableHeaderCell style={{ width: '100px' }}>ĐVT <span className="text-danger">*</span></CTableHeaderCell>
                   <CTableHeaderCell style={{ width: '150px' }}>
-                    Loại <span className="text-danger">*</span>
+                    Nhãn hiệu 
                   </CTableHeaderCell>
                   <CTableHeaderCell>Ghi chú</CTableHeaderCell>
                   <CTableHeaderCell style={{ width: '60px' }}></CTableHeaderCell>
@@ -180,7 +187,7 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu
                           value={row.maDichVuMienPhi}
                           onChange={(e) => handleMaHangChange(index, e.target.value)}
                           size="sm"
-                          disabled={row.daXoa}
+                          disabled={row.daXoa || isDeleted}
                         >
                           <option value="">-- Chọn mã hàng --</option>
                           {dichVuList.map((dv) => (
@@ -201,7 +208,7 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu
                           placeholder="0"
                           size="sm"
                           min="0"
-                          disabled={row.daXoa}
+                          disabled={row.daXoa || isDeleted}
                         />
                       </CTableDataCell>
                       <CTableDataCell>{row.donViTinh}</CTableDataCell>
@@ -210,9 +217,9 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu
                           type="text"
                           value={row.loai}
                           onChange={(e) => handleCellChange(index, 'loai', e.target.value)}
-                          placeholder="Loại"
+                          placeholder="Tên nhãn hiệu"
                           size="sm"
-                          disabled={row.daXoa}
+                          disabled={row.daXoa || isDeleted}
                         />
                       </CTableDataCell>
                       <CTableDataCell>
@@ -222,11 +229,11 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu
                           onChange={(e) => handleCellChange(index, 'ghiChu', e.target.value)}
                           placeholder="Ghi chú"
                           size="sm"
-                          disabled={row.daXoa}
+                          disabled={row.daXoa || isDeleted}
                         />
                       </CTableDataCell>
                       <CTableDataCell className="text-center">
-                        {!row.daXoa && (
+                        {!row.daXoa && !isDeleted && (
                           <FontAwesomeIcon
                             icon={faDeleteLeft}
                             className="text-danger cursor-pointer"
@@ -257,10 +264,12 @@ const ChiTietPhieuNhapModal = ({ visible, onClose, maPhieuNhapHang, chiTietPhieu
         )}
       </CModalBody>
       <CModalFooter>
-        <CButton color="primary" onClick={handleSaveChanges}>
-          <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
-          Lưu thay đổi
-        </CButton>
+        {!isDeleted && (
+          <CButton color="primary" onClick={handleSaveChanges}>
+            <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+            Lưu thay đổi
+          </CButton>
+        )}
         <CButton color="secondary" onClick={onClose}>
           Đóng
         </CButton>
@@ -295,6 +304,7 @@ ChiTietPhieuNhapModal.propTypes = {
   })).isRequired,
   onSave: PropTypes.func.isRequired,
   onDeleteRow: PropTypes.func.isRequired,
+  isDeleted: PropTypes.bool,
 }
 
 export default ChiTietPhieuNhapModal

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
+  faBed,
   faChartLine,
   faCircle,
   faGripLines,
@@ -535,7 +536,7 @@ const HotelManagement = () => {
                 onClick={() => handleTabChange(3)}
                 className="flex items-center text-sm sm:text-base"
               >
-                <i className="fa-solid fa-bed-front mt-1 me-1"></i>
+                <FontAwesomeIcon icon={faBed} className='me-1'/>
                 <span className="hidden sm:inline">Buồng phòng</span>
               </CTab>
             )}

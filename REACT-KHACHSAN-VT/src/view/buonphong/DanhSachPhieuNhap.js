@@ -107,7 +107,7 @@ const DanhSachPhieuNhap = ({
               <td className="text-center">{item.tongSoLuong || 0}</td>
             ),
             actions: (item) => (
-              <td className="text-center">
+              <td >
                 <CButton
                   color="info"
                   variant="ghost"
@@ -123,7 +123,7 @@ const DanhSachPhieuNhap = ({
                     color="danger"
                     variant="ghost"
                     size="sm"
-                    onClick={() => onDelete(item.maPhieuNhapHang)}
+                    onClick={() => onDelete(item.maPhieuNhapHang, item.stt)}
                     title="Xóa"
                   >
                     <FontAwesomeIcon icon={faTrash} />

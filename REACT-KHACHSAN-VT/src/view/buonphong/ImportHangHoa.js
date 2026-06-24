@@ -3,6 +3,11 @@ import {
   CButton,
   CCard,
   CCardBody,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
   CToast,
   CToastBody,
   CToaster,
@@ -30,6 +35,10 @@ const ImportHangHoa = () => {
   const [maPhieuNhapHang, setMaPhieuNhapHang] = useState(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [chiTietPhieu, setChiTietPhieu] = useState(null)
+  const [isPhieuDeleted, setIsPhieuDeleted] = useState(false)
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [maPhieuNhapToDelete, setMaPhieuNhapToDelete] = useState(null)
+  const [sttToDelete, setSttToDelete] = useState(null)
   const [toast, addToast] = useState(0)
   const toaster = useRef()
   const fileInputRef = useRef(null)
@@ -83,7 +92,9 @@ const ImportHangHoa = () => {
       const response = await axiosInstance.get(`/phieu-nhap-hang/chi-tiet-nhap-hang/${maPhieuNhap}`)
       console.log('Chi tiết phiếu nhập hàng:', response)
       console.log('Chi tiết data:', response.data)
-      
+
+      const phieu = phieuNhapList.find((p) => p.maPhieuNhapHang === maPhieuNhap)
+      setIsPhieuDeleted(phieu?.daXoa === true)
       setChiTietPhieu(response.data)
       setMaPhieuNhapHang(maPhieuNhap)
       setModalVisible(true)
@@ -93,12 +104,20 @@ const ImportHangHoa = () => {
     }
   }
 
-  // Xóa phiếu nhập hàng
-  const handleDelete = async (maPhieuNhap) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa phiếu nhập hàng này?')) {
-      return
-    }
-    
+  // Mở modal xác nhận xóa
+  const handleDelete = (maPhieuNhap, stt) => {
+    setMaPhieuNhapToDelete(maPhieuNhap)
+    setSttToDelete(stt)
+    setDeleteModalVisible(true)
+  }
+
+  // Thực hiện xóa sau khi xác nhận
+  const handleConfirmDelete = async () => {
+    const maPhieuNhap = maPhieuNhapToDelete
+    setDeleteModalVisible(false)
+    setMaPhieuNhapToDelete(null)
+    setSttToDelete(null)
+
     try {
       const response = await axiosInstance.delete(`/phieu-nhap-hang/${maPhieuNhap}`)
       
@@ -467,13 +486,48 @@ const ImportHangHoa = () => {
         </CCardBody>
       </CCard>
 
+      {/* Modal xác nhận xóa */}
+      <CModal
+        visible={deleteModalVisible}
+        onClose={() => {
+          setDeleteModalVisible(false)
+          setMaPhieuNhapToDelete(null)
+          setSttToDelete(null)
+        }}
+        alignment="center"
+      >
+        <CModalHeader>
+          <CModalTitle className='text-red-500'>Xác nhận xóa</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          Bạn có chắc chắn muốn xóa phiếu nhập hàng STT <strong>{sttToDelete}</strong> này không? Hành động này không thể hoàn tác.
+        </CModalBody>
+        <CModalFooter>
+          <CButton
+            color="secondary"
+            onClick={() => {
+              setDeleteModalVisible(false)
+              setMaPhieuNhapToDelete(null)
+              setSttToDelete(null)
+            }}
+          >
+            Hủy
+          </CButton>
+          <CButton color="danger" className="text-white" onClick={handleConfirmDelete}>
+            Xóa
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
       {/* Modal chi tiết phiếu nhập hàng */}
       <ChiTietPhieuNhapModal
         visible={modalVisible}
         onClose={() => {
           setModalVisible(false)
           setChiTietPhieu(null)
+          setIsPhieuDeleted(false)
         }}
+        isDeleted={isPhieuDeleted}
         maPhieuNhapHang={maPhieuNhapHang}
         chiTietPhieu={chiTietPhieu}
         dichVuList={dichVuList}

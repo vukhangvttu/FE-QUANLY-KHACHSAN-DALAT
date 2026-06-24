@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { getXemDuBaoPhongTrong } from 'src/service/LoaiPhongService'
 import { format } from 'date-fns'
+const EXCLUDED_ROOM_TYPES = ['HOI-TRUONG', 'HOI-THAO', 'GA-LA', 'PHONG-HOP']
+
 const DuBaoLoaiPhong = ({ isActive }) => {
   const [roomData, setRoomData] = useState([])
   const [loading, setLoading] = useState(false)
 
-  // Generate dates for the week
+  // Generate dates for the week 
   const generateDates = (checkin, checkout) => {
     if (!checkin || !checkout) return []
 
@@ -146,24 +148,28 @@ const DuBaoLoaiPhong = ({ isActive }) => {
     return room || { soPhongTrong: 0, tongSoPhong: 0 }
   }
 
+  const isCountableRoom = (maLoaiPhong) => {
+    return maLoaiPhong !== 'EXTRA-BED' && !EXCLUDED_ROOM_TYPES.includes(maLoaiPhong)
+  }
+
   // Tính tổng số phòng trống cho một ngày
   const getTotalAvailableRooms = (date) => {
     return roomData
-      .filter((item) => item.ngay === date)
+      .filter((item) => item.ngay === date && isCountableRoom(item.maLoaiPhong))
       .reduce((sum, item) => sum + item.soPhongTrong, 0)
   }
 
   // Tính tổng số phòng cho một ngày
   const getTotalRooms = (date) => {
     return roomData
-      .filter((item) => item.ngay === date)
+      .filter((item) => item.ngay === date && isCountableRoom(item.maLoaiPhong))
       .reduce((sum, item) => sum + item.tongSoPhong, 0)
   }
 
   // Tính tổng số phòng đã đặt cho một ngày
   const getTotalBookedRooms = (date) => {
     return roomData
-      .filter((item) => item.ngay === date)
+      .filter((item) => item.ngay === date && isCountableRoom(item.maLoaiPhong))
       .reduce((sum, item) => sum + (item.tongSoPhong - item.soPhongTrong), 0)
   }
 

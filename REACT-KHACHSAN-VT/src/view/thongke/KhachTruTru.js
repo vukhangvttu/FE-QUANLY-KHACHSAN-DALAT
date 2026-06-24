@@ -190,62 +190,52 @@ const KhachTruTru = ({ isActive }) => {
       <CToaster className="p-3" placement="top-end" push={toast} ref={toaster} />
       <CCard className="mt-2 mb-2 w-full m-0">
         <CCardBody className="p-3">
-          <CRow className="m-0">
-            <CCol md={3}>
-              <CFormLabel htmlFor="inputPassword" className="col-sm-6 col-form-label labelcustome">
-                Ngày đến
-              </CFormLabel>
-              <CCol sm={8}>
-                <CDatePicker
-                  locale="en-GB"
-                  date={dateRange.startDate}
-                  onDateChange={(date) => handleDateChange(date, 'startDate')}
-                  className="w-full"
-                />
-              </CCol>
+          <CRow className="align-items-end g-3 mb-3">
+            <CCol md={2}>
+              <CFormLabel className="labelcustome d-block mb-1">Ngày đến</CFormLabel>
+              <CDatePicker
+                locale="en-GB"
+                date={dateRange.startDate}
+                onDateChange={(date) => handleDateChange(date, 'startDate')}
+                className="w-full"
+              />
             </CCol>
-            <CCol md={3}>
-              <CFormLabel htmlFor="inputPassword" className="col-sm-6 col-form-label labelcustome">
-                Ngày đi
-              </CFormLabel>
-              <CCol sm={8}>
-                <CDatePicker
-                  locale="en-GB"
-                  date={dateRange.endDate}
-                  onDateChange={(date) => handleDateChange(date, 'endDate')}
-                  className="w-full"
-                />
-              </CCol>
+            <CCol md={2}>
+              <CFormLabel className="labelcustome d-block mb-1">Ngày đi</CFormLabel>
+              <CDatePicker
+                locale="en-GB"
+                date={dateRange.endDate}
+                onDateChange={(date) => handleDateChange(date, 'endDate')}
+                className="w-full"
+              />
             </CCol>
-            <CCol md={4} className="pe-0 position-relative">
-              <div className="position-absolute bottom-0">
-                {loading ? (
-                  <CButton color="primary" disabled className="me-2">
-                    <CSpinner as="span" size="sm" aria-hidden="true" />
-                    Đang xử lý...
-                  </CButton>
-                ) : (
-                  <CButton
-                    color="primary"
-                    className="text-white me-2"
-                    onClick={() => fetchData(dateRange.startDate, dateRange.endDate)}
-                  >
-                    <FontAwesomeIcon icon={faRotate} className="me-2" />
-                    Xem thông tin
-                  </CButton>
-                )}
-                {loadexcel ? (
-                  <CButton color="success" disabled>
-                    <CSpinner as="span" size="sm" aria-hidden="true" />
-                    Đang xử lý...
-                  </CButton>
-                ) : (
-                  <CButton color="success" className="text-white" onClick={handleExport}>
-                    <FontAwesomeIcon icon={faDownload} className="me-2" />
-                    Xuất ASM
-                  </CButton>
-                )}
-              </div>
+            <CCol md={4} className="d-flex flex-wrap gap-2">
+              {loading ? (
+                <CButton color="primary" disabled>
+                  <CSpinner as="span" size="sm" aria-hidden="true" />
+                  Đang xử lý...
+                </CButton>
+              ) : (
+                <CButton
+                  color="primary"
+                  className="text-white"
+                  onClick={() => fetchData(dateRange.startDate, dateRange.endDate)}
+                >
+                  <FontAwesomeIcon icon={faRotate} className="me-2" />
+                  Xem thông tin
+                </CButton>
+              )}
+              {loadexcel ? (
+                <CButton color="success" disabled>
+                  <CSpinner as="span" size="sm" aria-hidden="true" />
+                  Đang xử lý...
+                </CButton>
+              ) : (
+                <CButton color="success" className="text-white" onClick={handleExport}>
+                  <FontAwesomeIcon icon={faDownload} className="me-2" />
+                  Xuất ASM
+                </CButton>
+              )}
             </CCol>
           </CRow>
           <div className="w-full">

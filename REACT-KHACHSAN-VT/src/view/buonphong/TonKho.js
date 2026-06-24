@@ -50,7 +50,7 @@ const TonKho = () => {
       // Kiểm tra response.data.code và lấy dữ liệu từ response.data.result
       if (response.data && response.data.code === 200) {
         setTonKhoList(response.data.result || [])
-        addToast(exampleToast('✔️ Tải danh sách tồn kho thành công'))
+        // addToast(exampleToast('✔️ Tải danh sách tồn kho thành công'))
       } else {
         setTonKhoList([])
         addToast(exampleToast('⚠️ Không có dữ liệu tồn kho'))

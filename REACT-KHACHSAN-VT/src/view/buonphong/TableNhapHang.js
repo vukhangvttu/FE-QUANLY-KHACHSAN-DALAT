@@ -33,9 +33,9 @@ const TableNhapHang = ({
             <CTableHeaderCell style={{ width: '120px' }}>
               Số lượng <span className="text-danger">*</span>
             </CTableHeaderCell>
-            <CTableHeaderCell style={{ width: '100px' }}>ĐVT</CTableHeaderCell>
+            <CTableHeaderCell style={{ width: '100px' }}>ĐVT <span className="text-danger">*</span></CTableHeaderCell>
             <CTableHeaderCell style={{ width: '150px' }}>
-              Loại <span className="text-danger">*</span>
+              Nhãn hiệu 
             </CTableHeaderCell>
             <CTableHeaderCell>Ghi chú</CTableHeaderCell>
             <CTableHeaderCell style={{ width: '60px' }}></CTableHeaderCell>
@@ -89,7 +89,7 @@ const TableNhapHang = ({
                     type="text"
                     value={row.loai}
                     onChange={(e) => onCellChange(index, 'loai', e.target.value)}
-                    placeholder="Loại"
+                    placeholder="Tên nhãn hiệu"
                     size="sm"
                   />
                 </CTableDataCell>
