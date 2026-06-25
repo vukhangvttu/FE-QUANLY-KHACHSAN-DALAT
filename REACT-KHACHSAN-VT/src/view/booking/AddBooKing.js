@@ -79,7 +79,6 @@ const ThemDatPhong = () => {
         ghiChu: '',
       },
     ])
-    setTongSoLuong(tongSoLuong + 1)
 
     kiemTraPhongTrong(valueNgayDen, valueNgayDi)
   }
@@ -113,8 +112,6 @@ const ThemDatPhong = () => {
     updateChiTietBooKings(updatedRows)
 
     // Cập nhật các state
-    setTongSoLuong(tongSoLuong)
-    setTongTreEm(tongTreEm)
     setTongTien(tongTienTatCa)
     setTongTienKhachCanTra(newTongTienKhachCanTra)
   }
@@ -1362,6 +1359,7 @@ const ThemDatPhong = () => {
         ...booKing,
         tongSoLuong: tongSoLuong,
         // tongTien: tongTien,
+        soNguoiLon: tongNguoiLon,
         soTreEm: tongTreEm,
         ngayDen: formatDateToISO(booKing.ngayDen),
         ngayDi: formatDateToISO(booKing.ngayDi),
@@ -1573,6 +1571,17 @@ const ThemDatPhong = () => {
       }
       return prev
     })
+  }, [rows])
+
+  // Đồng bộ tổng số lượng, người lớn và trẻ em từ rows
+  React.useEffect(() => {
+    const tongSoLuong = rows.reduce((sum, row) => sum + (row.soLuong || 0), 0)
+    const tongNguoiLon = rows.reduce((sum, row) => sum + (row.nguoiLon || 0), 0)
+    const tongTreEm = rows.reduce((sum, row) => sum + (row.treEm || 0), 0)
+
+    setTongSoLuong(tongSoLuong)
+    setTongNguoiLon(tongNguoiLon)
+    setTongTreEm(tongTreEm)
   }, [rows])
 
   // Thêm biến yesterday để lấy ngày hôm qua
