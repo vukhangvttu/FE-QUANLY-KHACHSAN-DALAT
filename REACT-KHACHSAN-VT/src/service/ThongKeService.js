@@ -211,8 +211,43 @@ export const exportExcelThongKeDoanhSoKPINhanVien = async (ngayDen, ngayDi) => {
         ngayDen: format(ngayDen, 'yyyy-MM-dd'),
         ngayDi: format(ngayDi, 'yyyy-MM-dd'),
       },
+      timeout: 60000,
       responseType: 'blob',
     })
+    return response.data
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+}
+
+export const getThongKeAllKPINhanVienTheoKhoanThoiGian = async (ngayDen, ngayDi) => {
+  try {
+    const response = await axiosInstance.get('/thong-ke/thong-ke-all-kpi-nhan-vien-theo-khoan-thoi-gian', {
+      params: {
+        ngayBD: format(ngayDen, 'yyyy-MM-dd'),
+        ngayKT: format(ngayDi, 'yyyy-MM-dd'),
+      },
+      timeout: 60000,
+    })
+    console.log('[getThongKeAllKPINhanVienTheoKhoanThoiGian] response:', response)
+    return response.data
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+}
+
+export const getThongKeChiTietKPINhanVienTheoKhoanThoiGian = async (ngayDen, ngayDi) => {
+  try {
+    const response = await axiosInstance.get('/thong-ke/thong-ke-chi-tiet-kpi-nhan-vien-theo-khoan-thoi-gian', {
+      params: {
+        ngayBD: format(ngayDen, 'yyyy-MM-dd'),
+        ngayKT: format(ngayDi, 'yyyy-MM-dd'),
+      },
+      timeout: 60000,
+    })
+    console.log('[getThongKeChiTietKPINhanVienTheoKhoanThoiGian] response:', response)
     return response.data
   } catch (error) {
     console.log(error)

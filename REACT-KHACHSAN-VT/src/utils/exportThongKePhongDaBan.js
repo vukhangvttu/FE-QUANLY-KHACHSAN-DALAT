@@ -69,6 +69,11 @@ const copyTemplateBlock = (ws, srcStart, srcEnd, dstStart) => {
   })
 }
 
+const isSaturday = (year, month, day) => {
+  const date = new Date(year, month - 1, day)
+  return date.getMonth() === month - 1 && date.getDay() === 6
+}
+
 /**
  * Xuất Excel thống kê phòng đã bán — đọc template giữ nguyên định dạng.
  * Hỗ trợ khoảng thời gian nhiều năm: mỗi năm = 1 khối template copy xuống, cách 2 dòng.
@@ -152,12 +157,20 @@ export const exportThongKePhongDaBan = async (rawData, thangBD, namBD, thangKT, 
 
         if (valObj !== undefined) {
           cellBan.value = valObj.so_phong_da_ban
-          // Ghi đè công thức template bằng tỉ lệ từ API. 
+          // Ghi đè công thức template bằng tỉ lệ từ API.
           // Chia 100 để định dạng % của Excel hiển thị đúng (vd API trả 1 -> 0.01 -> 1%)
           cellTiLe.value = valObj.ti_le_full != null ? valObj.ti_le_full / 100 : null
         } else {
           cellBan.value = null
           cellTiLe.value = null
+        }
+
+        if (isSaturday(nam, thang, ngay)) {
+          cellBan.style = { ...cellBan.style, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } } }
+          cellTiLe.style = { ...cellTiLe.style, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } } }
+        } else {
+          cellBan.style = { ...cellBan.style, fill: { type: 'pattern', pattern: 'none' } }
+          cellTiLe.style = { ...cellTiLe.style, fill: { type: 'pattern', pattern: 'none' } }
         }
       }
     }
