@@ -96,8 +96,8 @@ const HoaDonVAT = () => {
           setHoaDonVat((prev) => ({
             ...prev,
             tenKhach: thongtinkhachhangbooking.ten_khach,
-            tenCongTy: thongtinkhachhangbooking.loai_nguon_khach || 'NGƯỜI MUA HÀNG KHÔNG LẤY HÓA ĐƠN',
-            diaChi: thongtinkhachhangbooking.dia_chi_booking || 'NGƯỜI MUA HÀNG KHÔNG LẤY HÓA ĐƠN',
+            tenCongTy: thongtinkhachhangbooking.loai_nguon_khach || 'BÁN CHO NGƯỜI TIÊU DÙNG',
+            diaChi: thongtinkhachhangbooking.dia_chi_booking ,
             codeVat: thongtinkhachhangbooking.ma_so_thue,
             email: thongtinkhachhangbooking.email_booking,
             dienThoai: thongtinkhachhangbooking.sdt_booking,
@@ -130,8 +130,8 @@ const HoaDonVAT = () => {
     ngayLap: new Date().toLocaleDateString('en-CA'),
     mauHoaDon: '1/002',
     kiHieu: 'C25MHK',
-    diaChi: 'NGƯỜI MUA HÀNG KHÔNG LẤY HÓA ĐƠN',
-    tenCongTy: 'NGƯỜI MUA HÀNG KHÔNG LẤY HÓA ĐƠN',
+    diaChi: '',
+    tenCongTy: 'BÁN CHO NGƯỜI TIÊU DÙNG',
     codeVat: '',
     soTaiKhoan: '',
     tong: 0.0,
@@ -144,7 +144,7 @@ const HoaDonVAT = () => {
     booKing: {
       maBooking: ma_booking,
     },
-    loaiGiayTo: 'CCCD',
+    loaiGiayTo: 'KHONG',
   }
   const [hoaDonVat, setHoaDonVat] = useState(initialFormState)
 
@@ -153,7 +153,7 @@ const HoaDonVAT = () => {
       if (e.target.value.length > 12) return
     }
     if (e.target.name === 'codeVat') {
-      if (e.target.value.length > 13) {
+      if (e.target.value.length > 14) {
         return
       }
     }
@@ -178,6 +178,8 @@ const HoaDonVAT = () => {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
+    if(hoaDonVat.loaiGiayTo !== 'KHONG') {
+  
     if (hoaDonVat.codeVat === '') {
       // Khi không có mã số thuế, bắt buộc phải có CCCD hợp lệ
       if (hoaDonVat.loaiGiayTo === 'CCCD') {
@@ -195,8 +197,8 @@ const HoaDonVAT = () => {
         }
       }
     } else {
-      if (hoaDonVat.codeVat.length !== 10 && hoaDonVat.codeVat.length !== 13) {
-        return addToast(exampleToast('⚠️ Mã số thuế phải gồm đúng 10 hoặc 13 chữ số'))
+      if (hoaDonVat.codeVat.length !== 10 && hoaDonVat.codeVat.length !== 14) {
+        return addToast(exampleToast('⚠️ Mã số thuế phải gồm đúng 10 hoặc 14 chữ số'))
       }
       if (hoaDonVat.diaChi === '') {
         return addToast(exampleToast('⚠️ Chưa nhập địa chỉ'))
@@ -205,6 +207,17 @@ const HoaDonVAT = () => {
         return addToast(exampleToast('⚠️ Chưa nhập tên công ty'))
       }
     }
+  }
+
+      if(hoaDonVat.codeVat.length > 0) {
+        if (hoaDonVat.codeVat.length !== 10 && hoaDonVat.codeVat.length !== 14) {
+        return addToast(exampleToast('⚠️ Mã số thuế phải gồm đúng 10 hoặc 14 chữ số'))
+      }
+      }
+
+         if (hoaDonVat.tenCongTy === '') {
+        return addToast(exampleToast('⚠️ Chưa nhập tên công ty'))
+      }
 
     console.log(hoaDonVat)
 
@@ -276,8 +289,8 @@ const HoaDonVAT = () => {
         }
       }
     } else {
-      if (hoaDonVat.codeVat.length !== 10 && hoaDonVat.codeVat.length !== 13) {
-        return addToast(exampleToast('⚠️ Mã số thuế phải gồm đúng 10 hoặc 13 chữ số'))
+      if (hoaDonVat.codeVat.length !== 10 && hoaDonVat.codeVat.length !== 14) {
+        return addToast(exampleToast('⚠️ Mã số thuế phải gồm đúng 10 hoặc 14 chữ số'))
       }
       if (hoaDonVat.diaChi === '') {
         return addToast(exampleToast('⚠️ Chưa nhập địa chỉ'))
@@ -477,7 +490,7 @@ const HoaDonVAT = () => {
         setPdfUrl(fileURL)
         setShowPdfModal(true)
         setTrangThaiXacNhan(true)
-        addToast(exampleToast('✅ In hóa đơn VAT thành công'))
+        addToast(exampleToast('✔️ In hóa đơn VAT thành công'))
       } else if (status === 403) {
         addToast(exampleToast('❌ Bạn không có quyền thực hiện thao tác này'))
       } else if (status === 400) {
@@ -612,7 +625,7 @@ const HoaDonVAT = () => {
         setPdfUrlHDPhatHanh(fileURL)
         setVisibleHDPhatHanh(true)
 
-        addToast(exampleToast('✅ In hóa đơn VAT thành công'))
+        addToast(exampleToast('✔️ In hóa đơn VAT thành công'))
       } else if (status === 403) {
         addToast(exampleToast('❌ Bạn không có quyền thực hiện thao tác này'))
       } else if (status === 400) {
@@ -973,7 +986,7 @@ const HoaDonVAT = () => {
                                   htmlFor="inputPassword"
                                   className="col-sm-2 col-form-label labelcustome"
                                 >
-                                  Địa chỉ <span className="text-danger">*</span>
+                                  Địa chỉ 
                                 </CFormLabel>
                                 <CCol sm={10}>
                                   <CFormTextarea
@@ -1003,8 +1016,8 @@ const HoaDonVAT = () => {
                                     name="codeVat"
                                     value={hoaDonVat.codeVat}
                                     onChange={onInputChange}
-                                    maxLength={13}
-                                    placeholder="Mã số thuế tối đa 13 ký tự"
+                                    maxLength={14}
+                                    placeholder="Mã số thuế tối đa 14 ký tự"
                                   />
                                 </CCol>
                               </CRow>
@@ -1125,6 +1138,7 @@ const HoaDonVAT = () => {
                                     value={hoaDonVat.loaiGiayTo}
                                     onChange={onInputChange}
                                   >
+                                    <option value="KHONG">Không</option>
                                     <option value="CCCD">CCCD</option>
                                     <option value="HOCHIEU">Hộ chiếu</option>
                                   </CFormSelect>
@@ -1200,6 +1214,7 @@ const HoaDonVAT = () => {
                             1.Nếu nhập mã số thuế (Code Vat) thì không cần nhập CCCD. <br />
                             2.Nếu nhập CCCD/Hộ chiếu thì không cần nhập mã số thuế (Code Vat).{' '}
                             <br />
+                            3.Nếu &quot;BÁN CHO NGƯỜI TIÊU DÙNG&quot; chỉ cần nhập Tên công ty
                           </span>
 
                           <div className="d-grid gap-2 d-md-flex justify-content-md-end">
