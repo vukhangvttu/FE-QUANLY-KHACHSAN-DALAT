@@ -122,6 +122,9 @@ export const SCOPE_MAPPING = {
   THONGKE: 'Thống kê',
   DANHSACHDATPHONG: 'Danh sách đặt phòng',
   DATPHONG: 'Đặt phòng',
+  THONGKETILEFULLPHONG: 'Thống kê tỉ lệ FULL phòng',
+  THONGKEDOANHSOKPINHANVIEN: 'Thống kê doanh số KPI nhân viên',
+  THONGKEDOANHTHU: 'Thống kê doanh thu',
 }
 
 /**
@@ -134,9 +137,12 @@ export const getAllowedTabs = () => {
 
   // Mapping scope với tab key
   const scopeToTabMapping = {
+    THONGKEDOANHTHU: 1,
     DUBAOLOAIPHONG: 1,
     SODOPHONG: 2,
+    THONGKETILEFULLPHONG: 3,
     BUONGPHONG: 3,
+    THONGKEDOANHSOKPINHANVIEN: 4,
     NHAHANG: 4,
     LINEPHONG: 6,
     DUBAOKHACH: 7,

@@ -34,6 +34,7 @@ export async function getThongKeTheoKhoanThoiGian(
         maNguonKhach: loaiNguonKhach,
         maLoaiPhong: loaiPhong,
       },
+      timeout: 60000,
     })
     console.log(response)
     if (response.status === 200) {
@@ -72,6 +73,7 @@ export const exportExcel = async (
         maNhomKhachHang: selectedNhomKhachHang,
         tenNhomKhachHang: tenNhomKhachHang,
       },
+      timeout: 60000,
       responseType: 'blob',
     })
     return response.data

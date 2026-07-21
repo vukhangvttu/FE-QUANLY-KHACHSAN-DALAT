@@ -21,10 +21,10 @@ import { exportThongKePhongDaBan } from 'src/utils/exportThongKePhongDaBan'
 import PropTypes from 'prop-types'
 
 const ThongKeTiLeFullPhong = ({ isActive }) => {
-  const [thangBD, setThangBD] = useState("1")
-  const [namBD, setNamBD] = useState("2026")
-  const [thangKT, setThangKT] = useState("12")
-  const [namKT, setNamKT] = useState("2026")
+  const [thangBD, setThangBD] = useState('1')
+  const [namBD, setNamBD] = useState('2026')
+  const [thangKT, setThangKT] = useState('12')
+  const [namKT, setNamKT] = useState('2026')
 
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
@@ -74,10 +74,10 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
       return false
     }
 
-    if (namBDNum < 2025 || namBDNum > namHienTai || namKTNum > namHienTai) {
-      addToast(exampleToast(`❌ Năm phải từ 2025 đến ${namHienTai}.`))
-      return false
-    }
+    // if (namBDNum < 2025 || namBDNum > namHienTai || namKTNum > namHienTai) {
+    //   addToast(exampleToast(`❌ Năm phải từ 2025 đến ${namHienTai}.`))
+    //   return false
+    // }
 
     if (namBDNum === namKTNum && thangBDNum > thangKTNum) {
       addToast(exampleToast('❌ Tháng bắt đầu không được lớn hơn tháng kết thúc trong cùng năm.'))
@@ -155,7 +155,12 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
     try {
       setLoading(true)
       setHasSearched(true)
-      const rawData = await exportExcelThongKePhongDaBanKhoanThoiGian(thangBD, namBD, thangKT, namKT)
+      const rawData = await exportExcelThongKePhongDaBanKhoanThoiGian(
+        thangBD,
+        namBD,
+        thangKT,
+        namKT,
+      )
       console.log('[ThongKeTiLeFullPhong] data từ API:', rawData)
       const normalized = normalizeData(rawData)
       if (normalized.length === 0) {
@@ -177,7 +182,12 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
     if (!validate()) return
     try {
       setLoadExcel(true)
-      const rawData = await exportExcelThongKePhongDaBanKhoanThoiGian(thangBD, namBD, thangKT, namKT)
+      const rawData = await exportExcelThongKePhongDaBanKhoanThoiGian(
+        thangBD,
+        namBD,
+        thangKT,
+        namKT,
+      )
       console.log('[ThongKeTiLeFullPhong] data từ API:', rawData)
       const normalized = normalizeData(rawData)
       if (normalized.length === 0) {
@@ -200,9 +210,7 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
     const thangKTNam = nam === namKTNum ? parseInt(thangKT, 10) : 12
 
     const thangFilterNum = filterThang ? parseInt(filterThang, 10) : null
-    const months = thangFilterNum
-      ? [thangFilterNum]
-      : Array.from({ length: 12 }, (_, i) => i + 1)
+    const months = thangFilterNum ? [thangFilterNum] : Array.from({ length: 12 }, (_, i) => i + 1)
 
     const dayHeaders = Array.from({ length: 31 }, (_, i) => (
       <th key={`day-${i}`} className="text-center" style={{ minWidth: '38px' }}>
@@ -221,16 +229,31 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
             </span>
           </div>
           <div className="overflow-auto">
-            <table className="table table-bordered table-sm table-striped align-middle mb-0" style={{ tableLayout: 'auto' }}>
+            <table
+              className="table table-bordered table-sm table-striped align-middle mb-0"
+              style={{ tableLayout: 'auto' }}
+            >
               <thead className="table-dark">
                 <tr>
-                  <th rowSpan={2} className="text-center" style={{ minWidth: '90px', verticalAlign: 'middle' }}>
+                  <th
+                    rowSpan={2}
+                    className="text-center"
+                    style={{ minWidth: '90px', verticalAlign: 'middle' }}
+                  >
                     Tháng
                   </th>
-                  <th rowSpan={2} className="text-center" style={{ minWidth: '130px', verticalAlign: 'middle' }}>
+                  <th
+                    rowSpan={2}
+                    className="text-center"
+                    style={{ minWidth: '130px', verticalAlign: 'middle' }}
+                  >
                     Chỉ tiêu
                   </th>
-                  <th rowSpan={2} className="text-center" style={{ minWidth: '110px', verticalAlign: 'middle' }}>
+                  <th
+                    rowSpan={2}
+                    className="text-center"
+                    style={{ minWidth: '110px', verticalAlign: 'middle' }}
+                  >
                     TB CỦA THÁNG
                   </th>
                   <th colSpan={31} className="text-center">
@@ -243,7 +266,11 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
                 {months.map((thang) => (
                   <React.Fragment key={`month-${thang}`}>
                     <tr>
-                      <td rowSpan={2} className="text-center fw-semibold" style={{ verticalAlign: 'middle' }}>
+                      <td
+                        rowSpan={2}
+                        className="text-center fw-semibold"
+                        style={{ verticalAlign: 'middle' }}
+                      >
                         Tháng {thang}
                       </td>
                       <td className="fw-semibold">Số phòng đã bán</td>
@@ -293,7 +320,11 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
           <CRow className="g-3 align-items-end">
             <CCol md={2}>
               <CFormLabel className="col-form-label labelcustome">Tháng bắt đầu</CFormLabel>
-              <CFormSelect aria-label="Tháng bắt đầu" value={thangBD} onChange={(e) => setThangBD(e.target.value)}>
+              <CFormSelect
+                aria-label="Tháng bắt đầu"
+                value={thangBD}
+                onChange={(e) => setThangBD(e.target.value)}
+              >
                 <option value="1">Tháng 1</option>
                 <option value="2">Tháng 2</option>
                 <option value="3">Tháng 3</option>
@@ -310,7 +341,11 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
             </CCol>
             <CCol md={2}>
               <CFormLabel className="col-form-label labelcustome">Năm bắt đầu</CFormLabel>
-              <CFormSelect aria-label="Năm bắt đầu" value={namBD} onChange={(e) => setNamBD(e.target.value)}>
+              <CFormSelect
+                aria-label="Năm bắt đầu"
+                value={namBD}
+                onChange={(e) => setNamBD(e.target.value)}
+              >
                 <option value="2025">Năm 2025</option>
                 <option value="2026">Năm 2026</option>
                 <option value="2027">Năm 2027</option>
@@ -323,7 +358,11 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
             </CCol>
             <CCol md={2}>
               <CFormLabel className="col-form-label labelcustome">Tháng kết thúc</CFormLabel>
-              <CFormSelect aria-label="Tháng kết thúc" value={thangKT} onChange={(e) => setThangKT(e.target.value)}>
+              <CFormSelect
+                aria-label="Tháng kết thúc"
+                value={thangKT}
+                onChange={(e) => setThangKT(e.target.value)}
+              >
                 <option value="1">Tháng 1</option>
                 <option value="2">Tháng 2</option>
                 <option value="3">Tháng 3</option>
@@ -340,7 +379,11 @@ const ThongKeTiLeFullPhong = ({ isActive }) => {
             </CCol>
             <CCol md={2}>
               <CFormLabel className="col-form-label labelcustome">Năm kết thúc</CFormLabel>
-              <CFormSelect aria-label="Năm kết thúc" value={namKT} onChange={(e) => setNamKT(e.target.value)}>
+              <CFormSelect
+                aria-label="Năm kết thúc"
+                value={namKT}
+                onChange={(e) => setNamKT(e.target.value)}
+              >
                 <option value="2025">Năm 2025</option>
                 <option value="2026">Năm 2026</option>
                 <option value="2027">Năm 2027</option>
