@@ -613,7 +613,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
                 <CCard className="mb-4">
                   <CCardBody className="p-3">
                     <div className="text-center fw-bold mb-3 fs-6">
-                      BÁO CÁO DOANH SỐ KPI NHÂN VIÊN
+                      BÁO CÁO THỐNG KÊ DOANH THU TỔNG
                       <br />
                       <span className="fs-6">
                         Từ {format(dateRange.startDate, 'dd/MM/yyyy')} đến {format(dateRange.endDate, 'dd/MM/yyyy')}

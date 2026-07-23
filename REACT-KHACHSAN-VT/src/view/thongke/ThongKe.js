@@ -58,7 +58,7 @@ const ThongKe = () => {
           
           {checkPermission('THONGKEDOANHSOKPINHANVIEN') && (
             <CTab aria-controls="profile-tab-pane" itemKey={4} onClick={() => setActiveTab(4)}>
-              Thống kê doanh số KPI nhân viên
+              Thống kê doanh số nhân viên
             </CTab>
           )}
         </CTabList>
