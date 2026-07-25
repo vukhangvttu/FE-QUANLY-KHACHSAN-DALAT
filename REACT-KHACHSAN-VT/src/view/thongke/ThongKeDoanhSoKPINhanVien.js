@@ -194,27 +194,140 @@ const ThongKeDoanhSoKPINhanVien = () => {
     </CToast>
   )
 
-  const tongKPIFields = [
+  // Cấu trúc cột: { key, label, category }
+  // category dùng để gom nhóm cho dòng tỉ lệ % (chia theo tổng thu thanh toán)
+  // category: 'room' (tiền phòng), 'extra' (phụ thu đặt ăn/extra bed), 'service' (minibar - giặt ủi),
+  //           'compensation' (xử lí mùi - đền bù), 'hall' (hội trường - gala), 'other' (dịch vụ khác),
+  //           'detail' (chi tiết không tính %), 'empty' (cột trống, không tính)
+  const roomSourceFields = [
     'tong_tien_ta',
     'tong_tien_ota',
     'tong_tien_walkin',
     'tong_tien_doan_le',
     'tong_tien_doan_gala',
     'tong_tien_none',
+  ]
+
+  const extraBedSourceFields = [
     'tong_phu_thu_giuong',
     'tong_phu_thu_an_sang',
     'tong_phu_thu_tre_em',
-    // 'tong_phu_thu_giuong',
     'tong_phu_thu_nguoi_lon',
     'tong_tien_setmonan',
-    'tong_tien_minibar',
-    'tong_tien_giatui',
+  ]
+
+  const minibarLaundrySourceFields = ['tong_tien_minibar', 'tong_tien_giatui']
+
+  const compensationSourceFields = [
+    'tong_tien_xu_li_mui',
     'tong_tien_denbu',
+  ]
+
+  const hallSourceFields = [
     'tong_tien_hoi_nghi',
+    'tong_tien_dich_vu_gala',
+    'tong_tien_dich_vu_tea_break',
+  ]
+
+  const otherServiceSourceFields = [
     'tong_phu_thu_check_in_som',
     'tong_phu_thu_check_out_tre',
-    'tong_thanh_toan',
   ]
+
+  // Cột hiển thị trong bảng: mỗi mục có key (field hoặc computed), label, category
+  const tongKPIColumns = [
+    { key: 'tong_tien_ta', label: 'Tổng tiền TA', category: 'detail' },
+    { key: 'tong_tien_ota', label: 'Tổng tiền OTA', category: 'detail' },
+    { key: 'tong_tien_walkin', label: 'Tổng tiền Walkin', category: 'detail' },
+    { key: 'tong_tien_doan_le', label: 'Tổng tiền đoàn lẻ', category: 'detail' },
+    { key: 'tong_tien_doan_gala', label: 'Tổng tiền đoàn gala', category: 'detail' },
+    { key: 'tong_tien_none', label: 'Tổng tiền NONE', category: 'detail' },
+    { key: 'group_room', label: 'Tổng tiền phòng', category: 'room', sources: roomSourceFields },
+    { key: 'tong_phu_thu_giuong', label: 'Tổng phụ thu giường', category: 'detail' },
+    { key: 'tong_phu_thu_an_sang', label: 'Tổng phụ thu ăn sáng', category: 'detail' },
+    { key: 'tong_phu_thu_tre_em', label: 'Tổng phụ thu trẻ em', category: 'detail' },
+    { key: 'tong_phu_thu_nguoi_lon', label: 'Tổng phụ thu người lớn', category: 'detail' },
+    { key: 'tong_tien_setmonan', label: 'Tổng tiền set món ăn', category: 'detail' },
+    {
+      key: 'group_extra',
+      label: 'Tổng phu thu đặt ăn, extra bed',
+      category: 'extra',
+      sources: extraBedSourceFields,
+    },
+    { key: 'tong_tien_minibar', label: 'Tổng tiền minibar', category: 'detail' },
+    { key: 'tong_tien_giatui', label: 'Tổng tiền giặt ủi', category: 'detail' },
+    {
+      key: 'group_minibar_laundry',
+      label: 'Tổng phụ thu dịch vụ Minibar - Giặt ủi',
+      category: 'service',
+      sources: minibarLaundrySourceFields,
+    },
+    { key: 'tong_tien_xu_li_mui', label: 'Tổng tiền xử lí mùi', category: 'detail' },
+    { key: 'tong_tien_denbu', label: 'Tổng tiền đền bù', category: 'detail' },
+    {
+      key: 'group_compensation',
+      label: 'Tổng thu xử lí mùi, đền bù',
+      category: 'compensation',
+      sources: compensationSourceFields,
+    },
+    { key: 'tong_tien_hoi_nghi', label: 'Tổng tiền hội trường', category: 'detail' },
+    { key: 'tong_tien_dich_vu_gala', label: 'Tổng tiền dịch vụ gala', category: 'detail' },
+    { key: 'tong_tien_dich_vu_tea_break', label: 'Tổng tiền dịch vụ Tea break', category: 'detail' },
+    {
+      key: 'group_hall',
+      label: 'Tổng thu hội trường, gala',
+      category: 'hall',
+      sources: hallSourceFields,
+    },
+    { key: 'tong_phu_thu_check_in_som', label: 'Tổng phụ thu check in sớm', category: 'detail' },
+    { key: 'tong_phu_thu_check_out_tre', label: 'Tổng phụ thu check out trễ', category: 'detail' },
+    {
+      key: 'group_other',
+      label: 'Tổng thu dịch vụ khác',
+      category: 'other',
+      sources: otherServiceSourceFields,
+    },
+    { key: 'tong_thanh_toan', label: 'Tổng thu thanh toán', category: 'total' },
+  ]
+
+  // Lấy giá trị hiển thị cho 1 ô theo cột
+  const getColumnValue = (item, col) => {
+    if (col.sources) {
+      return col.sources.reduce((sum, f) => sum + getNumericValue(item, f), 0)
+    }
+    if (col.key === 'tong_thanh_toan') {
+      // Tổng thu thanh toán = tổng tất cả các group lớn (theo công thức yêu cầu)
+      return (
+        roomSourceFields.reduce((s, f) => s + getNumericValue(item, f), 0) +
+        extraBedSourceFields.reduce((s, f) => s + getNumericValue(item, f), 0) +
+        minibarLaundrySourceFields.reduce((s, f) => s + getNumericValue(item, f), 0) +
+        compensationSourceFields.reduce((s, f) => s + getNumericValue(item, f), 0) +
+        hallSourceFields.reduce((s, f) => s + getNumericValue(item, f), 0) +
+        otherServiceSourceFields.reduce((s, f) => s + getNumericValue(item, f), 0)
+      )
+    }
+    return getNumericValue(item, col.key)
+  }
+
+  const getColumnTotal = (col) => {
+    if (col.sources) {
+      return col.sources.reduce(
+        (sum, f) => sum + allData.reduce((s, item) => s + getNumericValue(item, f), 0),
+        0,
+      )
+    }
+    if (col.key === 'tong_thanh_toan') {
+      return tongKPIColumns
+        .filter((c) => ['room', 'extra', 'service', 'compensation', 'hall', 'other'].includes(c.category))
+        .reduce((sum, c) => sum + getColumnTotal(c), 0)
+    }
+    return allData.reduce((sum, item) => sum + getNumericValue(item, col.key), 0)
+  }
+
+  const formatPercent = (value) => {
+    if (value === null || value === undefined || isNaN(value)) return ''
+    return `${value.toFixed(2)}%`
+  }
 
   const chiTietKPIFields = [
     'tong_gia_phong',
@@ -222,14 +335,17 @@ const ThongKeDoanhSoKPINhanVien = () => {
     'tong_phu_thu_an_sang',
     'tong_phu_thu_tre_em',
     'tong_phu_thu_nguoi_lon',
+    'tong_tien_set_mon_an',
     'tong_tien_dich_vu_minibar',
     'tong_tien_dich_vu_giatui',
     'tong_tien_dich_vu_khac',
     'tong_tien_den_bu',
     'tong_tien_hoi_nghi',
+    'tong_tien_dich_vu_gala',
+    'tong_tien_dich_vu_tea_break',
     'tong_phu_thu_check_in_som',
     'tong_phu_thu_check_out_tre',
-    'tong_tien_set_mon_an',
+    'tong_tien_set_mon_an_total',
     'tong_tien',
     'tien_coc',
     'tong_tien_cong_tien_coc',
@@ -274,9 +390,8 @@ const ThongKeDoanhSoKPINhanVien = () => {
   }
 
   const renderTongKPI = () => {
-    const totalValues = tongKPIFields.map((field) =>
-      allData.reduce((sum, item) => sum + getNumericValue(item, field), 0),
-    )
+    const columnTotals = tongKPIColumns.map((col) => getColumnTotal(col))
+    const totalPayment = columnTotals[tongKPIColumns.findIndex((c) => c.key === 'tong_thanh_toan')] || 0
     const start = (pageAll - 1) * PAGE_SIZE
     const pageData = allData.slice(start, start + PAGE_SIZE)
 
@@ -292,25 +407,15 @@ const ThongKeDoanhSoKPINhanVien = () => {
                 <th className="text-center" style={{ minWidth: '50px' }}>STT</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Người tạo</th>
                 <th className="text-center" style={{ minWidth: '180px' }}>Tên nhân viên</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền TA</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền OTA</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền Walkin</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền đoàn lẻ</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền đoàn gala</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền NONE</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng phụ thu giường</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng phụ thu ăn sáng</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng phụ thu trẻ em</th>
-                {/* <th className="text-center" style={{ minWidth: '120px' }}>Tổng phụ thu giường</th> */}
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng phụ thu người lớn</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền set món ăn</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền minibar</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền giặt ủi</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền đền bù</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng tiền hội nghị</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng phụ thu check in sớm</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng phụ thu check out trễ</th>
-                <th className="text-center" style={{ minWidth: '120px' }}>Tổng thanh toán</th>
+                {tongKPIColumns.map((col) => (
+                  <th
+                    key={col.key}
+                    className="text-center"
+                    style={{ minWidth: '120px' }}
+                  >
+                    {col.label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -319,22 +424,50 @@ const ThongKeDoanhSoKPINhanVien = () => {
                   <td className="text-center">{start + index + 1}</td>
                   <td>{item.nguoi_tao ?? ''}</td>
                   <td>{item.ten_nhan_vien ?? ''}</td>
-                  {tongKPIFields.map((field) => (
-                    <td key={field} className="text-end">{formatCurrency(item[field])}</td>
+                  {tongKPIColumns.map((col) => (
+                    <td key={col.key} className="text-end">
+                      {formatCurrency(getColumnValue(item, col))}
+                    </td>
                   ))}
                 </tr>
               ))}
               <tr className="table-warning fw-bold">
                 <td className="text-center" colSpan={3}>Tổng cộng</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                {totalValues.slice(6).map((val, idx) => (
-                  <td key={`total-${idx}`} className="text-end">{formatCurrency(val)}</td>
-                ))}
+                {columnTotals.map((val, idx) => {
+                  const col = tongKPIColumns[idx]
+                  return (
+                    <td
+                      key={`total-${col.key}`}
+                      className="text-end"
+                      style={{
+                        backgroundColor:
+                          col.category === 'total' ? '#d1e7dd' : undefined,
+                      }}
+                    >
+                      {formatCurrency(val)}
+                    </td>
+                  )
+                })}
+              </tr>
+              <tr className="table-info fw-bold">
+                <td className="text-center" colSpan={3}>CƠ CẤU TỈ LỆ CÁC NGUỒN THU (%)</td>
+                {columnTotals.map((val, idx) => {
+                  const col = tongKPIColumns[idx]
+                  const percent = totalPayment > 0 ? (val / totalPayment) * 100 : 0
+                  return (
+                    <td
+                      key={`percent-${col.key}`}
+                      className="text-end"
+                      style={{
+                        backgroundColor:
+                          col.category === 'total' ? '#d1e7dd' : undefined,
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      {formatPercent(percent)}
+                    </td>
+                  )
+                })}
               </tr>
             </tbody>
           </table>
@@ -349,6 +482,9 @@ const ThongKeDoanhSoKPINhanVien = () => {
       rows.reduce((sum, item) => {
         if (field === 'tong_tien_cong_tien_coc') {
           return sum + getNumericValue(item, 'tong_tien') + getNumericValue(item, 'tien_coc')
+        }
+        if (field === 'tong_tien_dich_vu_tea_break') {
+          return 0
         }
         return sum + getNumericValue(item, field)
       }, 0),
@@ -389,11 +525,14 @@ const ThongKeDoanhSoKPINhanVien = () => {
         <td className="text-end">{formatCurrency(item.tong_phu_thu_an_sang)}</td>
         <td className="text-end">{formatCurrency(item.tong_phu_thu_tre_em)}</td>
         <td className="text-end">{formatCurrency(item.tong_phu_thu_nguoi_lon)}</td>
+        <td className="text-end">{formatCurrency(item.tong_tien_set_mon_an)}</td>
         <td className="text-end">{formatCurrency(item.tong_tien_dich_vu_minibar)}</td>
         <td className="text-end">{formatCurrency(item.tong_tien_dich_vu_giatui)}</td>
         <td className="text-end">{formatCurrency(item.tong_tien_dich_vu_khac)}</td>
         <td className="text-end">{formatCurrency(item.tong_tien_den_bu)}</td>
         <td className="text-end">{formatCurrency(item.tong_tien_hoi_nghi)}</td>
+        <td className="text-end">{formatCurrency(item.tong_tien_dich_vu_gala)}</td>
+        <td className="text-end">{formatCurrency(0)}</td>
         <td className="text-end">{formatCurrency(item.tong_phu_thu_check_in_som)}</td>
         <td className="text-end">{formatCurrency(item.tong_phu_thu_check_out_tre)}</td>
         <td className="text-end">{formatCurrency(item.tong_tien_set_mon_an)}</td>
@@ -503,11 +642,14 @@ const ThongKeDoanhSoKPINhanVien = () => {
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng phụ thu ăn sáng</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng phụ thu trẻ em</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng phụ thu người lớn</th>
+                <th className="text-center" style={{ minWidth: '100px' }}>Set món ăn (cơm trưa, chiều)</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng tiền dịch vụ minibar</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng tiền dịch vụ giặt ủi</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng tiền dịch vụ khác</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng tiền đền bù</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng tiền hội nghị</th>
+                <th className="text-center" style={{ minWidth: '100px' }}>Tổng tiền dịch vụ gala</th>
+                <th className="text-center" style={{ minWidth: '100px' }}>Tổng tiền dịch vụ Tea break</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng phụ thu check in sớm</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng phụ thu check out trễ</th>
                 <th className="text-center" style={{ minWidth: '100px' }}>Tổng tiền set món ăn</th>
@@ -627,7 +769,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
                           onClick={() => setActiveTab(1)}
                           style={{ cursor: 'pointer' }}
                         >
-                          Tổng KPI
+                          Tổng doanh số nhân viên
                         </CNavLink>
                       </CNavItem>
                       <CNavItem>
@@ -636,7 +778,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
                           onClick={() => setActiveTab(2)}
                           style={{ cursor: 'pointer' }}
                         >
-                          Chi tiết KPI
+                          Chi tiết doanh số nhân viên
                         </CNavLink>
                       </CNavItem>
                     </CNav>
