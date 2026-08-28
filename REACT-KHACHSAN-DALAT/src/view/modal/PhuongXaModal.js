@@ -182,7 +182,7 @@ const PhuongXaModal = ({ visible, onClose, onSubmit }) => {
 
       if (response.code === 200) {
         if (response.result) {
-          addToast(exampleToast('✅ ' + response.message))
+          addToast(exampleToast('✔️ ' + response.message))
           setThemPhuongXa({
             tenPhuongXa: '',
             huyen: {

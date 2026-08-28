@@ -505,7 +505,7 @@ const ViewNhaHang = ({ isActive, refreshTrigger }) => {
         setGiamGia(0)
         setGhiChu('')
         setSelectedOption('1')
-        addToast(exampleToast('✅ Thanh toán thành công!'))
+        addToast(exampleToast('✔️ Thanh toán thành công!'))
 
         // Reset banHang state
         setBanHang({

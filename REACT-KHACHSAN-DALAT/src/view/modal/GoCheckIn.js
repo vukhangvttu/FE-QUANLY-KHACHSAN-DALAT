@@ -37,7 +37,7 @@ const GoCheckIn = ({ visible, onClose, ma_xepphong_bookking, tenphong, onSubmit 
 
         if (response.code === 200) {
           if (response.result) {
-            addToast(exampleToast('✅ Check-In nhận phòng thành công ' + tenphong))
+            addToast(exampleToast('✔️ Check-In nhận phòng thành công ' + tenphong))
             onSubmit(true)
           } else {
             addToast(exampleToast('❌ Check-In nhận phòng lỗi'))

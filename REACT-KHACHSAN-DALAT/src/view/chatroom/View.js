@@ -339,6 +339,38 @@ const HotelManagement = () => {
     })
   }
 
+  const updateRoomHoanDoiPhong = (maPhong1, maPhong1Moi, maPhong2Moi) => {
+    // Khi hoán đổi, phòng 1 đi vào phòng 2 và ngược lại
+    // maPhong1Moi là phòng mà phòng 1 sẽ chiếm (chính là maPhong2 cũ)
+    // maPhong2Moi là phòng mà phòng 2 sẽ chiếm (chính là maPhong1 cũ)
+    setRooms((prevRooms) => {
+      const room1Original = prevRooms.find((room) => room.maPhong === maPhong1)
+      const room2Original = prevRooms.find((room) => room.maPhong === maPhong2Moi)
+
+      if (!room1Original || !room2Original) return prevRooms
+
+      return prevRooms.map((room) => {
+        if (room.maPhong === maPhong1) {
+          // Phòng 1 giữ thông tin nhưng đổi sang phòng mới (phòng 2 cũ)
+          return {
+            ...room,
+            maPhong: maPhong1Moi,
+            tenPhong: 'P.' + maPhong1Moi,
+          }
+        }
+        if (room.maPhong === maPhong2Moi) {
+          // Phòng 2 giữ thông tin nhưng đổi sang phòng mới (phòng 1 cũ)
+          return {
+            ...room,
+            maPhong: maPhong2Moi,
+            tenPhong: 'P.' + maPhong2Moi,
+          }
+        }
+        return room
+      })
+    })
+  }
+
   const updateRoomPhuThuTienGiuong = (maPhong, soGiuongDaSuDung) => {
     setRooms((prevRooms) =>
       prevRooms.map((room) =>
@@ -684,6 +716,7 @@ const HotelManagement = () => {
                           updateRoomCheckIn={updateRoomCheckIn}
                           updateRoomNgayDi={updateRoomNgayDi}
                           updateRoomChuyenPhong={updateRoomChuyenPhong}
+                          updateRoomHoanDoiPhong={updateRoomHoanDoiPhong}
                           updateRoomPhuThuTienGiuong={updateRoomPhuThuTienGiuong}
                           updateRoomTraPhong={updateRoomTraPhong}
                         />

@@ -131,7 +131,7 @@ const DichVu = () => {
           const updatedItem = {
             ...item,
             soLuong: newQuantity,
-            thanhTien: newQuantity * item.gia, // ✅ Cập nhật tổng tiền cho từng item
+            thanhTien: newQuantity * item.gia, // ✔️ Cập nhật tổng tiền cho từng item
           }
           totalQuantity += updatedItem.soLuong
           totalPrice += updatedItem.thanhTien
@@ -143,8 +143,8 @@ const DichVu = () => {
         }
       })
 
-      setTongSoLuong(totalQuantity) // ✅ Cập nhật tổng số lượng
-      setTongThanhTien(totalPrice) // ✅ Cập nhật tổng thành tiền
+      setTongSoLuong(totalQuantity) // ✔️ Cập nhật tổng số lượng
+      setTongThanhTien(totalPrice) // ✔️ Cập nhật tổng thành tiền
 
       return updatedList
     })
@@ -183,7 +183,7 @@ const DichVu = () => {
           }
         })
 
-        setTongThanhTien(totalPrice) // ✅ Cập nhật tổng thành tiền
+        setTongThanhTien(totalPrice) // ✔️ Cập nhật tổng thành tiền
         return updatedList
       })
 

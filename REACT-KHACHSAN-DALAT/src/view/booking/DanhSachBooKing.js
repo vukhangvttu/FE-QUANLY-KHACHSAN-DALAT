@@ -25,6 +25,7 @@ import { ROOM_ACTIONS } from '../chatroom/constants'
 import { Popover } from 'flowbite-react'
 import XuatPhieuChiTietDatPhongModal from '../modal/XuatPhieuChiTietDatPhongModal'
 import UpdateTrangThaiBookingModal from '../modal/UpdateTrangThaiBookingModal'
+import CheckInAllPhongModal from '../modal/CheckInAllPhongModal'
 
 
 const getStatusColor = (maTrangThai) => {
@@ -117,13 +118,13 @@ const DanhSachDatPhong = () => {
       setLoading(true)
       const danhsach = await getAllBooKing()
       console.log(danhsach)
-      
+
       // Thêm _props cho row có co_hoa_don_vat = true
       const danhsachWithProps = danhsach.map((item) => ({
         ...item,
         _props: item.co_hoa_don_vat === true ? { color: 'success' } : undefined,
       }))
-      
+
       setBooKing(danhsachWithProps)
     } catch (error) {
       console.log('Lỗi getAllBooKing:', error)
@@ -146,6 +147,7 @@ const DanhSachDatPhong = () => {
   const [selectedBookingForPrint, setSelectedBookingForPrint] = useState(null)
   const [visibleChiTietDatPhong, setVisibleChiTietDatPhong] = useState(false)
   const [selectedMaBookingChiTiet, setSelectedMaBookingChiTiet] = useState('')
+
 
   const handlePrint = (booking) => {
     setSelectedBookingForPrint(booking)
@@ -178,7 +180,7 @@ const DanhSachDatPhong = () => {
             Math.ceil(
               (new Date(selectedBookingForPrint.ngay_di) -
                 new Date(selectedBookingForPrint.ngay_den)) /
-                (1000 * 60 * 60 * 24),
+              (1000 * 60 * 60 * 24),
             ) || 1,
           ratePerNight: selectedBookingForPrint.tong_tien || 0,
           total: selectedBookingForPrint.tong_tien || 0,
@@ -202,7 +204,11 @@ const DanhSachDatPhong = () => {
     setMaBooKing(ma_booking)
   }
 
-
+  const [visibleCheckInAll, setVisibleCheckInAll] = useState(false)
+  const handleOpenCheckInAll = (ma_booking) => {
+    setVisibleCheckInAll(true)
+    setMaBooKing(ma_booking)
+  }
 
   const [visibleUpdateTrangThaiBooking, setVisibleUpdateTrangThaiBooking] = useState(false)
   const [trangThaiBooking, setTrangThaiBooking] = useState(0)
@@ -264,7 +270,7 @@ const DanhSachDatPhong = () => {
                 </td>
               ),
               tongtien: (item) => <td>{(item?.tong_tien).toLocaleString('en-US')}</td>,
-              
+
               show_details: (item) => {
                 // if (item.trang_thai === 4) {
                 //   return <td></td>
@@ -292,7 +298,7 @@ const DanhSachDatPhong = () => {
                                         Thanh toán còn lại
                                       </Link>
                                     )} */}
-                                                              {/* <div
+                                {/* <div
                                       className="block px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
                                       onClick={() => handleXuatExcelHoaDon(item.ma_booking)}
                                     >
@@ -309,7 +315,7 @@ const DanhSachDatPhong = () => {
                               <div className="text-left cursor-pointer text-black">
                                 {item.da_xep_phong ? (
                                   <>
-                                  <button
+                                    <button
                                       onClick={() => handleOpenTrangThaiBooking(item.ma_booking, item.trang_thai)}
                                       className="block w-full text-left px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
                                     >
@@ -317,7 +323,7 @@ const DanhSachDatPhong = () => {
                                     </button>
 
                                     {item.ma_nhom_khach_hang === 'NKH2024040302' ||
-                                    item.ma_nhom_khach_hang === 'NKH2024040301' ? (
+                                      item.ma_nhom_khach_hang === 'NKH2024040301' ? (
                                       <Link
                                         to={`/dashboard/pos/danh-sach-booking/xuat-thong-tin-phieu-dang-ky-ota-ta/${item.ma_booking}`}
                                       >
@@ -362,12 +368,18 @@ const DanhSachDatPhong = () => {
                                       >
                                         PDF đặt phòng
                                       </Link> */}
-                                    <Link
+                                    {/* <Link
                                       to={`/dashboard/pos/danh-sach-booking/edit-xep-phong/${item.ma_booking}`}
                                       className="block px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
                                     >
                                       Update xếp phòng
-                                    </Link>
+                                    </Link> */}
+                                    <button
+                                      onClick={() => handleOpenCheckInAll(item.ma_booking)}
+                                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
+                                    >
+                                      Check In All phòng
+                                    </button>
 
                                     <Link
                                       to={`/dashboard/pos/danh-sach-booking/all-thanh-toan/${item.ma_booking}`}
@@ -395,18 +407,18 @@ const DanhSachDatPhong = () => {
                               </div>
                             ) : (
                               <>
-                              <button
-                                      onClick={() => handleOpenTrangThaiBooking(item.ma_booking, item.trang_thai)}
-                                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
-                                    >
-                                      Trạng thái booking
-                                    </button>
-                              <Link
-                                to={`/dashboard/pos/danh-sach-booking/edit-booking/${item.ma_booking}`}
-                                className="block px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
-                              >
-                                Update booking
-                              </Link>
+                                <button
+                                  onClick={() => handleOpenTrangThaiBooking(item.ma_booking, item.trang_thai)}
+                                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
+                                >
+                                  Trạng thái booking
+                                </button>
+                                <Link
+                                  to={`/dashboard/pos/danh-sach-booking/edit-booking/${item.ma_booking}`}
+                                  className="block px-4 py-2 hover:bg-gray-100 hover:text-blue-500"
+                                >
+                                  Update booking
+                                </Link>
                               </>
                             )}
                           </div>
@@ -471,7 +483,7 @@ const DanhSachDatPhong = () => {
         onClose={() => setVisibleChiTietDatPhong(false)}
         maBooking={selectedMaBookingChiTiet}
       />
-      
+
       <UpdateTrangThaiBookingModal
         visible={visibleUpdateTrangThaiBooking}
         onClose={() => setVisibleUpdateTrangThaiBooking(false)}
@@ -481,6 +493,12 @@ const DanhSachDatPhong = () => {
           setVisibleUpdateTrangThaiBooking(false)
           fetchData()
         }}
+      />
+
+      <CheckInAllPhongModal
+        visible={visibleCheckInAll}
+        onClose={() => setVisibleCheckInAll(false)}
+        maBooking={maBooKing}
       />
     </CRow>
   )

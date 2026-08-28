@@ -25,6 +25,7 @@ import ThongTinKhachHangTrenLine from '../modal/ThongTinKhachHangTrenLine'
 import { Popover } from 'flowbite-react'
 import GoCheckIn from '../modal/GoCheckIn'
 import CapNhatTraPhong from '../modal/CapNhatTraPhong'
+import HoanDoiPhong from '../modal/HoanDoiPhong'
 
 const RoomCard = ({
   room,
@@ -32,6 +33,7 @@ const RoomCard = ({
   updateRoomCheckIn,
   updateRoomNgayDi,
   updateRoomChuyenPhong,
+  updateRoomHoanDoiPhong,
   updateRoomPhuThuTienGiuong,
   updateRoomTraPhong,
 }) => {
@@ -135,13 +137,37 @@ const RoomCard = ({
     setVisibleChuyenPhong(true)
   }
 
+  const [visibleHoanDoiPhong, setVisibleHoanDoiPhong] = useState(false)
+  const handleClickHoanDoiPhong = (
+    ma_xepphong,
+    ngayDen,
+    ngayDi,
+    ngayHienTai,
+    maphong,
+    maloaiphong,
+    tenPhong,
+  ) => {
+    setMa_xepphong_bookking(ma_xepphong)
+    setMaPhong(maphong)
+    setNgayDen(ngayDen)
+    setNgayHienTai(ngayHienTai)
+    setNgayDi(ngayDi)
+    setMaLoaiPhong(maloaiphong)
+    setTenphong(tenPhong)
+    setVisibleHoanDoiPhong(true)
+  }
+
   const [visiblePhuThuTienGiuong, setVisiblePhuThuTienGiuong] = useState(false)
   const [soLuongGiuongMax, setSoLuongGiuongMax] = useState(0)
-  const handleClickPhuThuTienGiuong = (ma_xepphong, maphong, maloaiphong, soluonggiuong) => {
+  const [ngayDenPhuThu, setNgayDenPhuThu] = useState('')
+  const [ngayDiPhuThu, setNgayDiPhuThu] = useState('')
+  const handleClickPhuThuTienGiuong = (ma_xepphong, maphong, maloaiphong, soluonggiuong, ngayDen, ngayDi) => {
     setMa_xepphong_bookking(ma_xepphong)
     setMaPhong(maphong)
     setMaLoaiPhong(maloaiphong)
     setSoLuongGiuongMax(soluonggiuong)
+    setNgayDenPhuThu(ngayDen)
+    setNgayDiPhuThu(ngayDi)
     setVisiblePhuThuTienGiuong(true)
   }
 
@@ -176,6 +202,13 @@ const RoomCard = ({
     console.log('data', data)
     if (data) {
       updateRoomChuyenPhong(maPhong, data.maPhongMoi)
+    }
+  }
+
+  const handleHoanDoiPhongComplete = (data) => {
+    console.log('data Hoán đổi phòng', data)
+    if (data) {
+      updateRoomHoanDoiPhong(maPhong, data.maPhong1Moi, data.maPhong2Moi)
     }
   }
 
@@ -250,7 +283,7 @@ const RoomCard = ({
             <CRow>
               <CCol xs={5} sm={5} md={5} className="flex justify-center ">
                 {(room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' || room.trangThaiHienTai === 'CHECK-OUT TRỄ') &&
-                room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ? (
+                  room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ? (
                   <div className="flex items-center justify-center">
                     <FontAwesomeIcon icon={faPeopleArrows} className="text-xl" />
                   </div>
@@ -288,8 +321,8 @@ const RoomCard = ({
                         </div>
                         {
                           room.danhanPhong &&
-                          room.daTraPhong === false &&
-                          room.maxepphongbooking != null ? (
+                            room.daTraPhong === false &&
+                            room.maxepphongbooking != null ? (
                             <>
                               <div
                                 onClick={() => {
@@ -308,6 +341,23 @@ const RoomCard = ({
                               >
                                 Chuyển phòng
                               </div>
+                              {/* <div
+                                onClick={() => {
+                                  handleClickHoanDoiPhong(
+                                    room.maxepphongbooking,
+                                    room.ngayDen,
+                                    room.ngayDi,
+                                    room.ngayHienTai,
+                                    room.maPhong,
+                                    room.maLoaiPhong,
+                                    room.tenLoaiPhong,
+                                  )
+                                  handlePopoverClose()
+                                }}
+                                className="block px-4 py-1 hover:bg-gray-100 hover:text-purple-500"
+                              >
+                                Hoán đổi phòng
+                              </div> */}
                               {room.tenNhomKhachHang === 'OTA' || room.tenNhomKhachHang === 'TA' ? (
                                 <Link
                                   to={`/dashboard/pos/xuat-thong-tin-phieu-dang-ky-ota-ta/${room.maxepphongbooking}`}
@@ -335,6 +385,8 @@ const RoomCard = ({
                                     room.maPhong,
                                     room.maLoaiPhong,
                                     room.soGiuongThem,
+                                    room.ngayDen,
+                                    room.ngayDi
                                   )
                                   handlePopoverClose()
                                 }}
@@ -460,9 +512,9 @@ const RoomCard = ({
             }
             placement="left"
           > */}
-            <h3 className="text-xl font-bold flex items-center text-center gap-2 cursor-pointer">
-              {room.tenPhong}
-            </h3>
+          <h3 className="text-xl font-bold flex items-center text-center gap-2 cursor-pointer">
+            {room.tenPhong}
+          </h3>
           {/* </CTooltip> */}
         </CCol>
         <CCol xs={7} sm={7} md={6} lg={7} className="flex justify-end">
@@ -571,6 +623,19 @@ const RoomCard = ({
         onSubmit={handleChuyenPhongComplete}
       />
 
+      <HoanDoiPhong
+        visible={visibleHoanDoiPhong}
+        onClose={() => setVisibleHoanDoiPhong(false)}
+        maXepPhong1={ma_xepphong_bookking}
+        ngayDen1={ngayDen}
+        ngayDi1={ngayDi}
+        ngayHienTai1={ngayHienTai}
+        maPhong1={maPhong}
+        maLoaiPhong1={maloaiphong}
+        tenPhong1={tenphong}
+        onSubmit={handleHoanDoiPhongComplete}
+      />
+
       <PhuThu
         visible={visiblePhuThuTienGiuong}
         onClose={() => setVisiblePhuThuTienGiuong(false)}
@@ -578,6 +643,8 @@ const RoomCard = ({
         maLoaiPhong={maloaiphong}
         ma_xepphong={ma_xepphong_bookking}
         soGiuongMax={soLuongGiuongMax}
+        ngayDen={ngayDenPhuThu}
+        ngayDi={ngayDiPhuThu}
         onSubmit={handlePhuThuTienGiuongComplete}
       />
 
@@ -644,6 +711,7 @@ RoomCard.propTypes = {
   updateRoomCheckIn: PropTypes.func.isRequired,
   updateRoomNgayDi: PropTypes.func.isRequired,
   updateRoomChuyenPhong: PropTypes.func.isRequired,
+  updateRoomHoanDoiPhong: PropTypes.func.isRequired,
   updateRoomPhuThuTienGiuong: PropTypes.func.isRequired,
   updateRoomTraPhong: PropTypes.func,
 }

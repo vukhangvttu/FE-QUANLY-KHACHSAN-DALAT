@@ -24,8 +24,14 @@ import {
   CToaster,
   CToastHeader,
   CPopover,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CSmartTable,
 } from '@coreui/react-pro'
-import { faCirclePlus, faDeleteLeft, faFloppyDisk, faInfo, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
+import { faCirclePlus, faDeleteLeft, faFloppyDisk, faInfo, faInfoCircle, faPen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
@@ -41,12 +47,118 @@ import {
 import { getAllLoaiPhongTrongTrongKhoanThoiGian } from 'src/service/LoaiPhongService'
 import { getAllNhomKhachHang } from 'src/service/NhomKhachHang'
 import { createBooking } from 'src/service/BooKingService'
+import { createTenNguon, getAllTenNguon, updateTenNguon, getTenNguonById } from 'src/service/TenNguonService'
 import CurrencyInput from 'react-currency-input-field'
 import { getAllGiaPhongTheoThoiGian } from 'src/service/GiaPhongService'
 import { getListPhongTrongTheoKhoanThoiGian } from 'src/service/PhongService'
 
 const ThemDatPhong = () => {
   const [rows, setRows] = useState([])
+  const [visibleModalNameSource, setVisibleModalNameSource] = useState(false)
+  const [nameSourceData, setNameSourceData] = useState({
+    maTenNguon: '',
+    nameSource: '',
+    address: '',
+    email: '',
+    codeVat: ''
+  })
+
+  const handleNameSourceDataChange = (e) => {
+    const { name, value } = e.target;
+    setNameSourceData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const [loadingNameSource, setLoadingNameSource] = useState(false)
+  const [listTenNguon, setListTenNguon] = useState([])
+
+  const fetchTenNguon = async () => {
+    const response = await getAllTenNguon();
+    if (response && response.code === 200) {
+      setListTenNguon(response.result || []);
+    }
+  }
+
+  useEffect(() => {
+    fetchTenNguon();
+  }, [visibleModalNameSource])
+
+  const handleSaveNameSource = async () => {
+    if (!nameSourceData.nameSource || !nameSourceData.address || !nameSourceData.email || !nameSourceData.codeVat) {
+      addToast(exampleToast('⚠️ Vui lòng nhập đầy đủ thông tin Tên nguồn!'))
+      return
+    }
+
+    const req = {
+      tenNguon: nameSourceData.nameSource,
+      diaChi: nameSourceData.address,
+      email: nameSourceData.email,
+      codeVAT: nameSourceData.codeVat,
+    }
+
+    console.log("req", req);
+    setLoadingNameSource(true)
+    const response = await createTenNguon(req)
+    setLoadingNameSource(false)
+
+    if (response && response.code === 200) {
+      addToast(exampleToast('✔️ ' + response.message))
+      setVisibleModalNameSource(false)
+      setBooKing((prev) => ({
+        ...prev,
+        loaiNguonKhach: nameSourceData.nameSource
+      }))
+      setNameSourceData({
+        maTenNguon: '',
+        nameSource: '',
+        address: '',
+        email: '',
+        codeVat: ''
+      })
+      fetchTenNguon()
+    } else {
+      addToast(exampleToast('❌ ' + (response?.message || 'Lỗi thêm tên nguồn')))
+    }
+  }
+
+  const handleUpdateNameSource = async () => {
+    if (!nameSourceData.maTenNguon) {
+      addToast(exampleToast('⚠️ Vui lòng chọn một nguồn khách từ danh sách để cập nhật!'))
+      return
+    }
+    if (!nameSourceData.nameSource || !nameSourceData.address || !nameSourceData.email || !nameSourceData.codeVat) {
+      addToast(exampleToast('⚠️ Vui lòng nhập đầy đủ thông tin Tên nguồn!'))
+      return
+    }
+
+    const req = {
+      maTenNguon: nameSourceData.maTenNguon,
+      tenNguon: nameSourceData.nameSource,
+      diaChi: nameSourceData.address,
+      email: nameSourceData.email,
+      codeVAT: nameSourceData.codeVat,
+    }
+
+    setLoadingNameSource(true)
+    const response = await updateTenNguon(req)
+    setLoadingNameSource(false)
+
+    if (response && response.code === 200) {
+      addToast(exampleToast('✔️ ' + response.message))
+      setNameSourceData({
+        maTenNguon: '',
+        nameSource: '',
+        address: '',
+        email: '',
+        codeVat: ''
+      })
+      fetchTenNguon()
+    } else {
+      addToast(exampleToast('❌ ' + (response?.message || 'Lỗi cập nhật tên nguồn')))
+    }
+  }
 
   // Thêm dòng mới
   const handleAddRow = () => {
@@ -324,19 +436,19 @@ const ThemDatPhong = () => {
       const weekendPrice = options.find((option) => option.giaCuoiTuan)
       return weekendPrice
         ? {
-            maLoaiGia: weekendPrice.maLoaiGia,
-            gia: weekendPrice.gia,
-            maGiaPhong: weekendPrice.maGiaPhong,
-          }
+          maLoaiGia: weekendPrice.maLoaiGia,
+          gia: weekendPrice.gia,
+          maGiaPhong: weekendPrice.maGiaPhong,
+        }
         : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
     }
     const weekdayPrice = options.find((option) => option.giaNgayThuong)
     return weekdayPrice
       ? {
-          maLoaiGia: weekdayPrice.maLoaiGia,
-          gia: weekdayPrice.gia,
-          maGiaPhong: weekdayPrice.maGiaPhong,
-        }
+        maLoaiGia: weekdayPrice.maLoaiGia,
+        gia: weekdayPrice.gia,
+        maGiaPhong: weekdayPrice.maGiaPhong,
+      }
       : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
   }
 
@@ -691,7 +803,7 @@ const ThemDatPhong = () => {
 
     // Nếu là loại phòng hội nghị, reset các giá trị phụ thu về 0
     const isHoiNghi = isLoaiPhongHoiNghi(newLoaiPhong)
-    
+
     updatedRows[index] = {
       ...updatedRows[index],
       loaiPhong: newLoaiPhong,
@@ -772,13 +884,11 @@ const ThemDatPhong = () => {
       return
     }
 
-    // Kiểm tra số lượng phòng extra chỉ khi đang thêm phòng mới
-    if (selectedOptions.length > (row.danhSachPhongChiTiets?.length || 0)) {
-      if (soPhongExtra < row.soLuongExtraBed && row.soLuongExtraBed > 0) {
-        addToast(exampleToast('⚠️ Số phòng Extra chọn không được nhỏ quá số lượng Extra Bed!'))
-        return
-      }
-    }
+    // Kiểm tra số lượng phòng extra chọn không được vượt quá số lượng Extra Bed
+    // if (soPhongExtra > row.soLuongExtraBed && row.soLuongExtraBed > 0) {
+    //   addToast(exampleToast('⚠️ Số phòng Extra chọn không được vượt quá số lượng Extra Bed!'))
+    //   return
+    // }
 
     const updatedRows = [...rows]
     updatedRows[index] = {
@@ -829,9 +939,9 @@ const ThemDatPhong = () => {
 
       const phong = Array.isArray(row.soPhongDaChon)
         ? row.soPhongDaChon.map((phong) => ({
-            maPhong: phong.maPhong || '',
-            soGiuongThem: phong.soGiuongThem || 0,
-          }))
+          maPhong: phong.maPhong || '',
+          soGiuongThem: phong.soGiuongThem || 0,
+        }))
         : []
 
       return {
@@ -1639,7 +1749,7 @@ const ThemDatPhong = () => {
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
                     >
-                      First Name 
+                      First Name
                     </CFormLabel>
                     <CCol sm={8}>
                       <CFormInput
@@ -1747,22 +1857,73 @@ const ThemDatPhong = () => {
                   </CRow>
                   <CRow className="mb-1">
                     <CFormLabel
+                      htmlFor="searchSource"
+                      className="col-sm-4 col-form-label labelcustome text-primary"
+                    >
+                      Search Source
+                    </CFormLabel>
+                    <CCol sm={8}>
+                      <div style={{ zIndex: 100 }}>
+                        <Select
+                          options={listTenNguon.map((item) => ({
+                            value: item.maTenNguon,
+                            label: item.tenNguon,
+                          }))}
+                          onChange={async (selectedOption) => {
+                            if (selectedOption) {
+                              setBooKing((prev) => ({
+                                ...prev,
+                                loaiNguonKhach: selectedOption.label,
+                              }))
+
+                              if (selectedOption.value) {
+                                const res = await getTenNguonById(selectedOption.value)
+                                if (res && res.code === 200 && res.result) {
+                                  setBooKing((prev) => ({
+                                    ...prev,
+                                    khachHangBooKing: {
+                                      ...prev.khachHangBooKing,
+                                      diaChiBooking: res.result.diaChi || prev.khachHangBooKing.diaChiBooking,
+                                      emailBooking: res.result.email || prev.khachHangBooKing.emailBooking,
+                                      maSoThue: res.result.codeVAT || prev.khachHangBooKing.maSoThue,
+                                    },
+                                  }))
+                                }
+                              }
+                            }
+                          }}
+                          placeholder="Tìm kiếm Nguồn Khách..."
+                          isClearable
+                        />
+                      </div>
+                    </CCol>
+                  </CRow>
+                  <CRow className="mb-1">
+                    <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
                     >
                       Name Source
                     </CFormLabel>
                     <CCol sm={8}>
-                      <CFormInput
-                        type="text"
-                        className="peer border border-gray-300  hover:!border-green-500 transition-colors duration-300"
-                        name="loaiNguonKhach"
-                        value={booKing.loaiNguonKhach}
-                        onChange={onInputChange}
-                      />
+                      <div className="d-flex align-items-center">
+                        <CFormInput
+                          type="text"
+                          className="peer border border-gray-300  hover:!border-green-500 transition-colors duration-300 me-2"
+                          name="loaiNguonKhach"
+                          value={booKing.loaiNguonKhach}
+                          onChange={onInputChange}
+                        />
+                        <FontAwesomeIcon
+                          icon={faCirclePlus}
+                          className="text-success cursor-pointer ms-1"
+                          size="xl"
+                          onClick={() => setVisibleModalNameSource(true)}
+                        />
+                      </div>
                     </CCol>
                   </CRow>
-                  <CRow className='mb-4'>
+                  <CRow >
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -1781,10 +1942,10 @@ const ThemDatPhong = () => {
                   </CRow>
                 </div>
               </div>
-             
+
             </CCol>
             <CCol md={6}>
-               <div className="relative mb-3">
+              <div className="relative mb-3">
                 <span className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold">
                   Contract Preson Infomation
                 </span>
@@ -1921,7 +2082,7 @@ const ThemDatPhong = () => {
                     </CCol>
                   </CRow>
 
-                   <CRow>
+                  <CRow className='mb-3'>
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -1947,14 +2108,14 @@ const ThemDatPhong = () => {
             </CCol>
 
             <CCol className="mb-3">
-                <CFormTextarea
-                  className="border-2 border-gray-500"
-                  rows={2}
-                  value={booKing.ghiChu}
-                  name="ghiChu"
-                  placeholder="Nhập ghi chú"
-                  onChange={onInputChange}
-                ></CFormTextarea>
+              <CFormTextarea
+                className="border-2 border-gray-500"
+                rows={4}
+                value={booKing.ghiChu}
+                name="ghiChu"
+                placeholder="Nhập ghi chú"
+                onChange={onInputChange}
+              ></CFormTextarea>
             </CCol>
 
             <div className="relative mb-3">
@@ -2064,9 +2225,9 @@ const ThemDatPhong = () => {
                               const tongTienDong =
                                 (row.giaPhongTheoNgays && row.giaPhongTheoNgays.length > 0
                                   ? row.giaPhongTheoNgays.reduce(
-                                      (sum, giaNgay) => sum + giaNgay.gia * (row.soLuong || 0),
-                                      0,
-                                    )
+                                    (sum, giaNgay) => sum + giaNgay.gia * (row.soLuong || 0),
+                                    0,
+                                  )
                                   : 0) +
                                 (row.giaExtraBed || 0) * (row.soLuongExtraBed || 0) * soDem +
                                 (row.giaPhuThuTreEm || 0) * (row.soLuongPhuThuTreEm || 0) * soDem +
@@ -2087,7 +2248,7 @@ const ThemDatPhong = () => {
                                         onDateChange={(date) =>
                                           handleDateChangeNgayDen(date, index)
                                         }
-                                        minDate={yesterday}
+                                        minDate={yesterday} // Đã bỏ giới hạn ngày - cho phép chọn thoải mái
                                       />
                                     </div>
                                   </CTableDataCell>
@@ -2157,7 +2318,7 @@ const ThemDatPhong = () => {
                                           event,
                                           index,
                                           (row.tongSoLuongExtraBed || 0) -
-                                            (row.tongSoLuongExtraBedDaSuDung || 0),
+                                          (row.tongSoLuongExtraBedDaSuDung || 0),
                                           row.soLuong,
                                         )
                                       }
@@ -2349,22 +2510,20 @@ const ThemDatPhong = () => {
                                                       className="flex items-center justify-between gap-2"
                                                     >
                                                       <div
-                                                        className={`text-sm ${
-                                                          isSaturday
-                                                            ? 'text-red-500 font-medium'
-                                                            : ''
-                                                        }`}
+                                                        className={`text-sm ${isSaturday
+                                                          ? 'text-red-500 font-medium'
+                                                          : ''
+                                                          }`}
                                                       >
                                                         {formatNgayThu(date)}{' '}
                                                         {date.toLocaleDateString('vi-VN')}
                                                         {isSaturday}:
                                                       </div>
                                                       <CurrencyInput
-                                                        className={`outline-none w-32 border-b-2 ${
-                                                          isSaturday
-                                                            ? 'border-red-500'
-                                                            : 'border-gray-500'
-                                                        } rounded-none text-right`}
+                                                        className={`outline-none w-32 border-b-2 ${isSaturday
+                                                          ? 'border-red-500'
+                                                          : 'border-gray-500'
+                                                          } rounded-none text-right`}
                                                         value={giaHienTai}
                                                         decimalsLimit={2}
                                                         onValueChange={(value, _, values) => {
@@ -2394,7 +2553,7 @@ const ThemDatPhong = () => {
                                     >
                                       <FontAwesomeIcon icon={faInfoCircle} className="text-xl ml-2 text-blue-500 cursor-pointer" />
                                     </CPopover>
-                                    
+
                                   </CTableDataCell>
                                   {/* <CTableDataCell className="text-center">{soDem}</CTableDataCell> */}
                                   <CTableDataCell className="text-right">
@@ -2445,7 +2604,7 @@ const ThemDatPhong = () => {
                                   .reduce((sum, row) => sum + (row.tongTienDong || 0), 0)
                                   .toLocaleString('en-US')}
                               </CTableDataCell>
-                                <CTableDataCell colSpan={2} className="text-center"></CTableDataCell>
+                              <CTableDataCell colSpan={2} className="text-center"></CTableDataCell>
                             </CTableRow>
                           </CTableBody>
                         </CTable>
@@ -2506,6 +2665,157 @@ const ThemDatPhong = () => {
           </CForm>
         </CCardBody>
       </CCard>
+
+      <CModal size="xl" visible={visibleModalNameSource} onClose={() => setVisibleModalNameSource(false)} scrollable>
+        <CModalHeader onClose={() => setVisibleModalNameSource(false)}>
+          <CModalTitle>Name Source Information</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <CForm>
+            <CRow className="mb-3">
+              <CCol md={6}>
+                <CRow>
+                  <CFormLabel className="col-sm-4 col-form-label labelcustome">Name Source</CFormLabel>
+                  <CCol sm={8}>
+                    <CFormInput
+                      type="text"
+                      name="nameSource"
+                      value={nameSourceData.nameSource}
+                      onChange={handleNameSourceDataChange}
+                    />
+                  </CCol>
+                </CRow>
+              </CCol>
+              <CCol md={6}>
+                <CRow>
+                  <CFormLabel className="col-sm-4 col-form-label labelcustome">Address</CFormLabel>
+                  <CCol sm={8}>
+                    <CFormInput
+                      type="text"
+                      name="address"
+                      value={nameSourceData.address}
+                      onChange={handleNameSourceDataChange}
+                    />
+                  </CCol>
+                </CRow>
+              </CCol>
+            </CRow>
+            <CRow className="mb-3">
+              <CCol md={6}>
+                <CRow>
+                  <CFormLabel className="col-sm-4 col-form-label labelcustome">Email</CFormLabel>
+                  <CCol sm={8}>
+                    <CFormInput
+                      type="email"
+                      name="email"
+                      value={nameSourceData.email}
+                      onChange={handleNameSourceDataChange}
+                    />
+                  </CCol>
+                </CRow>
+              </CCol>
+              <CCol md={6}>
+                <CRow>
+                  <CFormLabel className="col-sm-4 col-form-label labelcustome">Code VAT</CFormLabel>
+                  <CCol sm={8}>
+                    <CFormInput
+                      type="text"
+                      name="codeVat"
+                      value={nameSourceData.codeVat}
+                      onChange={handleNameSourceDataChange}
+                    />
+                  </CCol>
+                </CRow>
+              </CCol>
+            </CRow>
+            <div className="d-flex justify-content-end gap-2 mt-3">
+              <CButton
+                color="secondary"
+                variant="outline"
+                onClick={() => setNameSourceData({ maTenNguon: '', nameSource: '', address: '', email: '', codeVat: '' })}
+              >
+                Reset
+              </CButton>
+              <CButton
+                color="warning"
+                onClick={handleUpdateNameSource}
+                disabled={loadingNameSource || !nameSourceData.maTenNguon}
+              >
+                <FontAwesomeIcon icon={faFloppyDisk} />  Update
+              </CButton>
+              <CButton color="primary" onClick={handleSaveNameSource} disabled={loadingNameSource || !!nameSourceData.maTenNguon}>
+                {loadingNameSource ? (
+                  <>
+                    <CSpinner as="span" size="sm" aria-hidden="true" className="me-2" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save changes'
+                )}
+              </CButton>
+            </div>
+          </CForm>
+
+          <hr className="my-4" />
+          <h5 className="mb-3 font-semibold text-lg">Danh sách Nguồn Khách</h5>
+          <CSmartTable
+            activePage={1}
+            // cleaner
+            clickableRows
+            columns={[
+              { key: 'index', label: 'STT', _style: { width: '80px' } },
+              { key: 'tenNguon', label: 'Tên Nguồn' },
+              { key: 'diaChi', label: 'Địa Chỉ' },
+              { key: 'email', label: 'Email' },
+              { key: 'codeVAT', label: 'Code VAT' },
+              { key: 'action', label: 'Thao Tác', filter: false, sorter: false, _style: { width: '100px' } },
+            ]}
+            columnFilter
+            columnSorter
+            items={listTenNguon.map((item, index) => ({ ...item, index: index + 1 }))}
+            itemsPerPageSelect
+            itemsPerPage={5}
+            pagination
+            scopedColumns={{
+              action: (item) => (
+                <td className="py-2 text-center">
+                  <CButton
+                    color="info"
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setNameSourceData({
+                        maTenNguon: item.maTenNguon || 0,
+                        nameSource: item.tenNguon || '',
+                        address: item.diaChi || '',
+                        email: item.email || '',
+                        codeVat: item.codeVAT || '',
+                      })
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faPen} />
+                  </CButton>
+                </td>
+              ),
+            }}
+            onRowClick={(item) => {
+              setBooKing((prev) => ({
+                ...prev,
+                loaiNguonKhach: item.tenNguon
+              }))
+              setVisibleModalNameSource(false)
+            }}
+            tableProps={{
+              bordered: true,
+              hover: true,
+              responsive: true,
+              className: 'cursor-pointer',
+            }}
+          />
+        </CModalBody>
+
+      </CModal>
     </CRow>
   )
 }

@@ -7,111 +7,115 @@
 * License (https://coreui.io/pro/license/)
 -->
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="CoreUI for React - Open Source Bootstrap Admin Template" />
-    <meta name="author" content="Łukasz Holeczek" />
-    <meta
-      name="keyword"
-      content="Bootstrap,Admin,Template,Open,Source,CSS,SCSS,HTML,RWD,Dashboard,React"
-    />
 
-    <script>
-      // Optimized rotating favicon animation
-      ;(function () {
-        // Chỉ chạy animation khi tab đang active
-        if (document.hidden) return
+<head>
+  <script src="%PUBLIC_URL%/env-config.js"></script>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="CoreUI for React - Open Source Bootstrap Admin Template" />
+  <meta name="author" content="Łukasz Holeczek" />
+  <meta name="keyword" content="Bootstrap,Admin,Template,Open,Source,CSS,SCSS,HTML,RWD,Dashboard,React" />
 
-        const faviconPath = '/favicon.ico'
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        const img = new Image()
-        let angle = 0
-        let animationId = null
-        const UPDATE_INTERVAL = 200 // Cập nhật mỗi 200ms để animation chậm hơn
-        const ANGLE_INCREMENT = 3 // Quay 3 độ mỗi lần để animation mượt mà hơn
+  <script>
+    // Optimized rotating favicon animation
+    ; (function () {
+      // Chỉ chạy animation khi tab đang active
+      if (document.hidden) return
 
-        img.onload = function () {
-          canvas.width = img.width || 32
-          canvas.height = img.height || 32
+      const faviconPath = '/favicon.ico'
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      let angle = 0
+      let animationId = null
+      const UPDATE_INTERVAL = 200 // Cập nhật mỗi 200ms để animation chậm hơn
+      const ANGLE_INCREMENT = 3 // Quay 3 độ mỗi lần để animation mượt mà hơn
 
-          function rotateFavicon() {
-            // Kiểm tra nếu tab không active thì dừng animation
-            if (document.hidden) {
-              if (animationId) {
-                clearTimeout(animationId)
-                animationId = null
-              }
-              return
+      img.onload = function () {
+        canvas.width = img.width || 32
+        canvas.height = img.height || 32
+
+        function rotateFavicon() {
+          // Kiểm tra nếu tab không active thì dừng animation
+          if (document.hidden) {
+            if (animationId) {
+              clearTimeout(animationId)
+              animationId = null
             }
-
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-            // Save context state
-            ctx.save()
-
-            // Move to center, rotate, then move back
-            ctx.translate(canvas.width / 2, canvas.height / 2)
-            ctx.rotate((angle * Math.PI) / 180)
-            ctx.translate(-canvas.width / 2, -canvas.height / 2)
-
-            // Draw the image
-            ctx.drawImage(img, 0, 0)
-
-            // Restore context state
-            ctx.restore()
-
-            // Update favicon
-            const link = document.getElementById('favicon')
-            if (link) {
-              link.href = canvas.toDataURL('image/png')
-            }
-
-            // Increment angle với bước nhảy lớn hơn
-            angle = (angle + ANGLE_INCREMENT) % 360
-
-            // Sử dụng setTimeout thay vì requestAnimationFrame để giảm tần suất
-            animationId = setTimeout(rotateFavicon, UPDATE_INTERVAL)
+            return
           }
 
-          // Bắt đầu animation
-          rotateFavicon()
+          // Clear canvas
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-          // Dừng animation khi tab không active
-          document.addEventListener('visibilitychange', function () {
-            if (document.hidden) {
-              if (animationId) {
-                clearTimeout(animationId)
-                animationId = null
-              }
-            } else {
-              if (!animationId) {
-                rotateFavicon()
-              }
+          // Save context state
+          ctx.save()
+
+          // Move to center, rotate, then move back
+          ctx.translate(canvas.width / 2, canvas.height / 2)
+          ctx.rotate((angle * Math.PI) / 180)
+          ctx.translate(-canvas.width / 2, -canvas.height / 2)
+
+          // Draw the image
+          ctx.drawImage(img, 0, 0)
+
+          // Restore context state
+          ctx.restore()
+
+          // Update favicon
+          const link = document.getElementById('favicon')
+          if (link) {
+            link.href = canvas.toDataURL('image/png')
+          }
+
+          // Increment angle với bước nhảy lớn hơn
+          angle = (angle + ANGLE_INCREMENT) % 360
+
+          // Sử dụng setTimeout thay vì requestAnimationFrame để giảm tần suất
+          animationId = setTimeout(rotateFavicon, UPDATE_INTERVAL)
+        }
+
+        // Bắt đầu animation
+        rotateFavicon()
+
+        // Dừng animation khi tab không active
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) {
+            if (animationId) {
+              clearTimeout(animationId)
+              animationId = null
             }
-          })
-        }
+          } else {
+            if (!animationId) {
+              rotateFavicon()
+            }
+          }
+        })
+      }
 
-        img.onerror = function () {
-          // Nếu không load được favicon thì không chạy animation
-          console.warn('Could not load favicon for animation')
-        }
+      img.onerror = function () {
+        // Nếu không load được favicon thì không chạy animation
+        console.warn('Could not load favicon for animation')
+      }
 
-        img.src = faviconPath
-      })()
-    </script>
+      img.src = faviconPath
+    })()
+  </script>
 
-    <title>Golden Era Vũng Tàu</title>
-    <!--
+  <title>Golden Era Đà Lạt</title>
+  <script>
+    if (window._env_ && window._env_.VI_TRI === 'VUNGTAU') {
+      document.title = 'Golden Era Vũng Tàu'
+    }
+  </script>
+  <!--
       manifest.json provides metadata used when your web app is added to the
       homescreen on Android. See https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" id="favicon" />
-    <!--
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" id="favicon" />
+  <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
       Only files inside the `public` folder can be referenced from the HTML.
@@ -120,14 +124,10 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <link
-      rel="stylesheet"
-      data-purpose="Layout StyleSheet"
-      title="Web Awesome"
-      href="/css/app-wa-759e655e9594906b7aa7a0115e8d04dd.css?vsn=d"
-    />
+  <link rel="stylesheet" data-purpose="Layout StyleSheet" title="Web Awesome"
+    href="/css/app-wa-759e655e9594906b7aa7a0115e8d04dd.css?vsn=d" />
 
-    <!-- <link
+  <!-- <link
       rel="stylesheet"
       href="https://site-assets.fontawesome.com/releases/v6.7.2/css/sharp-duotone-thin.css"
     >
@@ -181,11 +181,12 @@
       rel="stylesheet"
       href="https://site-assets.fontawesome.com/releases/v6.7.2/css/duotone-light.css"
     > -->
-  </head>
-  <body>
-    <noscript> You need to enable JavaScript to run this app. </noscript>
-    <div id="root"></div>
-    <!--
+</head>
+
+<body>
+  <noscript> You need to enable JavaScript to run this app. </noscript>
+  <div id="root"></div>
+  <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
 
@@ -195,5 +196,6 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-  </body>
+</body>
+
 </html>

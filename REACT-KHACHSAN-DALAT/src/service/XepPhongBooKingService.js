@@ -144,6 +144,10 @@ export async function updatePhuThuXepPhong(
   so_nguoi_lon,
   phu_thu_tre,
   so_tre,
+  phu_thu_checkin_som,
+  phu_thu_checkout_tre,
+  phu_thu_nang_hang_phong,
+  so_luong_phu_thu_nang_hang_phong,
   ma_xepphong,
   navigate,
 ) {
@@ -156,6 +160,10 @@ export async function updatePhuThuXepPhong(
         so_nguoi_lon: so_nguoi_lon,
         phu_thu_tre: phu_thu_tre,
         so_tre: so_tre,
+        phu_thu_check_in_som: phu_thu_checkin_som,
+        phu_thu_check_out_tre: phu_thu_checkout_tre,
+        phu_thu_nang_hang_phong: phu_thu_nang_hang_phong,
+        so_luong_nang_hang_phong: so_luong_phu_thu_nang_hang_phong,
         ma_xepphong: ma_xepphong,
       },
     })

@@ -14,8 +14,8 @@ COPY ../../build /usr/share/nginx/html
 # Mở port 80
 EXPOSE 80
 
-# Khởi chạy Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Khởi chạy Nginx, tạo file env-config.js để truyền biến môi trường vào React lúc runtime
+CMD ["/bin/sh", "-c", "echo \"window._env_ = { \\\"VI_TRI\\\": \\\"${VI_TRI:-DALAT}\\\" };\" > /usr/share/nginx/html/env-config.js && exec nginx -g \"daemon off;\""]
 
 
 #docker build -f src/docker/Dockerfile -t vukhangvttu/fe-khachsan-vt:1.0 .

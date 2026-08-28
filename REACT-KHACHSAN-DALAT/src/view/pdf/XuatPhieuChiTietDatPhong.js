@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Buffer } from 'buffer'
 import {
   Document,
@@ -18,13 +18,21 @@ import PropTypes from 'prop-types'
 import contactImg from 'src/assets/images/contact.png'
 import { format, parseISO } from 'date-fns'
 
-import logoImg from 'src/assets/images/logovaddresmoi.jpg.png'
+import logoImgDaLat from 'src/assets/images/logo-ge-da-lat.png'
+import logoImgVungTau from 'src/assets/images/logo-ge-vung-tau.png'
+
 import * as pdfjsLib from 'pdfjs-dist/build/pdf'
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry'
 import {
   getThongTinXuatPhieuChiTietBooking,
   getThongTinXuatPhieuChiTietPhuThuBooking,
 } from 'src/service/APIService'
+import SignaturePad from 'src/components/SignaturePad'
+import { faCircleDown } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
+const viTri = window._env_?.VI_TRI || 'DALAT'
+const logoImg = viTri === 'VUNGTAU' ? logoImgVungTau : logoImgDaLat
 window.Buffer = Buffer
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 // Đăng ký font
@@ -236,12 +244,12 @@ const getTongTienPhuThu = (data, dataPhuThu) => {
   // Tính tổng phụ thu từ dataPhuThu (thongTinPhuThu)
   const tongPhuThuTuDataPhuThu = Array.isArray(dataPhuThu)
     ? dataPhuThu.reduce(
-        (sum, row) =>
-          sum +
-          (row.tong_tien || 0) +
-          (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1),
-        0,
-      )
+      (sum, row) =>
+        sum +
+        (row.tong_tien || 0) +
+        (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1),
+      0,
+    )
     : 0
 
   // Trả về tổng của cả hai
@@ -345,22 +353,22 @@ const columns = [
         row.so_luong_extra_bed > 0
       ) {
         let tongGiaPhuThu = 0
-        
+
         // Cộng phụ thu ăn sáng
         if (row.so_luong_phu_thu_an_sang > 0) {
           tongGiaPhuThu += (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang
         }
-        
+
         // Cộng phụ thu trẻ em
         if (row.so_luong_phu_thu_tre_em > 0) {
           tongGiaPhuThu += (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em
         }
-        
+
         // Cộng phụ thu extra bed
         if (row.so_luong_extra_bed > 0) {
           tongGiaPhuThu += (row.gia_extra_bed || 0) * row.so_luong_extra_bed
         }
-        
+
         return formatCurrency(tongGiaPhuThu)
       }
 
@@ -380,22 +388,22 @@ const columns = [
         row.so_luong_extra_bed > 0
       ) {
         let tongTienPhuThu = 0
-        
+
         // Cộng phụ thu ăn sáng
         if (row.so_luong_phu_thu_an_sang > 0) {
           tongTienPhuThu += (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1)
         }
-        
+
         // Cộng phụ thu trẻ em
         if (row.so_luong_phu_thu_tre_em > 0) {
           tongTienPhuThu += (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em * (row.so_dem || 1)
         }
-        
+
         // Cộng phụ thu extra bed
         if (row.so_luong_extra_bed > 0) {
           tongTienPhuThu += (row.gia_extra_bed || 0) * row.so_luong_extra_bed * (row.so_dem || 1)
         }
-        
+
         return formatCurrency(tongTienPhuThu)
       }
 
@@ -522,7 +530,7 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
             <View style={[styles.cell_align_center, styles.colPeople]}>
               <Text>Số lượng người/phòng</Text>
             </View>
-               <View style={[styles.cell_align_center, styles.colNights]}>
+            <View style={[styles.cell_align_center, styles.colNights]}>
               <Text>SL</Text>
             </View>
             <View style={[styles.cell_align_center, styles.colNights]}>
@@ -639,12 +647,36 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
           src={contactImg}
           style={{ width: '100%', marginBottom: 5, height: '140px', marginTop: 5 }}
         />
-        <View style={styles.contactInfo}>
-          <Text style={{ fontWeight: 'bold' }}>Hoang Kim - Golden Era Vung Tau Hotel </Text>
-          <Text>03-05 Thuy Van Street, Vung Tau Ward , Ho Chi Minh City, S.R Vietnam </Text>
-          <Text>Hotline: 08888.713.92 - 0393.054.272; (Zalo: 08888.713.92) </Text>
-          <Text>Website: goldenera.vttu.edu.vn </Text>
-        </View>
+
+        {
+          viTri === 'DALAT' && (
+            <>
+              <View style={styles.contactInfo}>
+                <Text style={{ fontWeight: 'bold' }}>DƯƠNG HOÀNG - GOLDEN ERA ĐÀ LẠT Hotel </Text>
+                <Text>10 Bùi Thị Xuân, phường Xuân Hương - Đà Lạt, tỉnh Lâm Đồng </Text>
+                <Text>Hotline: 02633.551.551; (Zalo: 0914.581.551 ) </Text>
+                <Text>Website: goldenera.vttu.edu.vn </Text>
+              </View>
+            </>
+          )
+        }
+
+        {viTri === 'VUNGTAU' && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={[styles.contactInfo, { flex: 1 }]}>
+              <Text style={{ fontWeight: 'bold' }}>DƯƠNG HOÀNG - GOLDEN ERA VŨNG TÀU Hotel </Text>
+              <Text>03-05 Thuy Van Street, Vung Tau Ward , Ho Chi Minh City, S.R Vietnam</Text>
+              <Text>Hotline: 08888.713.92 - 0393.054.272; (Zalo: 08888.713.92) </Text>
+              <Text>Website: goldenera.vttu.edu.vn </Text>
+            </View>
+            <View style={{ width: 80, height: 80 }}>
+              <Image
+                src={`https://img.vietqr.io/image/970436-3366696969-compact.png?amount=${Math.round(soTienConLai * 0.5)}&addInfo=${encodeURIComponent(`Thanh toan booking ${thongTinKhachHang?.ma_booking || ''}`)}&accountName=${encodeURIComponent('CTY TRACH NHIEM HUU HAN HOANG KIM-DOLDEN')}`}
+              />
+            </View>
+          </View>
+        )}
+
       </Page>
     </Document>
   )
@@ -740,8 +772,23 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
       fetchData()
     }
   }, [ma_booking])
+
+  const [previewImageUrl, setPreviewImageUrl] = useState(null)
+  const [generatingPreview, setGeneratingPreview] = useState(false)
+  const originalPreviewRef = useRef(null)
+
   const handleDownloadImage = useCallback(async () => {
     if (!thongTinKhachHang || !thongTinThanhToan) return
+
+    // Nếu đã có ảnh xem trước (bao gồm cả chữ ký trên mobile), tải luôn ảnh đó
+    if (previewImageUrl) {
+      const link = document.createElement('a')
+      link.download = `PhieuDangKy_${thongTinKhachHang.ma_booking}.png`
+      link.href = previewImageUrl
+      link.click()
+      return
+    }
+
     setDownloading(true)
     try {
       const blob = await pdf(
@@ -809,9 +856,123 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
     } catch (error) {
       console.error('Lỗi khi tải ảnh:', error)
     } finally {
-      setDownloading(false)
     }
-  }, [thongTinKhachHang, thongTinThanhToan, thongTinPhuThu])
+  }, [thongTinKhachHang, thongTinThanhToan, thongTinPhuThu, previewImageUrl])
+
+
+  const isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth <= 768
+
+  useEffect(() => {
+    if (isMobile && thongTinKhachHang && thongTinThanhToan) {
+      const generatePreview = async () => {
+        setGeneratingPreview(true)
+        try {
+          const blob = await pdf(
+            <HotelRegistrationForm
+              thongTinKhachHang={thongTinKhachHang}
+              thongTinThanhToan={thongTinThanhToan}
+              thongTinPhuThu={thongTinPhuThu}
+            />,
+          ).toBlob()
+
+          const arrayBuffer = await blob.arrayBuffer()
+          const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+          const scale = 2
+
+          if (pdfDoc.numPages === 1) {
+            const page = await pdfDoc.getPage(1)
+            const viewport = page.getViewport({ scale })
+            const canvas = document.createElement('canvas')
+            canvas.width = viewport.width
+            canvas.height = viewport.height
+            const ctx = canvas.getContext('2d')
+            await page.render({ canvasContext: ctx, viewport }).promise
+            setPreviewImageUrl(canvas.toDataURL('image/png'))
+          } else {
+            let totalHeight = 0
+            let maxWidth = 0
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+              const page = await pdfDoc.getPage(i)
+              const viewport = page.getViewport({ scale })
+              totalHeight += viewport.height
+              if (viewport.width > maxWidth) {
+                maxWidth = viewport.width
+              }
+            }
+
+            const bigCanvas = document.createElement('canvas')
+            bigCanvas.width = maxWidth
+            bigCanvas.height = totalHeight
+            const bigCtx = bigCanvas.getContext('2d')
+
+            let currentY = 0
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+              const page = await pdfDoc.getPage(i)
+              const viewport = page.getViewport({ scale })
+              const pageCanvas = document.createElement('canvas')
+              pageCanvas.width = viewport.width
+              pageCanvas.height = viewport.height
+              const pageCtx = pageCanvas.getContext('2d')
+
+              await page.render({ canvasContext: pageCtx, viewport }).promise
+              bigCtx.drawImage(pageCanvas, 0, currentY)
+              currentY += pageCanvas.height
+            }
+            setPreviewImageUrl(bigCanvas.toDataURL('image/png'))
+          }
+        } catch (error) {
+          console.error('Lỗi khi tạo ảnh xem trước:', error)
+        } finally {
+          setGeneratingPreview(false)
+        }
+      }
+      generatePreview()
+    }
+  }, [isMobile, thongTinKhachHang, thongTinThanhToan, thongTinPhuThu])
+
+  // Composite chữ ký vào khung "Khách hàng/Guest" trên ảnh xem trước
+  const handleSignatureConfirm = useCallback(
+    (signatureDataUrl) => {
+      if (!previewImageUrl) return
+
+      const previewImg = new window.Image()
+      previewImg.onload = () => {
+        const w = previewImg.width
+        const h = previewImg.height
+
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(previewImg, 0, 0)
+
+        // PDF A5 landscape – column5 (30% bên phải), imageContainer: 160×200pt
+        const sigBoxX = w * 0.715
+        const sigBoxY = h * 0.10
+        const sigBoxW = w * 0.270
+        const sigBoxH = h * 0.476
+
+        const sigImg = new window.Image()
+        sigImg.onload = () => {
+          const padding = 8
+          const availW = sigBoxW - padding * 2
+          const availH = sigBoxH - padding * 2
+          const scale = Math.min(availW / sigImg.width, availH / sigImg.height) * 0.6
+          const drawW = sigImg.width * scale
+          const drawH = sigImg.height * scale
+          const drawX = sigBoxX + padding + (availW - drawW) / 2
+          const drawY = sigBoxY + padding + (availH - drawH) / 3
+          ctx.drawImage(sigImg, drawX, drawY, drawW, drawH)
+          setPreviewImageUrl(canvas.toDataURL('image/png'))
+        }
+        sigImg.src = signatureDataUrl
+      }
+      previewImg.src = previewImageUrl
+    },
+    [previewImageUrl],
+  )
 
   return (
     <div className="w-full flex flex-col items-center" style={{ height: '90vh' }}>
@@ -829,21 +990,58 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
             fontSize: 14,
           }}
         >
-          {downloading ? 'Đang tải...' : 'Tải ảnh PNG'}
+          {downloading ? 'Đang tải...' : <><FontAwesomeIcon icon={faCircleDown} /> Tải ảnh PNG</>}
         </button>
       </div>
       <div className="w-full flex justify-center items-center" style={{ flex: 1 }}>
-        <PDFViewer style={{ width: '60vh', height: '90vh' }}>
-          {thongTinKhachHang && thongTinThanhToan ? (
-            <HotelRegistrationForm
-              thongTinKhachHang={thongTinKhachHang}
-              thongTinThanhToan={thongTinThanhToan}
-              thongTinPhuThu={thongTinPhuThu}
-            />
-          ) : (
-            <p>Đang tải dữ liệu...</p>
-          )}
-        </PDFViewer>
+        {isMobile ? (
+          <div style={{ marginTop: '20px', textAlign: 'center', width: '90%' }}>
+            {generatingPreview ? (
+              <div style={{ padding: '40px', color: '#666' }}>
+                <p>Đang tải ảnh xem trước...</p>
+              </div>
+            ) : previewImageUrl ? (
+              <>
+                <img
+                  src={previewImageUrl}
+                  alt="Preview PDF"
+                  style={{ width: '100%', border: '1px solid #ccc', borderRadius: '8px' }}
+                />
+                <SignaturePad onSave={handleSignatureConfirm} />
+              </>
+            ) : (
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '40px 20px',
+                  border: '1px solid #ccc',
+                  borderRadius: '8px',
+                  backgroundColor: '#f9f9f9',
+                }}
+              >
+                <h4 style={{ color: '#dc3545', marginBottom: '15px' }}>Không thể xem trước PDF</h4>
+                <p style={{ marginBottom: '10px' }}>
+                  Trình duyệt trên thiết bị di động hoặc máy tính bảng không hỗ trợ xem trước tệp PDF này.
+                </p>
+                <p>
+                  Vui lòng nhấn nút <strong>Tải ảnh PNG</strong> ở trên để tải về.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <PDFViewer style={{ width: '99%', height: '900px' }}>
+            {thongTinKhachHang && thongTinThanhToan ? (
+              <HotelRegistrationForm
+                thongTinKhachHang={thongTinKhachHang}
+                thongTinThanhToan={thongTinThanhToan}
+                thongTinPhuThu={thongTinPhuThu}
+              />
+            ) : (
+              <p>Đang tải dữ liệu...</p>
+            )}
+          </PDFViewer>
+        )}
       </div>
     </div>
   )

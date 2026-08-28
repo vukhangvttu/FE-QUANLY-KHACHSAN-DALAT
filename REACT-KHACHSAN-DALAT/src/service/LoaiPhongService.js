@@ -1,5 +1,4 @@
 import axiosInstance from './axiosConfig'
-import config from './Config'
 
 export async function getAllLoaiPhongBooKing(navigate) {
   try {
@@ -16,6 +15,23 @@ export async function getAllLoaiPhongBooKing(navigate) {
 export async function getAllLoaiPhongTrongTrongKhoanThoiGian(ngayDen, ngayDi) {
   try {
     const response = await axiosInstance.get('/loai-phong/kiem-tra-loai-phong-trong', {
+      params: {
+        ngayDen: ngayDen,
+        ngayDi: ngayDi,
+      },
+    })
+    console.log('trả ra loại phòng', response)
+    if (response.status === 200) {
+      return response.data.result
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export async function getThongKePhongDangOTheoLoaiController(ngayDen, ngayDi) {
+  try {
+    const response = await axiosInstance.get('/loai-phong/kiem-tra-loai-phong-dang-o-theo-loai', {
       params: {
         ngayDen: ngayDen,
         ngayDi: ngayDi,

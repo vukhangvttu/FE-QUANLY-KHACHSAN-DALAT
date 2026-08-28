@@ -193,7 +193,7 @@ const EditBooKing = () => {
               ngayDi: formattedDate,
             },
           ],
-          valueNgayDen,
+          row.ngayDen, // Sử dụng ngày đến của chính dòng này thay vì valueNgayDen tổng
           selectedDate,
         )[0]
         return syncedRow
@@ -227,11 +227,11 @@ const EditBooKing = () => {
           return old
             ? old
             : {
-                maGiaPhongTheoNgay: null,
-                maLoaiPhong: row.loaiPhong.maLoaiPhong,
-                ngay: ngayStr,
-                gia: getGiaTheoLoaiNgay(row.loaiPhong.maLoaiPhong, date),
-              }
+              maGiaPhongTheoNgay: null,
+              maLoaiPhong: row.loaiPhong.maLoaiPhong,
+              ngay: ngayStr,
+              gia: getGiaTheoLoaiNgay(row.loaiPhong.maLoaiPhong, date),
+            }
         })
       } else {
         newGiaPhongTheoNgays = newDates.map((date) => ({
@@ -408,20 +408,20 @@ const EditBooKing = () => {
       const weekendPrice = options.find((option) => option.giaCuoiTuan)
       return weekendPrice
         ? {
-            maLoaiGia: weekendPrice.maLoaiGia,
-            gia: weekendPrice.gia,
-            maGiaPhong: weekendPrice.maGiaPhong,
-          }
+          maLoaiGia: weekendPrice.maLoaiGia,
+          gia: weekendPrice.gia,
+          maGiaPhong: weekendPrice.maGiaPhong,
+        }
         : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
     }
     // Nếu không phải Thứ 7, ưu tiên giá ngày thường
     const weekdayPrice = options.find((option) => option.giaNgayThuong)
     return weekdayPrice
       ? {
-          maLoaiGia: weekdayPrice.maLoaiGia,
-          gia: weekdayPrice.gia,
-          maGiaPhong: weekdayPrice.maGiaPhong,
-        }
+        maLoaiGia: weekdayPrice.maLoaiGia,
+        gia: weekdayPrice.gia,
+        maGiaPhong: weekdayPrice.maGiaPhong,
+      }
       : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
   }
 
@@ -693,9 +693,9 @@ const EditBooKing = () => {
     const updatedRows = rows.map((row) =>
       row.loaiPhong === maLoaiPhong
         ? {
-            ...row,
-            ghiChu: value,
-          }
+          ...row,
+          ghiChu: value,
+        }
         : row,
     )
 
@@ -777,9 +777,22 @@ const EditBooKing = () => {
       setLoading(true)
 
       // Gọi API lấy chi tiết đặt phòng
-      const chitietbooking = await getChiTietBooKingByMaBooKing(ma_booking, navigate)
+      let chitietbooking = await getChiTietBooKingByMaBooKing(ma_booking, navigate)
 
       if (chitietbooking) {
+        // Lọc giaPhongTheoNgays chỉ lấy các ngày nằm trong khoảng ngayDen và ngayDi (không tính ngayDi)
+        chitietbooking = chitietbooking.map((row) => {
+          if (row.ngayDen && row.ngayDi && row.giaPhongTheoNgays) {
+            const ngayDenFormat = row.ngayDen.includes('/') ? row.ngayDen.split('/').reverse().join('-') : row.ngayDen;
+            const ngayDiFormat = row.ngayDi.includes('/') ? row.ngayDi.split('/').reverse().join('-') : row.ngayDi;
+            const filteredGia = row.giaPhongTheoNgays.filter((g) => {
+              return g.ngay >= ngayDenFormat && g.ngay < ngayDiFormat;
+            });
+            return { ...row, giaPhongTheoNgays: filteredGia };
+          }
+          return row;
+        });
+
         // Cập nhật chi tiết booking
         // setChiTietBooKing(chitietbooking)
 
@@ -818,11 +831,8 @@ const EditBooKing = () => {
           setValueNgayDen(booking.ngayDen)
           setValueNgayDi(booking.ngayDi)
 
-          setBooKing((prev) => ({
-            ...prev,
-            ...booking,
-            chiTietBooKings: chitietbooking,
-          }))
+          // Cập nhật lại chi tiết booking thông qua hàm updateChiTietBooKings để tính toán lại tienPhong, tổng tiền...
+          updateChiTietBooKings(chitietbooking)
 
           // Mỗi dòng chi tiết có ngày đến/đi riêng — kiểm tra phòng trống theo đúng từng dòng
           await kiemTraPhongTrongNhieuDong(chitietbooking)
@@ -1420,7 +1430,7 @@ const EditBooKing = () => {
     }
   }
 
-  const ChoXyLyXoaPhongHoiNghi = () => {}
+  const ChoXyLyXoaPhongHoiNghi = () => { }
   const [visibleXoaHoiNghi, setVisbleXoaHoiNghi] = useState(false)
   const [maPhongHoiNghi, setMaPhongHoiNghi] = useState('')
 
@@ -2381,7 +2391,7 @@ const EditBooKing = () => {
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
                     >
-                      First Name 
+                      First Name
                     </CFormLabel>
                     <CCol sm={8}>
                       <CFormInput
@@ -2518,10 +2528,10 @@ const EditBooKing = () => {
                   </CRow>
                 </div>
               </div>
-             
+
             </CCol>
             <CCol md={6}>
-               <div className="relative mb-3">
+              <div className="relative mb-3">
                 <span className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold">
                   Contract Preson Infomation
                 </span>
@@ -2652,7 +2662,7 @@ const EditBooKing = () => {
                     </CCol>
                   </CRow>
 
-                   <CRow>
+                  <CRow>
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -2675,19 +2685,19 @@ const EditBooKing = () => {
                   </CRow>
 
                 </div>
-              
+
               </div>
             </CCol>
-              <CCol className='mb-3'>
-                  <CFormTextarea
-                    className="border-2 border-gray-500"
-                    rows={2}
-                    value={booKing.ghiChu}
-                    name="ghiChu"
-                    placeholder="Nhập ghi chú"
-                    onChange={onInputChange}
-                  ></CFormTextarea>
-                </CCol>
+            <CCol className='mb-3'>
+              <CFormTextarea
+                className="border-2 border-gray-500"
+                rows={2}
+                value={booKing.ghiChu}
+                name="ghiChu"
+                placeholder="Nhập ghi chú"
+                onChange={onInputChange}
+              ></CFormTextarea>
+            </CCol>
 
             <div className="relative mb-3">
               <span className="absolute -top-3 left-6 bg-white px-1 text-sm font-semibold">
@@ -2815,17 +2825,17 @@ const EditBooKing = () => {
                                   const tongTienDong =
                                     (row.giaPhongTheoNgays && row.giaPhongTheoNgays.length > 0
                                       ? row.giaPhongTheoNgays.reduce(
-                                          (sum, giaNgay) => sum + giaNgay.gia * (row.soLuong || 0),
-                                          0,
-                                        )
+                                        (sum, giaNgay) => sum + giaNgay.gia * (row.soLuong || 0),
+                                        0,
+                                      )
                                       : 0) +
                                     (row.giaExtraBed || 0) * (row.soLuongExtraBed || 0) * soDem +
                                     (row.giaPhuThuTreEm || 0) *
-                                      (row.soLuongPhuThuTreEm || 0) *
-                                      soDem +
+                                    (row.soLuongPhuThuTreEm || 0) *
+                                    soDem +
                                     (row.giaPhuThuAnSang || 0) *
-                                      (row.soLuongPhuThuAnSang || 0) *
-                                      soDem
+                                    (row.soLuongPhuThuAnSang || 0) *
+                                    soDem
 
                                   row.tongTienDong = tongTienDong
 
@@ -2846,7 +2856,7 @@ const EditBooKing = () => {
                                               return (
                                                 ngayDenDate < createDateFromInput(today) &&
                                                 ngayDenDate.toDateString() !==
-                                                  createDateFromInput(today).toDateString()
+                                                createDateFromInput(today).toDateString()
                                               )
                                             })()}
                                           />
@@ -2897,7 +2907,7 @@ const EditBooKing = () => {
                                               row.soLuongExtraBed,
                                             )
                                           }
-                                          // disabled={daXepPhong && !row.isNew}
+                                        // disabled={daXepPhong && !row.isNew}
                                         />
                                       </CTableDataCell>
 
@@ -2936,7 +2946,7 @@ const EditBooKing = () => {
                                               event,
                                               row.loaiPhong,
                                               (row.tongSoLuongExtraBed || 0) -
-                                                (row.tongSoLuongExtraBedDaSuDung || 0),
+                                              (row.tongSoLuongExtraBedDaSuDung || 0),
                                               row.soLuong,
                                             )
                                           }
@@ -3042,13 +3052,13 @@ const EditBooKing = () => {
                                           isMulti
                                           value={
                                             row.danhSachPhongChiTiets &&
-                                            row.danhSachPhongChiTiets.length > 0
+                                              row.danhSachPhongChiTiets.length > 0
                                               ? phongOptions[row.index]?.filter(
-                                                  (option) =>
-                                                    row.danhSachPhongChiTiets.some(
-                                                      (p) => p.maPhong === option.maPhong,
-                                                    ),
-                                                )
+                                                (option) =>
+                                                  row.danhSachPhongChiTiets.some(
+                                                    (p) => p.maPhong === option.maPhong,
+                                                  ),
+                                              )
                                               : []
                                           }
                                           onChange={(selected) =>
@@ -3113,9 +3123,8 @@ const EditBooKing = () => {
                                                 key={option.maGiaPhong}
                                                 value={option.maLoaiGia}
                                               >
-                                                {`${
-                                                  option.tenLoaiGia
-                                                } - Giá: ${option.gia.toLocaleString('vi-VN')}`}
+                                                {`${option.tenLoaiGia
+                                                  } - Giá: ${option.gia.toLocaleString('vi-VN')}`}
                                                 {option.giaCuoiTuan ? ' (Cuối tuần)' : ''}
                                                 {option.giaNgayThuong ? ' (Ngày thường)' : ''}
                                                 {option.giaNgayLe ? ' (Ngày lễ)' : ''}
@@ -3123,7 +3132,7 @@ const EditBooKing = () => {
                                               </option>
                                             ),
                                           )}
-                                           <option value="41">Giá Booking Online </option>
+                                          <option value="41">Giá Booking Online </option>
                                         </CFormSelect>
                                       </CTableDataCell>
                                       {/* <CTableDataCell>
@@ -3179,13 +3188,12 @@ const EditBooKing = () => {
                                                           className="flex items-center justify-between gap-2"
                                                         >
                                                           <div
-                                                            className={`text-sm ${
-                                                              isSaturday
-                                                                ? 'text-red-500 font-medium'
-                                                                : isPastDate
-                                                                  ? 'text-gray-400'
-                                                                  : ''
-                                                            }`}
+                                                            className={`text-sm ${isSaturday
+                                                              ? 'text-red-500 font-medium'
+                                                              : isPastDate
+                                                                ? 'text-gray-400'
+                                                                : ''
+                                                              }`}
                                                           >
                                                             {row.loaiPhong.maLoaiPhong},{' '}
                                                             {formatNgayThu(date)}{' '}
@@ -3194,15 +3202,13 @@ const EditBooKing = () => {
                                                           </div>
                                                           <div className="relative">
                                                             <CurrencyInput
-                                                              className={`outline-none w-32 border-b-2 ${
-                                                                isSaturday
-                                                                  ? 'border-red-500'
-                                                                  : isPastDate
-                                                                    ? 'border-gray-300'
-                                                                    : 'border-gray-500'
-                                                              } rounded-none text-right ${
-                                                                isPastDate ? 'bg-gray-100' : ''
-                                                              }`}
+                                                              className={`outline-none w-32 border-b-2 ${isSaturday
+                                                                ? 'border-red-500'
+                                                                : isPastDate
+                                                                  ? 'border-gray-300'
+                                                                  : 'border-gray-500'
+                                                                } rounded-none text-right ${isPastDate ? 'bg-gray-100' : ''
+                                                                }`}
                                                               value={giaHienTai}
                                                               decimalsLimit={2}
                                                               // disabled={isPastDate}
@@ -3233,7 +3239,7 @@ const EditBooKing = () => {
                                             </div>
                                           }
                                         >
-                                             <FontAwesomeIcon icon={faInfoCircle} className="text-xl ml-2 text-blue-500 cursor-pointer" />
+                                          <FontAwesomeIcon icon={faInfoCircle} className="text-xl ml-2 text-blue-500 cursor-pointer" />
                                         </CPopover>
                                       </CTableDataCell>
 

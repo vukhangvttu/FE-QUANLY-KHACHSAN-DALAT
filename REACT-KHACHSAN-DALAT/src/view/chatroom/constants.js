@@ -42,4 +42,5 @@ export const ROOM_ACTIONS = {
   PRINT_REGISTRATION_FROM: 'In phiếu đăng ký',
   PRINT_REGISTRATION_FROM_OTA_TA: 'In phiếu ĐK OTA/TA',
   PRINT_REGISTRATION_FROM_CHI_TIET_DAT_PHONG: 'In chi tiết đặt phòng',
+  SWAP_ROOM: 'Hoán đổi phòng',
 }

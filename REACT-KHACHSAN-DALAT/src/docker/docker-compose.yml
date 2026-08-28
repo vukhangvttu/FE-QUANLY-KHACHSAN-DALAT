@@ -9,3 +9,5 @@ services:
     container_name: my-react-khach-san
     restart: always # Thêm dòng này để container tự động restart
 
+    environment:
+      - VI_TRI=VUNGTAU # <--- Thêm biến này, nếu là DALAT thì để trống hoặc =DALAT

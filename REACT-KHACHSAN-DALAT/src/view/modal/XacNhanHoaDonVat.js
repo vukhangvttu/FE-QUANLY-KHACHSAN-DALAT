@@ -47,7 +47,7 @@ const XacNhanHoaDonVat = ({ visible, onClose, ma_hoadon_vat, onSubmit }) => {
 
       if (response.status === 200) {
         if (response.data.result) {
-          addToast(exampleToast('✅ Phát hành hóa đơn VAT thành công'))
+          addToast(exampleToast('✔️ Phát hành hóa đơn VAT thành công'))
 
           const data = {
             data: {

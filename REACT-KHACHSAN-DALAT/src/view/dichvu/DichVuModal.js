@@ -8,6 +8,7 @@ import { faEllipsisVertical, faFloppyDisk, faSearch } from '@fortawesome/free-so
 
 import { useNavigate, useParams } from 'react-router-dom'
 import { createPhieuDichVu, getAllNhomDichVu } from 'src/service/DichVu'
+import config from '../../service/Config'
 import GhiChuModal from '../modal/GhiChuModal'
 import CurrencyInput from 'react-currency-input-field'
 const DichVuModal = ({ visible, onClose, onSubmit, maPhong }) => {
@@ -76,6 +77,7 @@ const DichVuModal = ({ visible, onClose, onSubmit, maPhong }) => {
 
       const chitietbooking = await getAllNhomDichVu(navigate)
       if (chitietbooking) {
+        // console.log('DanhSachDichVu raw:', JSON.stringify(chitietbooking))
         setDanhSachDichVu(chitietbooking)
       } else {
         addToast(exampleToast('Không thể tải chi tiết đặt phòng. Vui lòng thử lại sau!'))
@@ -355,9 +357,9 @@ const DichVuModal = ({ visible, onClose, onSubmit, maPhong }) => {
                         <div className="w-16 h-16 mb-2 overflow-hidden rounded-md bg-gray-200 flex items-center justify-center">
                           {product.hinhAnh ? (
                             <img
-                              src={`data:image/jpeg;base64,${product.hinhAnh}`}
+                              src={`${config.apiBaseUrl}${product.hinhAnh}`}
                               alt={product.tenDichVu}
-                              className="w-20 h-20  object-cover"
+                              className="w-20 h-20 object-cover"
                             />
                           ) : (
                             <span className="text-sm text-gray-500">Hình ảnh</span>

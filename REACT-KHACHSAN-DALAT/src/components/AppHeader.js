@@ -23,6 +23,8 @@ const AppHeader = () => {
     })
   }, [])
 
+  const viTri = window._env_?.VI_TRI || 'DALAT'
+
   return (
     <CHeader position="sticky" className="mb-2 p-0" ref={headerRef}>
       <CContainer className="border-bottom px-4 position-relative" fluid>
@@ -64,7 +66,20 @@ const AppHeader = () => {
               whiteSpace: 'nowrap',
             }}
           >
-            Golden Era Vũng Tàu
+            {
+              viTri === 'DALAT' && (
+                <>
+                  Golden Era Đà Lạt
+                </>
+              )
+            }
+            {
+              viTri === 'VUNGTAU' && (
+                <>
+                  Golden Era Vũng Tàu
+                </>
+              )
+            }
           </span>
         </div>
 

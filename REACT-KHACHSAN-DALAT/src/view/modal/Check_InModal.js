@@ -72,7 +72,7 @@ const Check_InModal = ({ visible, onClose, ma_xepphong_bookking, tenphong, onSub
       setCheckInStatus({
         isLate: false,
         isEarly: false,
-        message: '✅ Check-in đúng giờ! Khách đến trong khung giờ check-in chuẩn.',
+        message: '✔️ Check-in đúng giờ! Khách đến trong khung giờ check-in chuẩn.',
         alertType: 'success',
       })
     }

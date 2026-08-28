@@ -4,9 +4,14 @@ import { Document, Page, Text, View, StyleSheet, PDFViewer, Image, Font } from '
 import { AllThongTinKhachHang } from 'src/service/ThanhToanService'
 import { useNavigate, useParams } from 'react-router-dom'
 import PropTypes from 'prop-types'
-import logoImg from 'src/assets/images/Picture1.png'
+import logoImgDaLat from 'src/assets/images/logo-ge-da-lat.png'
+import logoImgVungTau from 'src/assets/images/logo-ge-vung-tau.png'
+
 import { format, parseISO } from 'date-fns'
 import { getDanhSachHoaDon } from 'src/service/HoaDonService'
+
+const viTri = window._env_?.VI_TRI || 'DALAT'
+const logoImg = viTri === 'VUNGTAU' ? logoImgVungTau : logoImgDaLat
 window.Buffer = Buffer
 // Đăng ký font
 Font.register({
@@ -547,18 +552,43 @@ const XuatPhieuThanhToan = () => {
     }
   }, [ma_booking])
 
+  const isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth <= 768
+
   return (
     <div>
-      <PDFViewer style={{ width: '100%', height: '700px' }}>
-        {thongTinKhachHang && thongTinThanhToan ? (
-          <HotelRegistrationForm
-            thongTinKhachHang={thongTinKhachHang}
-            thongTinThanhToan={thongTinThanhToan}
-          />
-        ) : (
-          <p>Đang tải dữ liệu...</p>
-        )}
-      </PDFViewer>
+      {isMobile ? (
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '40px 20px',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            backgroundColor: '#f9f9f9',
+            marginTop: '20px'
+          }}
+        >
+          <h4 style={{ color: '#dc3545', marginBottom: '15px' }}>Không thể xem trước PDF</h4>
+          <p style={{ marginBottom: '10px' }}>
+            Trình duyệt trên thiết bị di động hoặc máy tính bảng không hỗ trợ xem trước tệp PDF này.
+          </p>
+          <p>
+            Vui lòng sử dụng máy tính để xem và in phiếu thanh toán.
+          </p>
+        </div>
+      ) : (
+        <PDFViewer style={{ width: '100%', height: '700px' }}>
+          {thongTinKhachHang && thongTinThanhToan ? (
+            <HotelRegistrationForm
+              thongTinKhachHang={thongTinKhachHang}
+              thongTinThanhToan={thongTinThanhToan}
+            />
+          ) : (
+            <p>Đang tải dữ liệu...</p>
+          )}
+        </PDFViewer>
+      )}
       {/* You can also add a download button that uses ReactPDF.pdf(HotelRegistrationPDFDownload).toBlob().then(...) */}
     </div>
   )

@@ -1,7 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Picture1 from 'src/assets/images/Picture1.png'
-import Picture2 from 'src/assets/images/Picture2.png'
+
 import './ReportRegistration.css'
 
 const ReportRegistration = ({ data }) => {

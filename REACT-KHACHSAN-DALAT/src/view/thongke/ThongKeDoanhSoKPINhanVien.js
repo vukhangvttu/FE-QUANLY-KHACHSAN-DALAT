@@ -113,12 +113,25 @@ const ThongKeDoanhSoKPINhanVien = () => {
 
       const normalizedAll = normalizeData(allData)
       const normalizedChiTiet = normalizeData(chiTietData)
-      if (normalizedAll.length === 0 && normalizedChiTiet.length === 0) {
+
+      // Bổ sung các trường có thể bị thiếu từ API tổng hợp
+      const finalAll = normalizedAll.map(emp => {
+        const empChiTiet = normalizedChiTiet.filter(c => c.nguoi_tao === emp.nguoi_tao)
+        return {
+          ...emp,
+          tong_tien_dich_vu_khac: emp.tong_tien_dich_vu_khac ?? empChiTiet.reduce((s, c) => s + (Number(c.tong_tien_dich_vu_khac) || 0), 0),
+          tong_tien_dich_vu_don_dep: emp.tong_tien_dich_vu_don_dep ?? empChiTiet.reduce((s, c) => s + (Number(c.tong_tien_dich_vu_don_dep) || 0), 0),
+          tong_phu_thu_check_out_tre: emp.tong_phu_thu_check_out_tre ?? empChiTiet.reduce((s, c) => s + (Number(c.tong_phu_thu_check_out_tre) || 0), 0),
+          tong_phu_thu_check_in_som: emp.tong_phu_thu_check_in_som ?? empChiTiet.reduce((s, c) => s + (Number(c.tong_phu_thu_check_in_som) || 0), 0),
+        }
+      })
+
+      if (finalAll.length === 0 && normalizedChiTiet.length === 0) {
         addToast(exampleToast('⚠️ Không tìm thấy dữ liệu trong khoảng thời gian này!'))
       } else {
         addToast(exampleToast('✔ Tìm kiếm thành công!'))
       }
-      setAllData(normalizedAll)
+      setAllData(finalAll)
       setChiTietData(normalizedChiTiet)
     } catch (error) {
       console.error('Lỗi khi tìm kiếm:', error)
@@ -232,6 +245,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
   const otherServiceSourceFields = [
     'tong_phu_thu_check_in_som',
     'tong_phu_thu_check_out_tre',
+
   ]
 
   // Cột hiển thị trong bảng: mỗi mục có key (field hoặc computed), label, category
@@ -250,7 +264,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
     { key: 'tong_tien_setmonan', label: 'Tổng tiền set món ăn', category: 'detail' },
     {
       key: 'group_extra',
-      label: 'Tổng phu thu đặt ăn, extra bed',
+      label: 'Tổng đặt ăn, extra bed',
       category: 'extra',
       sources: extraBedSourceFields,
     },
@@ -258,7 +272,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
     { key: 'tong_tien_giatui', label: 'Tổng tiền giặt ủi', category: 'detail' },
     {
       key: 'group_minibar_laundry',
-      label: 'Tổng phụ thu dịch vụ Minibar - Giặt ủi',
+      label: 'Tổng  Minibar - Giặt ủi',
       category: 'service',
       sources: minibarLaundrySourceFields,
     },
@@ -281,11 +295,14 @@ const ThongKeDoanhSoKPINhanVien = () => {
     },
     { key: 'tong_phu_thu_check_in_som', label: 'Tổng phụ thu check in sớm', category: 'detail' },
     { key: 'tong_phu_thu_check_out_tre', label: 'Tổng phụ thu check out trễ', category: 'detail' },
+    { key: 'tong_tien_dich_vu_don_dep', label: 'Tổng phụ thu dọn phòng', category: 'detail' },
+    { key: 'tong_phu_thu_nang_hang_phong', label: 'Tổng nâng hạng phòng', category: 'detail' },
+
     {
-      key: 'group_other',
+      key: 'tong_tien_dich_vu_khac',
       label: 'Tổng thu dịch vụ khác',
-      category: 'other',
-      sources: otherServiceSourceFields,
+      category: 'detail',
+
     },
     { key: 'tong_thanh_toan', label: 'Tổng thu thanh toán', category: 'total' },
   ]
@@ -303,7 +320,11 @@ const ThongKeDoanhSoKPINhanVien = () => {
         minibarLaundrySourceFields.reduce((s, f) => s + getNumericValue(item, f), 0) +
         compensationSourceFields.reduce((s, f) => s + getNumericValue(item, f), 0) +
         hallSourceFields.reduce((s, f) => s + getNumericValue(item, f), 0) +
-        otherServiceSourceFields.reduce((s, f) => s + getNumericValue(item, f), 0)
+        getNumericValue(item, 'tong_phu_thu_check_in_som') +
+        getNumericValue(item, 'tong_phu_thu_check_out_tre') +
+        getNumericValue(item, 'tong_tien_dich_vu_don_dep') +
+        getNumericValue(item, 'tong_tien_dich_vu_khac') +
+        getNumericValue(item, 'tong_phu_thu_nang_hang_phong')
       )
     }
     return getNumericValue(item, col.key)
@@ -317,9 +338,16 @@ const ThongKeDoanhSoKPINhanVien = () => {
       )
     }
     if (col.key === 'tong_thanh_toan') {
-      return tongKPIColumns
-        .filter((c) => ['room', 'extra', 'service', 'compensation', 'hall', 'other'].includes(c.category))
-        .reduce((sum, c) => sum + getColumnTotal(c), 0)
+      return (
+        tongKPIColumns
+          .filter((c) => ['room', 'extra', 'service', 'compensation', 'hall'].includes(c.category))
+          .reduce((sum, c) => sum + getColumnTotal(c), 0) +
+        getColumnTotal({ key: 'tong_phu_thu_check_in_som' }) +
+        getColumnTotal({ key: 'tong_phu_thu_check_out_tre' }) +
+        getColumnTotal({ key: 'tong_tien_dich_vu_don_dep' }) +
+        getColumnTotal({ key: 'tong_tien_dich_vu_khac' }) +
+        getColumnTotal({ key: 'tong_phu_thu_nang_hang_phong' })
+      )
     }
     return allData.reduce((sum, item) => sum + getNumericValue(item, col.key), 0)
   }
@@ -375,7 +403,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
               ) : (
                 <button
                   key={p}
-                  className={`btn btn-sm ${ p === page ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                  className={`btn btn-sm ${p === page ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
                   onClick={() => setPage(p)}
                 >
                   {p}
@@ -691,7 +719,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
           <CCardBody className="p-3">
             <CRow className="m-0 mb-2">
               <CCol md={2}>
-                 <CFormLabel className="col-form-label labelcustome">Ngày bắt đầu</CFormLabel>
+                <CFormLabel className="col-form-label labelcustome">Ngày bắt đầu</CFormLabel>
                 <CDatePicker
                   locale="en-GB"
                   date={dateRange.startDate}
@@ -787,7 +815,7 @@ const ThongKeDoanhSoKPINhanVien = () => {
                       <CTabPane visible={activeTab === 1}>
                         {renderTongKPI()}
                       </CTabPane>
-                        <CTabPane visible={activeTab === 2}>
+                      <CTabPane visible={activeTab === 2}>
                         {chiTietData.length > 0 && (
                           <div className="d-flex align-items-center gap-2 mb-3" style={{ maxWidth: '300px' }}>
                             <CFormLabel className="col-form-label labelcustome mb-0 text-nowrap">Người tạo:</CFormLabel>

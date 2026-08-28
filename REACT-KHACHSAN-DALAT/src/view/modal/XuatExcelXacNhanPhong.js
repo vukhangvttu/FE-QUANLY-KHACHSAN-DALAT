@@ -49,7 +49,7 @@ const XuatExcelXacNhanPhong = ({ visible, onClose, ma_booking }) => {
       link.remove()
       window.URL.revokeObjectURL(url)
 
-      addToast(exampleToast('✅ Xuất excel thành công!'))
+      addToast(exampleToast('✔️ Xuất excel thành công!'))
       onClose() // Đóng modal khi xuất excel thành công
     } catch (error) {
       console.error('Lỗi khi xuất báo cáo:', error)

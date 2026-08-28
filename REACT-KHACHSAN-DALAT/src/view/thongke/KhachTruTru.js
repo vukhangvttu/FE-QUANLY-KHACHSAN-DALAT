@@ -233,7 +233,7 @@ const KhachTruTru = ({ isActive }) => {
               ) : (
                 <CButton color="success" className="text-white" onClick={handleExport}>
                   <FontAwesomeIcon icon={faDownload} className="me-2" />
-                  Xuất ASM
+                  Xuất khai báo Bộ Công An
                 </CButton>
               )}
             </CCol>

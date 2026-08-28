@@ -347,7 +347,7 @@ const CapNhatNgayDi = ({
 
       if (response.code === 200) {
         if (response.result) {
-          addToast(exampleToast('✅ ' + response.message + ' Phòng ' + maPhong))
+          addToast(exampleToast('✔️ ' + response.message + ' Phòng ' + maPhong))
           onClose()
           const updatedData = {
             ngayDi: ngay_di_moi,

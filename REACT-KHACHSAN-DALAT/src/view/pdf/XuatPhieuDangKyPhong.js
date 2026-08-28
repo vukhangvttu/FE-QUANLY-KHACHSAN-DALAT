@@ -13,7 +13,9 @@ import {
 } from '@react-pdf/renderer'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf'
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry'
-import myImage from 'src/assets/images/Picture1.png'
+import myImageDaLat from 'src/assets/images/logo-ge-da-lat.png'
+import myImageVungTau from 'src/assets/images/logo-ge-vung-tau.png'
+
 import imageMacDinh from 'src/assets/images/Picture2.png'
 import { useNavigate, useParams } from 'react-router-dom'
 import PropTypes from 'prop-types'
@@ -23,6 +25,9 @@ import {
   getThongTinXuatPhieuDangKy,
 } from 'src/service/XepPhongBooKingService'
 import { CSpinner } from '@coreui/react-pro'
+
+const viTri = window._env_?.VI_TRI || 'DALAT'
+const myImage = viTri === 'VUNGTAU' ? myImageVungTau : myImageDaLat
 
 window.Buffer = Buffer // Gán Buffer vào global window
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
@@ -549,9 +554,9 @@ const XuatPhieuDangKyPhong = ({ thongTinKhachHang, thongTinThanhToan }) => (
                     <Text>
                       {thongTinThanhToan[0]?.so_giuong > 0
                         ? formatCurrency(
-                            thongTinThanhToan[0].phu_thu_tien_giuong *
-                              thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0),
-                          )
+                          thongTinThanhToan[0].phu_thu_tien_giuong *
+                          thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0),
+                        )
                         : ''}
                     </Text>
                   </View>
@@ -608,10 +613,10 @@ const XuatPhieuDangKyPhong = ({ thongTinKhachHang, thongTinThanhToan }) => (
                     <Text>
                       {thongTinThanhToan[0]?.so_tre > 0
                         ? formatCurrency(
-                            thongTinThanhToan[0].phu_thu_tre_em *
-                              thongTinThanhToan[0].so_tre *
-                              thongTinThanhToan[0].so_dem,
-                          )
+                          thongTinThanhToan[0].phu_thu_tre_em *
+                          thongTinThanhToan[0].so_tre *
+                          thongTinThanhToan[0].so_dem,
+                        )
                         : ''}
                     </Text>
                   </View>
@@ -654,10 +659,10 @@ const XuatPhieuDangKyPhong = ({ thongTinKhachHang, thongTinThanhToan }) => (
                     <Text>
                       {formatCurrency(
                         thongTinThanhToan.reduce((sum, item) => sum + item.tong_tien, 0) +
-                          thongTinThanhToan[0].phu_thu_tien_giuong *
-                            thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0) +
-                          thongTinThanhToan[0].phu_thu_tre_em *
-                            thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0),
+                        thongTinThanhToan[0].phu_thu_tien_giuong *
+                        thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0) +
+                        thongTinThanhToan[0].phu_thu_tre_em *
+                        thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0),
                       )}
                     </Text>
                   </View>
@@ -733,10 +738,10 @@ const XuatPhieuDangKyPhong = ({ thongTinKhachHang, thongTinThanhToan }) => (
                     <Text>
                       {formatCurrency(
                         thongTinThanhToan.reduce((sum, item) => sum + item.tong_tien, 0) +
-                          thongTinThanhToan[0].phu_thu_tien_giuong *
-                            thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0) +
-                          thongTinThanhToan[0].phu_thu_tre_em *
-                            thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0),
+                        thongTinThanhToan[0].phu_thu_tien_giuong *
+                        thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0) +
+                        thongTinThanhToan[0].phu_thu_tre_em *
+                        thongTinThanhToan.reduce((sum, item) => sum + item.so_dem, 0),
                       )}
                     </Text>
                   </View>

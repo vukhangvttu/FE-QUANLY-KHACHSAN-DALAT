@@ -64,7 +64,7 @@ const PermissionDemo = () => {
               <div className="mb-4">
                 <h5>Trạng thái Token:</h5>
                 <p className={isTokenValid ? 'text-success' : 'text-danger'}>
-                  {isTokenValid ? '✅ Token hợp lệ' : '❌ Token không hợp lệ hoặc đã hết hạn'}
+                  {isTokenValid ? '✔️ Token hợp lệ' : '❌ Token không hợp lệ hoặc đã hết hạn'}
                 </p>
               </div>
 
@@ -109,19 +109,19 @@ const PermissionDemo = () => {
                   <div className="col-md-6">
                     <h6>Quyền Tab:</h6>
                     <ul>
-                      <li>SODOPHONG: {canAccessTab(2) ? '✅' : '❌'}</li>
-                      <li>BUONGPHONG: {canAccessTab(3) ? '✅' : '❌'}</li>
-                      <li>LINEPHONG: {canAccessTab(6) ? '✅' : '❌'}</li>
-                      <li>DUBAOLOAIPHONG: {canAccessTab(1) ? '✅' : '❌'}</li>
-                      <li>NHAHANG: {canAccessTab(4) ? '✅' : '❌'}</li>
+                      <li>SODOPHONG: {canAccessTab(2) ? '✔️' : '❌'}</li>
+                      <li>BUONGPHONG: {canAccessTab(3) ? '✔️' : '❌'}</li>
+                      <li>LINEPHONG: {canAccessTab(6) ? '✔️' : '❌'}</li>
+                      <li>DUBAOLOAIPHONG: {canAccessTab(1) ? '✔️' : '❌'}</li>
+                      <li>NHAHANG: {canAccessTab(4) ? '✔️' : '❌'}</li>
                     </ul>
                   </div>
                   <div className="col-md-6">
                     <h6>Quyền Button:</h6>
                     <ul>
-                      <li>DATPHONG: {canAccessButton('DATPHONG') ? '✅' : '❌'}</li>
-                      <li>DANHSACHDATPHONG: {canAccessButton('DANHSACHDATPHONG') ? '✅' : '❌'}</li>
-                      <li>THONGKE: {canAccessButton('THONGKE') ? '✅' : '❌'}</li>
+                      <li>DATPHONG: {canAccessButton('DATPHONG') ? '✔️' : '❌'}</li>
+                      <li>DANHSACHDATPHONG: {canAccessButton('DANHSACHDATPHONG') ? '✔️' : '❌'}</li>
+                      <li>THONGKE: {canAccessButton('THONGKE') ? '✔️' : '❌'}</li>
                     </ul>
                   </div>
                 </div>

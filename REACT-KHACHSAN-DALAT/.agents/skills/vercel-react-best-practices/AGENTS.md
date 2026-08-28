@@ -736,7 +736,7 @@ Deduplication works recursively. Impact varies by data type:
 <C users={users} active={users.filter(u => u.active)} />
 <C product={product} productName={product.name} />
 
-// ✅ Good
+// ✔️ Good
 <C users={users} />
 <C product={product} />
 // Do filtering/destructuring in client
@@ -1602,12 +1602,12 @@ function TodoList() {
   // Stable callback, never recreated
   const addItems = useCallback((newItems: Item[]) => {
     setItems(curr => [...curr, ...newItems])
-  }, [])  // ✅ No dependencies needed
+  }, [])  // ✔️ No dependencies needed
   
   // Always uses latest state, no stale closure risk
   const removeItem = useCallback((id: string) => {
     setItems(curr => curr.filter(item => item.id !== id))
-  }, [])  // ✅ Safe and stable
+  }, [])  // ✔️ Safe and stable
   
   return <ItemsEditor items={items} onAdd={addItems} onRemove={removeItem} />
 }

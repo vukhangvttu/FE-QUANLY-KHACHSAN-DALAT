@@ -13,14 +13,20 @@ import {
 } from '@react-pdf/renderer'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf'
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry'
-import myImage from 'src/assets/images/Picture1.png'
+import myImageDaLat from 'src/assets/images/logo-ge-da-lat.png'
+import myImageVungTau from 'src/assets/images/logo-ge-vung-tau.png'
+
 import imageMacDinh from 'src/assets/images/Picture2.png'
 import { AllThongTinKhachHang, getThongTinXuatPhieuDangKy, getThongTinXuatPhieuDangKyOTA_TA } from 'src/service/ThanhToanService'
 import { useNavigate, useParams } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { format, parseISO } from 'date-fns'
 import { getThongTinXuatPhieuChiTietPhuThuBooking } from 'src/service/APIService'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleDown } from '@fortawesome/free-solid-svg-icons'
 
+const viTri = window._env_?.VI_TRI || 'DALAT'
+const myImage = viTri === 'VUNGTAU' ? myImageVungTau : myImageDaLat
 window.Buffer = Buffer
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 // Đăng ký font
@@ -872,7 +878,7 @@ const App = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: 10, display: 'flex', gap: 10 }}>
+      <div style={{ marginBottom: 10, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
         <button
           onClick={handleDownloadImage}
           disabled={downloading || !thongTinKhachHang || !thongTinThanhToan}
@@ -886,10 +892,10 @@ const App = () => {
             fontSize: 14,
           }}
         >
-          {downloading ? 'Đang tải...' : 'Tải ảnh PNG'}
+          {downloading ? 'Đang tải...' : <><FontAwesomeIcon icon={faCircleDown} /> Tải ảnh PNG</>}
         </button>
       </div>
-      <PDFViewer style={{ width: '100%', height: '700px' }}>
+      <PDFViewer style={{ width: '99%', height: '900px' }}>
         {thongTinKhachHang && thongTinThanhToan ? (
           <HotelRegistrationForm
             thongTinKhachHang={thongTinKhachHang}

@@ -191,7 +191,7 @@ const ChuyenPhong = ({
 
       if (response.code === 200) {
         if (response.result) {
-          addToast(exampleToast('✅ Chuyển phòng thành công'))
+          addToast(exampleToast('✔️ Chuyển phòng thành công'))
           onClose()
           const updatedData = {
             maPhongCu: maPhong,

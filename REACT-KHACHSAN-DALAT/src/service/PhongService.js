@@ -89,6 +89,25 @@ export async function getListPhongTrongTheoKhoanThoiGian(maLoaiPhong, ngayDen, n
   }
 }
 
+export async function getListPhongDangOTheoLoai(maLoaiPhong, ngayDen, ngayDi) {
+  try {
+    const response = await axiosInstance.get('/phong/kiem-tra-phong-dang-o-theo-loai', {
+      params: {
+        maLoaiPhong: maLoaiPhong,
+        ngay_den: ngayDen,
+        ngay_di: ngayDi,
+      },
+    })
+    console.log(response)
+    if (response.status === 200) {
+      return response.data.result
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+
 export async function getListPhongTrongTheoKhoanThoiGianAndBooking(
   maLoaiPhong,
   ngayDen,

@@ -377,7 +377,7 @@ export async function getGiaPhongTheoMaLoaiPhong(maLoaiPhong) {
 export async function getListGiaPhongTheoNgay(maXepPhong, navigate) {
   try {
     const response = await axiosInstance.get(`/gia-phong/theo-xep-phong/${maXepPhong}`)
-    
+
     if (response.status === 200) {
       return response.data.result
     }
@@ -385,6 +385,26 @@ export async function getListGiaPhongTheoNgay(maXepPhong, navigate) {
   } catch (error) {
     console.log('Lỗi getListGiaPhongTheoNgay:', error)
     return null
+  }
+}
+
+export async function getGiaPhongTheoLoaiVaNgay(maLoaiPhong, ngayBatDau, ngayKetThuc) {
+  try {
+    const response = await axiosInstance.get('/gia-phong/theo-loai-phong-va-ngay', {
+      params: {
+        maLoaiPhong,
+        ngayBatDau,
+        ngayKetThuc,
+      },
+    })
+
+    if (response.status === 200) {
+      return response.data.result || []
+    }
+    return []
+  } catch (error) {
+    console.log('Lỗi getGiaPhongTheoLoaiVaNgay:', error)
+    return []
   }
 }
 
