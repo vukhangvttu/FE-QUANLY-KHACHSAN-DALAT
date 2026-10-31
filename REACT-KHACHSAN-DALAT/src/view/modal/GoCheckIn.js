@@ -11,12 +11,9 @@ import {
 import { CButton, CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react-pro'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
-import { updateNhanPhongBooking } from 'src/service/XepPhongBooKingService'
-import { useNavigate } from 'react-router-dom'
+import { updateCheckOutBooking } from 'src/service/XepPhongBooKingService'
 
 const GoCheckIn = ({ visible, onClose, ma_xepphong_bookking, tenphong, onSubmit }) => {
-  const navigate = useNavigate()
-
   const [trangthaiload, setTrangthaiload] = useState(false)
 
   const onClickDaNhanPhong = async (ma_xepphong_bookking) => {
@@ -25,22 +22,20 @@ const GoCheckIn = ({ visible, onClose, ma_xepphong_bookking, tenphong, onSubmit 
     } else {
       try {
         setTrangthaiload(true)
-        // 5. Gọi API nếu dữ liệu hợp lệ
-        const response = await updateNhanPhongBooking(ma_xepphong_bookking, true, navigate)
+        const response = await updateCheckOutBooking(ma_xepphong_bookking, false, 0)
 
-        console.log('createXepPhongBooking successfully:', response)
+        console.log('Hủy check-in thành công:', response)
         setTrangthaiload(false)
-        // 6. Kiểm tra mã phản hồi từ server
         if ([400, 500].includes(response.code)) {
           return addToast(exampleToast(response.message))
         }
 
         if (response.code === 200) {
           if (response.result) {
-            addToast(exampleToast('✔️ Check-In nhận phòng thành công ' + tenphong))
+            addToast(exampleToast('✔️ Hủy check-in thành công ' + tenphong))
             onSubmit(true)
           } else {
-            addToast(exampleToast('❌ Check-In nhận phòng lỗi'))
+            addToast(exampleToast('❌ Hủy check-in không thành công'))
           }
         }
       } catch (error) {

@@ -5,6 +5,7 @@ export async function saveChuyenPhong(
   ma_phong_cu,
   ma_phong_moi,
   ma_loai_phong,
+  selectedMaLoaiPhong,
   danh_sach_gia_phong,
 ) {
   try {
@@ -14,6 +15,7 @@ export async function saveChuyenPhong(
         ma_phong_cu: ma_phong_cu,
         ma_phong_moi: ma_phong_moi,
         ma_loai_phong: ma_loai_phong,
+        ma_loai_phong_moi: selectedMaLoaiPhong
       },
     })
 

@@ -68,6 +68,44 @@ export async function updateNhanPhongBooking(
   }
 }
 
+export async function updateCheckInBulk(ma_xepphong_booking) {
+  try {
+    const response = await axiosInstance.put('/xep-phong-booking/check-in/bulk', {
+      ma_xepphong_booking,
+      danhanphong: true,
+    })
+    console.log('Cập nhật check-in hàng loạt:', response)
+    return response.data
+  } catch (error) {
+    console.log('Lỗi cập nhật check-in hàng loạt:', error)
+    throw error
+  }
+}
+
+export async function updateCheckOutBooking(
+  ma_xepphong_bookking,
+  nhanphong,
+  phuThuCheckInSom,
+) {
+  try {
+    const response = await axiosInstance.put(
+      `/xep-phong-booking/check-out/${ma_xepphong_bookking}`,
+      null,
+      {
+        params: {
+          danhanphong: nhanphong,
+          phuThuCheckInSom: phuThuCheckInSom,
+        },
+      },
+    )
+    console.log('Cập nhật check-out:', response)
+    return response.data
+  } catch (error) {
+    console.log('Lỗi cập nhật check-out:', error)
+    throw error
+  }
+}
+
 export async function getXepPhongByMaXepPhong(ma_xepphong) {
   try {
     const response = await axiosInstance.get(`/xep-phong-booking/chi-tiet-xep-phong/${ma_xepphong}`)
@@ -201,7 +239,7 @@ export async function deleteXepPhongBooking_Phong(ma_chitiet, ma_phong) {
   }
 }
 
-export async function createDichVuMienPhi(bookingData, ma_xepphong, ngay ) {
+export async function createDichVuMienPhi(bookingData, ma_xepphong, ngay) {
   try {
     const response = await axiosInstance.post(
       `/chi-tiet-booking-dich-vu-mien-phi/${ma_xepphong}`,
@@ -253,13 +291,38 @@ export async function getAllDichVuMienPhi() {
   }
 }
 
-  export async function updateTraPhong(ma_xepphong) {
-    try {
+export async function updateTraPhong(ma_xepphong) {
+  try {
     const response = await axiosInstance.put(`/xep-phong-booking/tra-phong-booking/${ma_xepphong}`, {})
     console.log('Cập nhật trả phòng:', response)
     return response.data
   } catch (error) {
     console.log('Lỗi cập nhật xếp phòng booking:', error)
+    throw error
+  }
+}
+
+export async function getDanhSachPhongCheckInByMaBooKing(ma_booking) {
+  try {
+    const response = await axiosInstance.get(`/xep-phong-booking/check_in_all/${ma_booking}`)
+    console.log('Danh sách phòng check in by ma booking:', response)
+    if (response.status === 200) {
+      return response.data.result
+    }
+    return null
+  } catch (error) {
+    console.log('Lỗi lấy danh sách phòng check in by ma booking:', error)
+    throw error
+  }
+}
+
+export async function updateCheckNhanPhongAll(checkAllPhongRequest) {
+  try {
+    const response = await axiosInstance.put(`/xep-phong-booking/check_in_all`, checkAllPhongRequest)
+    console.log('Cập nhật check in all:', response)
+    return response.data
+  } catch (error) {
+    console.log('Lỗi cập nhật check in all:', error)
     throw error
   }
 }

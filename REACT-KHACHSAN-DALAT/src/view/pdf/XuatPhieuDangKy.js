@@ -21,14 +21,14 @@ import { AllThongTinKhachHang, getThongTinXuatPhieuDangKy } from 'src/service/Th
 import { useNavigate, useParams } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { format, parseISO } from 'date-fns'
-import { getThongTinXuatPhieuChiTietPhuThuBooking } from 'src/service/APIService'
+import { getThongTinXuatPhieuChiTietPhuThuBooking, uploadSignatureImage } from 'src/service/APIService'
 import SignaturePad from 'src/components/SignaturePad'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleDown } from '@fortawesome/free-solid-svg-icons'
+import { faCircleDown, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons'
+import { CToast, CToastBody, CToaster, CToastHeader } from '@coreui/react-pro'
 
 const viTri = window._env_?.VI_TRI || 'DALAT'
 const myImage = viTri === 'VUNGTAU' ? myImageVungTau : myImageDaLat
-
 window.Buffer = Buffer
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 // Đăng ký font
@@ -409,7 +409,7 @@ const formatCurrency = (amount) => {
 }
 
 // Create Document Component
-const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinPhuThu }) => {
+const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinPhuThu, signatureImage }) => {
   const tongTienPhong = thongTinThanhToan?.reduce((sum, row) => sum + row.tong_tien, 0)
 
   const tongPhuThuTreEm = thongTinPhuThu?.reduce(
@@ -767,6 +767,11 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
                     {' '}
                     (Tôi đã đọc và hiểu rõ)
                   </Text>
+                  {signatureImage && (
+                    <View style={{ marginTop: 0, alignItems: 'center' }}>
+                      <Image src={signatureImage} style={{ width: 130, height: 60, objectFit: 'contain' }} />
+                    </View>
+                  )}
                 </View>
               </View>
             </View>
@@ -790,6 +795,7 @@ HotelRegistrationForm.propTypes = {
     ngay_di: PropTypes.string,
     tien_coc: PropTypes.number,
   }).isRequired, // `thongTinKhachHang` là một object
+  signatureImage: PropTypes.string,
 
   thongTinThanhToan: PropTypes.arrayOf(
     PropTypes.shape({
@@ -852,6 +858,8 @@ const App = () => {
 
   const [previewImageUrl, setPreviewImageUrl] = useState(null)
   const [generatingPreview, setGeneratingPreview] = useState(false)
+  const [signatureImage, setSignatureImage] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const originalPreviewRef = useRef(null) // Lưu ảnh gốc để mỗi lần ký đều composite từ ảnh sạch
   const handleDownloadImage = useCallback(async () => {
     if (!thongTinKhachHang || !thongTinThanhToan) return
@@ -872,6 +880,7 @@ const App = () => {
           thongTinKhachHang={thongTinKhachHang}
           thongTinThanhToan={thongTinThanhToan}
           thongTinPhuThu={thongTinPhuThu}
+          signatureImage={signatureImage}
         />,
       ).toBlob()
 
@@ -939,9 +948,7 @@ const App = () => {
   }, [thongTinKhachHang, thongTinThanhToan, thongTinPhuThu, previewImageUrl])
 
 
-  const isMobile =
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    window.innerWidth <= 768
+  const isMobile = true // Luôn hiển thị giao diện ký ở mọi kích thước
 
   useEffect(() => {
     if (isMobile && thongTinKhachHang && thongTinThanhToan) {
@@ -953,6 +960,7 @@ const App = () => {
               thongTinKhachHang={thongTinKhachHang}
               thongTinThanhToan={thongTinThanhToan}
               thongTinPhuThu={thongTinPhuThu}
+              signatureImage={signatureImage}
             />,
           ).toBlob()
 
@@ -1013,58 +1021,76 @@ const App = () => {
       }
       generatePreview()
     }
-  }, [isMobile, thongTinKhachHang, thongTinThanhToan, thongTinPhuThu])
+  }, [isMobile, thongTinKhachHang, thongTinThanhToan, thongTinPhuThu, signatureImage])
 
-  // Composite chữ ký vào khung "Khách hàng/Guest" trên ảnh xem trước
-  const handleSignatureConfirm = useCallback(
-    (signatureDataUrl) => {
-      const srcUrl = originalPreviewRef.current || previewImageUrl
-      if (!srcUrl) return
+  // Khi xác nhận chữ ký, lưu vào state. useEffect sẽ tự động re-render PDF gốc và nhúng thẳng chữ ký vào với chất lượng cao nhất
+  const handleSignatureConfirm = useCallback((signatureDataUrl) => {
+    setSignatureImage(signatureDataUrl)
+  }, [])
 
-      const previewImg = new window.Image()
-      previewImg.onload = () => {
-        const w = previewImg.width
-        const h = previewImg.height
-
-        const canvas = document.createElement('canvas')
-        canvas.width = w
-        canvas.height = h
-        const ctx = canvas.getContext('2d')
-
-        // Luôn vẽ từ ảnh gốc → xóa chữ ký cũ tự động
-        ctx.drawImage(previewImg, 0, 0)
-
-        // Tọa độ vùng ký (column5 = 30% bên phải, vùng dashed box)
-        const sigBoxX = w * 0.715
-        const sigBoxY = h * 0.60
-        const sigBoxW = w * 0.270
-        const sigBoxH = h * 0.45
-
-        // Vẽ chữ ký lên, thu nhỏ để vừa khung, căn giữa
-        const sigImg = new window.Image()
-        sigImg.onload = () => {
-          const padding = 8
-          const availW = sigBoxW - padding * 2
-          const availH = sigBoxH - padding * 2
-          const scale = Math.min(availW / sigImg.width, availH / sigImg.height) * 0.6
-          const drawW = sigImg.width * scale
-          const drawH = sigImg.height * scale
-          const drawX = sigBoxX + padding + (availW - drawW) / 2
-          const drawY = sigBoxY + padding + (availH - drawH) / 2
-
-          ctx.drawImage(sigImg, drawX, drawY, drawW, drawH)
-          setPreviewImageUrl(canvas.toDataURL('image/png'))
-        }
-        sigImg.src = signatureDataUrl
+  const handleUploadSignature = async () => {
+    if (!signatureImage || !previewImageUrl) {
+      alert('Vui lòng ký và xác nhận chữ ký trước khi lưu lên server.')
+      return
+    }
+    setUploading(true)
+    try {
+      const reponse = await uploadSignatureImage(ma_booking, previewImageUrl)
+      if (reponse.status == true) {
+        addToast(exampleToast('✔ ' + reponse.message))
       }
-      previewImg.src = srcUrl
-    },
-    [previewImageUrl],
+      else {
+        addToast(exampleToast('❌' + reponse.message))
+      }
+    } catch (e) {
+      addToast(exampleToast('❌ Lỗi lưu chữ ký: ' + e.message))
+    } finally {
+      setUploading(false)
+    }
+  }
+  const [toast, addToast] = useState(0)
+  const toaster = useRef()
+  const exampleToast = (message) => (
+    <CToast>
+      <CToastHeader closeButton>
+        <svg
+          className="rounded me-2"
+          width="20"
+          height="20"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMidYMid slice"
+          focusable="false"
+          role="img"
+        >
+          <rect width="100%" height="100%" fill="#007aff"></rect>
+        </svg>
+        <div className="fw-bold me-auto">Thông báo</div>
+        <small>Thông báo biến mất sau 5 giây</small>
+      </CToastHeader>
+      <CToastBody>{message}</CToastBody>
+    </CToast>
   )
-
   return (
     <div>
+      <>
+        <CToaster className="p-3" placement="top-end" push={toast} ref={toaster} />
+      </>
       <div style={{ marginBottom: 10, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <button
+          onClick={handleUploadSignature}
+          disabled={uploading || !signatureImage}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: uploading || !signatureImage ? '#ccc' : '#0d6efd',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            cursor: uploading || !signatureImage ? 'not-allowed' : 'pointer',
+            fontSize: 14,
+          }}
+        >
+          {uploading ? 'Đang lưu...' : <><FontAwesomeIcon icon={faCloudArrowUp} /> Lưu lên Server</>}
+        </button>
         <button
           onClick={handleDownloadImage}
           disabled={downloading || !thongTinKhachHang || !thongTinThanhToan}
@@ -1082,7 +1108,7 @@ const App = () => {
         </button>
       </div>
       {isMobile ? (
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <div style={{ marginTop: '20px', justifyContent: 'center', alignItems: 'center' }}>
           {generatingPreview ? (
             <div style={{ padding: '40px', color: '#666' }}>
               <p>Đang tải ảnh xem trước...</p>
@@ -1092,7 +1118,7 @@ const App = () => {
               <img
                 src={previewImageUrl}
                 alt="Preview PDF"
-                style={{ width: '100%', border: '1px solid #ccc', borderRadius: '8px' }}
+                style={{ width: '80%', display: 'block', margin: '0 auto', border: '1px solid #ccc', borderRadius: '8px' }}
               />
               <SignaturePad onSave={handleSignatureConfirm} />
             </>

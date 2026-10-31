@@ -975,8 +975,8 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
   )
 
   return (
-    <div className="w-full flex flex-col items-center" style={{ height: '90vh' }}>
-      <div style={{ marginBottom: 10, display: 'flex', gap: 10 }}>
+    <div>
+      <div style={{ marginBottom: 10, display: 'flex', gap: 10, justifyContent: 'center' }}>
         <button
           onClick={handleDownloadImage}
           disabled={downloading || !thongTinKhachHang || !thongTinThanhToan}
@@ -993,7 +993,7 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
           {downloading ? 'Đang tải...' : <><FontAwesomeIcon icon={faCircleDown} /> Tải ảnh PNG</>}
         </button>
       </div>
-      <div className="w-full flex justify-center items-center" style={{ flex: 1 }}>
+      <div>
         {isMobile ? (
           <div style={{ marginTop: '20px', textAlign: 'center', width: '90%' }}>
             {generatingPreview ? (

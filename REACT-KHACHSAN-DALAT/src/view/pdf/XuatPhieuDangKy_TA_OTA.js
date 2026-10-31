@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Buffer } from 'buffer'
 import {
   Document,
@@ -21,9 +21,11 @@ import { AllThongTinKhachHang, getThongTinXuatPhieuDangKy, getThongTinXuatPhieuD
 import { useNavigate, useParams } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { format, parseISO } from 'date-fns'
-import { getThongTinXuatPhieuChiTietPhuThuBooking } from 'src/service/APIService'
+import { getThongTinXuatPhieuChiTietPhuThuBooking, uploadSignatureImage } from 'src/service/APIService'
+import SignaturePad from 'src/components/SignaturePad'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleDown } from '@fortawesome/free-solid-svg-icons'
+import { faCircleDown, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons'
+import { CToast, CToastBody, CToaster, CToastHeader } from '@coreui/react-pro'
 
 const viTri = window._env_?.VI_TRI || 'DALAT'
 const myImage = viTri === 'VUNGTAU' ? myImageVungTau : myImageDaLat
@@ -407,7 +409,7 @@ const formatCurrency = (amount) => {
 }
 
 // Create Document Component
-const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinPhuThu }) => {
+const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinPhuThu, signatureImage }) => {
   const tongTienPhong = thongTinThanhToan?.reduce((sum, row) => sum + row.tong_tien, 0)
 
   const tongPhuThuTreEm = thongTinPhuThu?.reduce(
@@ -719,6 +721,11 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
                     {' '}
                     (Tôi đã đọc và hiểu rõ)
                   </Text>
+                  {signatureImage && (
+                    <View style={{ marginTop: 0, alignItems: 'center' }}>
+                      <Image src={signatureImage} style={{ width: 130, height: 60, objectFit: 'contain' }} />
+                    </View>
+                  )}
                 </View>
               </View>
             </View>
@@ -742,6 +749,7 @@ HotelRegistrationForm.propTypes = {
     ngay_di: PropTypes.string,
     tien_coc: PropTypes.number,
   }).isRequired, // `thongTinKhachHang` là một object
+  signatureImage: PropTypes.string,
 
   thongTinThanhToan: PropTypes.arrayOf(
     PropTypes.shape({
@@ -802,8 +810,23 @@ const App = () => {
     }
   }, [ma_booking])
 
+  const [previewImageUrl, setPreviewImageUrl] = useState(null)
+  const [generatingPreview, setGeneratingPreview] = useState(false)
+  const [signatureImage, setSignatureImage] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const originalPreviewRef = useRef(null) // Lưu ảnh gốc để mỗi lần ký đều composite từ ảnh sạch
   const handleDownloadImage = useCallback(async () => {
     if (!thongTinKhachHang || !thongTinThanhToan) return
+
+    // Nếu đã có ảnh xem trước (bao gồm cả chữ ký trên mobile), tải luôn ảnh đó
+    if (previewImageUrl) {
+      const link = document.createElement('a')
+      link.download = `PhieuDangKy_TA_OTA_${thongTinKhachHang.ma_booking}.png`
+      link.href = previewImageUrl
+      link.click()
+      return
+    }
+
     setDownloading(true)
     try {
       const blob = await pdf(
@@ -811,6 +834,7 @@ const App = () => {
           thongTinKhachHang={thongTinKhachHang}
           thongTinThanhToan={thongTinThanhToan}
           thongTinPhuThu={thongTinPhuThu}
+          signatureImage={signatureImage}
         />,
       ).toBlob()
 
@@ -874,11 +898,151 @@ const App = () => {
     } finally {
       setDownloading(false)
     }
-  }, [thongTinKhachHang, thongTinThanhToan, thongTinPhuThu])
+  }, [thongTinKhachHang, thongTinThanhToan, thongTinPhuThu, previewImageUrl])
+
+  const isMobile = true // Luôn hiển thị giao diện ký ở mọi kích thước
+
+  useEffect(() => {
+    if (isMobile && thongTinKhachHang && thongTinThanhToan) {
+      const generatePreview = async () => {
+        setGeneratingPreview(true)
+        try {
+          const blob = await pdf(
+            <HotelRegistrationForm
+              thongTinKhachHang={thongTinKhachHang}
+              thongTinThanhToan={thongTinThanhToan}
+              thongTinPhuThu={thongTinPhuThu}
+              signatureImage={signatureImage}
+            />,
+          ).toBlob()
+
+          const arrayBuffer = await blob.arrayBuffer()
+          const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+          const scale = 2 // Scale nhỏ hơn chút để render nhanh hơn trên mobile
+
+          if (pdfDoc.numPages === 1) {
+            const page = await pdfDoc.getPage(1)
+            const viewport = page.getViewport({ scale })
+            const canvas = document.createElement('canvas')
+            canvas.width = viewport.width
+            canvas.height = viewport.height
+            const ctx = canvas.getContext('2d')
+            await page.render({ canvasContext: ctx, viewport }).promise
+            const dataUrl = canvas.toDataURL('image/png')
+            originalPreviewRef.current = dataUrl
+            setPreviewImageUrl(dataUrl)
+          } else {
+            let totalHeight = 0
+            let maxWidth = 0
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+              const page = await pdfDoc.getPage(i)
+              const viewport = page.getViewport({ scale })
+              totalHeight += viewport.height
+              if (viewport.width > maxWidth) {
+                maxWidth = viewport.width
+              }
+            }
+
+            const bigCanvas = document.createElement('canvas')
+            bigCanvas.width = maxWidth
+            bigCanvas.height = totalHeight
+            const bigCtx = bigCanvas.getContext('2d')
+
+            let currentY = 0
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+              const page = await pdfDoc.getPage(i)
+              const viewport = page.getViewport({ scale })
+              const pageCanvas = document.createElement('canvas')
+              pageCanvas.width = viewport.width
+              pageCanvas.height = viewport.height
+              const pageCtx = pageCanvas.getContext('2d')
+
+              await page.render({ canvasContext: pageCtx, viewport }).promise
+              bigCtx.drawImage(pageCanvas, 0, currentY)
+              currentY += pageCanvas.height
+            }
+            const dataUrl = bigCanvas.toDataURL('image/png')
+            setPreviewImageUrl(dataUrl)
+          }
+        } catch (error) {
+          console.error('Lỗi khi tạo ảnh xem trước:', error)
+        } finally {
+          setGeneratingPreview(false)
+        }
+      }
+      generatePreview()
+    }
+  }, [isMobile, thongTinKhachHang, thongTinThanhToan, thongTinPhuThu, signatureImage])
+
+  // Khi xác nhận chữ ký, lưu vào state. useEffect sẽ tự động re-render PDF gốc và nhúng thẳng chữ ký vào với chất lượng cao nhất
+  const handleSignatureConfirm = useCallback((signatureDataUrl) => {
+    setSignatureImage(signatureDataUrl)
+  }, [])
+
+  const handleUploadSignature = async () => {
+    if (!signatureImage || !previewImageUrl) {
+      alert('Vui lòng ký và xác nhận chữ ký trước khi lưu lên server.')
+      return
+    }
+    setUploading(true)
+    try {
+      const reponse = await uploadSignatureImage(ma_booking, previewImageUrl)
+      if (reponse.status == true) {
+        addToast(exampleToast('✔ ' + reponse.message))
+      }
+      else {
+        addToast(exampleToast('❌' + reponse.message))
+      }
+    } catch (e) {
+      addToast(exampleToast('❌ Lỗi lưu chữ ký: ' + e.message))
+    } finally {
+      setUploading(false)
+    }
+  }
+  const [toast, addToast] = useState(0)
+  const toaster = useRef()
+  const exampleToast = (message) => (
+    <CToast>
+      <CToastHeader closeButton>
+        <svg
+          className="rounded me-2"
+          width="20"
+          height="20"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMidYMid slice"
+          focusable="false"
+          role="img"
+        >
+          <rect width="100%" height="100%" fill="#007aff"></rect>
+        </svg>
+        <div className="fw-bold me-auto">Thông báo</div>
+        <small>Thông báo biến mất sau 5 giây</small>
+      </CToastHeader>
+      <CToastBody>{message}</CToastBody>
+    </CToast>
+  )
 
   return (
     <div>
+      <>
+        <CToaster className="p-3" placement="top-end" push={toast} ref={toaster} />
+      </>
       <div style={{ marginBottom: 10, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <button
+          onClick={handleUploadSignature}
+          disabled={uploading || !signatureImage}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: uploading || !signatureImage ? '#ccc' : '#0d6efd',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            cursor: uploading || !signatureImage ? 'not-allowed' : 'pointer',
+            fontSize: 14,
+          }}
+        >
+          {uploading ? 'Đang lưu...' : <><FontAwesomeIcon icon={faCloudArrowUp} /> Lưu lên Server</>}
+        </button>
         <button
           onClick={handleDownloadImage}
           disabled={downloading || !thongTinKhachHang || !thongTinThanhToan}
@@ -895,17 +1059,54 @@ const App = () => {
           {downloading ? 'Đang tải...' : <><FontAwesomeIcon icon={faCircleDown} /> Tải ảnh PNG</>}
         </button>
       </div>
-      <PDFViewer style={{ width: '99%', height: '900px' }}>
-        {thongTinKhachHang && thongTinThanhToan ? (
-          <HotelRegistrationForm
-            thongTinKhachHang={thongTinKhachHang}
-            thongTinThanhToan={thongTinThanhToan}
-            thongTinPhuThu={thongTinPhuThu}
-          />
-        ) : (
-          <p>Đang tải dữ liệu...</p>
-        )}
-      </PDFViewer>
+      {isMobile ? (
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          {generatingPreview ? (
+            <div style={{ padding: '40px', color: '#666' }}>
+              <p>Đang tải ảnh xem trước...</p>
+            </div>
+          ) : previewImageUrl ? (
+            <>
+              <img
+                src={previewImageUrl}
+                alt="Preview PDF"
+                style={{ width: '80%', display: 'block', margin: '0 auto', border: '1px solid #ccc', borderRadius: '8px' }}
+              />
+              <SignaturePad onSave={handleSignatureConfirm} />
+            </>
+          ) : (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '40px 20px',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                backgroundColor: '#f9f9f9',
+              }}
+            >
+              <h4 style={{ color: '#dc3545', marginBottom: '15px' }}>Không thể xem trước PDF</h4>
+              <p style={{ marginBottom: '10px' }}>
+                Trình duyệt trên thiết bị di động hoặc máy tính bảng không hỗ trợ xem trước tệp PDF này.
+              </p>
+              <p>
+                Vui lòng nhấn nút <strong>Tải ảnh PNG</strong> ở trên để tải về.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <PDFViewer style={{ width: '99%', height: '900px' }}>
+          {thongTinKhachHang && thongTinThanhToan ? (
+            <HotelRegistrationForm
+              thongTinKhachHang={thongTinKhachHang}
+              thongTinThanhToan={thongTinThanhToan}
+              thongTinPhuThu={thongTinPhuThu}
+            />
+          ) : (
+            <p>Đang tải dữ liệu...</p>
+          )}
+        </PDFViewer>
+      )}
     </div>
   )
 }

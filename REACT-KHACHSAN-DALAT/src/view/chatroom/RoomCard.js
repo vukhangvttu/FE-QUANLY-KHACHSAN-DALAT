@@ -31,6 +31,10 @@ const RoomCard = ({
   room,
   updateRoomStatus,
   updateRoomCheckIn,
+  refreshRoomData,
+  bulkCheckInMode,
+  isBulkCheckInSelected,
+  onBulkCheckInToggle,
   updateRoomNgayDi,
   updateRoomChuyenPhong,
   updateRoomHoanDoiPhong,
@@ -161,7 +165,14 @@ const RoomCard = ({
   const [soLuongGiuongMax, setSoLuongGiuongMax] = useState(0)
   const [ngayDenPhuThu, setNgayDenPhuThu] = useState('')
   const [ngayDiPhuThu, setNgayDiPhuThu] = useState('')
-  const handleClickPhuThuTienGiuong = (ma_xepphong, maphong, maloaiphong, soluonggiuong, ngayDen, ngayDi) => {
+  const handleClickPhuThuTienGiuong = (
+    ma_xepphong,
+    maphong,
+    maloaiphong,
+    soluonggiuong,
+    ngayDen,
+    ngayDi,
+  ) => {
     setMa_xepphong_bookking(ma_xepphong)
     setMaPhong(maphong)
     setMaLoaiPhong(maloaiphong)
@@ -174,14 +185,14 @@ const RoomCard = ({
   const handleCheckInComplete = (data) => {
     if (data) {
       setVisibleCheckInBooKing(false)
-      updateRoomCheckIn(room.maPhong, true)
+      refreshRoomData(room.maPhong)
     }
   }
 
   const handleGoCheckInComplete = (data) => {
     if (data) {
       setVisibleGoCheckIn(false)
-      // updateRoomCheckIn(room.maPhong, false)
+      refreshRoomData(room.maPhong)
     }
   }
 
@@ -282,8 +293,9 @@ const RoomCard = ({
           <CCol xs={5} sm={5} md={5}>
             <CRow>
               <CCol xs={5} sm={5} md={5} className="flex justify-center ">
-                {(room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' || room.trangThaiHienTai === 'CHECK-OUT TRỄ') &&
-                  room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ? (
+                {(room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY' ||
+                  room.trangThaiHienTai === 'CHECK-OUT TRỄ') &&
+                room.trangThaiTuongLai === 'SẼ ĐẾN TRONG HÔM NAY' ? (
                   <div className="flex items-center justify-center">
                     <FontAwesomeIcon icon={faPeopleArrows} className="text-xl" />
                   </div>
@@ -291,12 +303,20 @@ const RoomCard = ({
                 {!room.danhanPhong &&
                   room.maxepphongbooking != null &&
                   room.trangthaibooking !== 3 && (
-                    <CTooltip content="Check-in" style={customTooltipStyle}>
+                    <CTooltip
+                      content={bulkCheckInMode ? 'Chọn phòng check-in' : 'Check-in'}
+                      style={customTooltipStyle}
+                    >
                       <CCol className="flex justify-center ">
                         <CFormCheck
-                          onClick={() => {
-                            handleClickCheckIn(room.maxepphongbooking, room.tenPhong)
-                            setActivePopover(null)
+                          checked={bulkCheckInMode ? isBulkCheckInSelected : undefined}
+                          onChange={(event) => {
+                            if (bulkCheckInMode) {
+                              onBulkCheckInToggle(room.maxepphongbooking, event.target.checked)
+                            } else {
+                              handleClickCheckIn(room.maxepphongbooking, room.tenPhong)
+                              setActivePopover(null)
+                            }
                           }}
                         />
                       </CCol>
@@ -321,9 +341,21 @@ const RoomCard = ({
                         </div>
                         {
                           room.danhanPhong &&
-                            room.daTraPhong === false &&
-                            room.maxepphongbooking != null ? (
+                          room.daTraPhong === false &&
+                          room.maxepphongbooking != null ? (
                             <>
+                              <div
+                                onClick={() => {
+                                  setMa_xepphong_bookking(room.maxepphongbooking)
+                                  setMaPhong(room.maPhong)
+                                  setTenphong(room.tenPhong)
+                                  setVisibleGoCheckIn(true)
+                                  handlePopoverClose()
+                                }}
+                                className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500"
+                              >
+                                Hủy Check-in
+                              </div>
                               <div
                                 onClick={() => {
                                   handleClickChuyenPhong(
@@ -386,7 +418,7 @@ const RoomCard = ({
                                     room.maLoaiPhong,
                                     room.soGiuongThem,
                                     room.ngayDen,
-                                    room.ngayDi
+                                    room.ngayDi,
                                   )
                                   handlePopoverClose()
                                 }}
@@ -709,6 +741,10 @@ RoomCard.propTypes = {
   }).isRequired,
   updateRoomStatus: PropTypes.func.isRequired,
   updateRoomCheckIn: PropTypes.func.isRequired,
+  refreshRoomData: PropTypes.func.isRequired,
+  bulkCheckInMode: PropTypes.bool,
+  isBulkCheckInSelected: PropTypes.bool,
+  onBulkCheckInToggle: PropTypes.func,
   updateRoomNgayDi: PropTypes.func.isRequired,
   updateRoomChuyenPhong: PropTypes.func.isRequired,
   updateRoomHoanDoiPhong: PropTypes.func.isRequired,

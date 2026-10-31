@@ -9,33 +9,39 @@ import {
     CToastHeader,
     CFormLabel,
     CAlert,
+    CFormCheck,
 } from '@coreui/react-pro'
+import { format, parseISO } from 'date-fns'
 import { CButton, CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react-pro'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faClock } from '@fortawesome/free-solid-svg-icons'
-import { updateNhanPhongBooking } from 'src/service/XepPhongBooKingService'
+import { updateCheckNhanPhongAll, getDanhSachPhongCheckInByMaBooKing } from 'src/service/XepPhongBooKingService'
 import { useNavigate } from 'react-router-dom'
 import CurrencyInput from 'react-currency-input-field'
 
-const CheckInAllPhongModal = ({ visible, onClose, ma_bookking }) => {
-    const navigate = useNavigate()
+const CheckInAllPhongModal = ({ visible, onClose, maBooking }) => {
 
     const [trangthaiload, setTrangthaiload] = useState(false)
-    const [phuPhiCheckInSom, setPhuPhiCheckInSom] = useState('')
     const [checkInStatus, setCheckInStatus] = useState({
         isLate: false,
         isEarly: false,
         message: '',
         alertType: 'info',
     })
+    const [danhSachPhong, setDanhSachPhong] = useState([])
+    const [checkedPhongs, setCheckedPhongs] = useState([])
 
     // Kiểm tra thời gian check-in khi modal mở
     useEffect(() => {
         if (visible) {
-            checkCheckInTime()
+
+            if (maBooking) {
+                fetchDanhSachPhong()
+            }
         } else {
             // Reset state khi modal đóng
-            setPhuPhiCheckInSom('')
+            setDanhSachPhong([])
+            setCheckedPhongs([])
             setCheckInStatus({
                 isLate: false,
                 isEarly: false,
@@ -43,78 +49,49 @@ const CheckInAllPhongModal = ({ visible, onClose, ma_bookking }) => {
                 alertType: 'info',
             })
         }
-    }, [visible])
+    }, [visible, maBooking])
 
-    const checkCheckInTime = () => {
-        const now = new Date()
-        const currentHour = now.getHours()
-
-        // Check-in trễ: sau 14:00 (2 PM)
-        if (currentHour >= 14) {
-            setCheckInStatus({
-                isLate: true,
-                isEarly: false,
-                message: '⚠️ Cảnh báo: Check-in trễ! Khách đã đến sau giờ check-in chuẩn (14:00).',
-                alertType: 'warning',
-            })
-        }
-        // Check-in sớm: trước 13:00 (1 PM)
-        else if (currentHour < 13) {
-            setCheckInStatus({
-                isLate: false,
-                isEarly: true,
-                message: 'ℹ️ Thông báo: Check-in sớm! Khách đến trước giờ check-in chuẩn (13:00).',
-                alertType: 'info',
-            })
-        }
-        // Check-in đúng giờ: từ 13:00 đến 14:00
-        else {
-            setCheckInStatus({
-                isLate: false,
-                isEarly: false,
-                message: '✔️ Check-in đúng giờ! Khách đến trong khung giờ check-in chuẩn.',
-                alertType: 'success',
-            })
+    const fetchDanhSachPhong = async () => {
+        try {
+            const data = await getDanhSachPhongCheckInByMaBooKing(maBooking)
+            console.log('Dữ liệu API danh sách phòng check-in:', data)
+            if (data) {
+                setDanhSachPhong(data)
+            }
+        } catch (error) {
+            console.error('Lỗi khi fetch danh sách phòng:', error)
         }
     }
 
-    const onClickDaNhanPhong = async (ma_bookking) => {
-        if (ma_bookking === null || ma_bookking === undefined) {
+    const onClickDaNhanPhong = async (maBooking) => {
+        if (maBooking === null || maBooking === undefined) {
             return addToast(exampleToast('⚠️ Mã booking hiện không hợp lệ'))
         } else {
             try {
                 setTrangthaiload(true)
 
-                // Chuẩn bị dữ liệu check-in
+                // Lấy danh sách tất cả các phòng để gửi lên, true nếu đã chọn, false nếu không chọn
+                const requestPayload = danhSachPhong.map(p => ({
+                    maXepPhongBooking: p.ma_xep_phong_booking,
+                    maPhong: p.ma_phong,
+                    check: checkedPhongs.includes(p.ma_phong)
+                }))
 
-                const phuThuCheckInSom = phuPhiCheckInSom === '' ? 0 : phuPhiCheckInSom
+                // 5. Gọi API mới
+                const response = await updateCheckNhanPhongAll(requestPayload)
 
-                // 5. Gọi API nếu dữ liệu hợp lệ
-                const response = await updateNhanPhongBooking(
-                    ma_bookking,
-                    true,
-                    phuThuCheckInSom,
-                    navigate,
-                )
-
-                console.log('createXepPhongBooking successfully:', response)
+                console.log('Cập nhật check in all successfully:', response)
                 setTrangthaiload(false)
+
                 // 6. Kiểm tra mã phản hồi từ server
-                if ([400, 500].includes(response.code)) {
-                    return addToast(exampleToast(response.message))
+                if (response && [400, 403, 500].includes(response.code)) {
+                    return addToast(exampleToast(`❌ ${response.message}`))
                 }
 
-                if (response.code === 200) {
-                    if (response.result) {
-                        let successMessage = '✔️ Check-In nhận phòng thành công '
-                        if (checkInStatus.isEarly && phuPhiCheckInSom) {
-                            successMessage += ` (Phụ phí check-in sớm: ${phuPhiCheckInSom})`
-                        }
-                        addToast(exampleToast(successMessage))
-
-                    } else {
-                        addToast(exampleToast('❌ Check-In nhận phòng lỗi'))
-                    }
+                if (response && response.code === 200) {
+                    addToast(exampleToast('✔️ Check-In nhận phòng thành công'))
+                    fetchDanhSachPhong() // Cập nhật lại danh sách sau khi check-in thành công
+                    // onClose() // Đóng modal nếu cần
                 }
             } catch (error) {
                 console.error('Error:', error)
@@ -124,7 +101,7 @@ const CheckInAllPhongModal = ({ visible, onClose, ma_bookking }) => {
                     const { status, data } = error.response
 
                     if (status === 500) {
-                        addToast(exampleToast('❌ Thêm không thành công. Internal Server Error!'))
+                        addToast(exampleToast('❌ Cập nhật không thành công. Internal Server Error!'))
                     } else if (data?.message) {
                         addToast(exampleToast(`❌ ${data.message}`))
                     } else {
@@ -167,6 +144,7 @@ const CheckInAllPhongModal = ({ visible, onClose, ma_bookking }) => {
             </>
 
             <CModal
+                size="lg"
                 alignment="center"
                 visible={visible}
                 onClose={onClose}
@@ -179,7 +157,7 @@ const CheckInAllPhongModal = ({ visible, onClose, ma_bookking }) => {
                 </CModalHeader>
                 <CModalBody>
                     <h4 className="mb-3">
-                        Bạn có muốn <span className="text-red-500">check-in</span> nhận phòng
+                        Bạn có muốn <span className="text-red-500">check-in</span> nhận phòng BK-ID: {maBooking}
                     </h4>
 
                     {/* Hiển thị thông báo về thời gian check-in */}
@@ -192,34 +170,62 @@ const CheckInAllPhongModal = ({ visible, onClose, ma_bookking }) => {
                         </CAlert>
                     )}
 
-                    {/* Input phụ phí check-in sớm */}
+                    {/* Checkbox danh sách phòng 2 cột */}
+                    {danhSachPhong && danhSachPhong.length > 0 && (
+                        <div className="mb-4">
+                            <div className="row">
+                                <div className="col-12 mb-3 border-bottom pb-2">
+                                    <CFormCheck
+                                        id="checkAll"
+                                        label={<span><span className="fw-bold">Chọn tất cả</span>({danhSachPhong.length} phòng)</span>}
+                                        checked={checkedPhongs.length === danhSachPhong.length && danhSachPhong.length > 0}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setCheckedPhongs(danhSachPhong.map(p => p.ma_phong))
+                                            } else {
+                                                setCheckedPhongs([])
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                {danhSachPhong.map((phong, idx) => {
+                                    const isChecked = checkedPhongs.includes(phong.ma_phong)
+                                    let timeDisplay = ''
+                                    if (isChecked && phong.thoi_gian_nhan) {
+                                        try {
+                                            timeDisplay = format(parseISO(phong.thoi_gian_nhan), 'HH:mm dd/MM/yyyy')
+                                        } catch (e) {
+                                            timeDisplay = phong.thoi_gian_nhan
+                                        }
+                                    }
 
-                    <div className="mb-3">
-                        <CFormLabel htmlFor="phuPhiCheckInSom" className="fw-bold">
-                            Phụ thu check-in sớm (VNĐ):
-                        </CFormLabel>
-                        <CurrencyInput
-                            id="phuPhiCheckInSom"
-                            name="phuPhiCheckInSom"
-                            placeholder="Nhập số tiền phụ thu..."
-                            value={phuPhiCheckInSom}
-                            onValueChange={(value) => setPhuPhiCheckInSom(value || '')}
-                            prefix=""
-                            // suffix=" VNĐ"
-                            decimalsLimit={0}
-                            allowNegativeValue={false}
-                            className="form-control"
-                            style={{
-                                fontSize: '14px',
-                                padding: '8px 12px',
-                                border: '1px solid #ced4da',
-                                borderRadius: '4px',
-                            }}
-                        />
-                        <small className="text-muted">
-                            Nhập số tiền phụ phí nếu khách check-in sớm (tùy chọn)
-                        </small>
-                    </div>
+                                    return (
+                                        <div className="col-6 mb-3" key={idx}>
+                                            <CFormCheck
+                                                id={`check_${phong.ma_phong}`}
+                                                label={`Phòng: ${phong.ma_phong || phong.ten_phong || ''}`}
+                                                checked={isChecked}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setCheckedPhongs(prev => [...prev, phong.ma_phong])
+                                                    } else {
+                                                        setCheckedPhongs(prev => prev.filter(id => id !== phong.ma_phong))
+                                                    }
+                                                }}
+                                            />
+                                            {isChecked && phong.thoi_gian_nhan && (
+                                                <div className="text-muted ms-4 mt-1" style={{ fontSize: '0.85rem' }}>
+                                                    Thời gian nhận: {timeDisplay}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+
                 </CModalBody>
                 <CModalFooter>
                     <CButton color="secondary" onClick={onClose} variant="outline">
@@ -229,7 +235,7 @@ const CheckInAllPhongModal = ({ visible, onClose, ma_bookking }) => {
                         <CButton
                             color="success"
                             className="text-white px-3"
-                            onClick={() => onClickDaNhanPhong(ma_bookking)}
+                            onClick={() => onClickDaNhanPhong(maBooking)}
                         >
                             <FontAwesomeIcon icon={faCheck} /> Đồng ý
                         </CButton>
@@ -249,6 +255,6 @@ const CheckInAllPhongModal = ({ visible, onClose, ma_bookking }) => {
 CheckInAllPhongModal.propTypes = {
     visible: PropTypes.bool.isRequired, // visible là boolean, bắt buộc
     onClose: PropTypes.func.isRequired, // onClose là hàm, bắt buộc
-    ma_bookking: PropTypes.string,
+    maBooking: PropTypes.string,
 }
 export default CheckInAllPhongModal

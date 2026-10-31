@@ -7,10 +7,13 @@ import {
   faChartLine,
   faCircle,
   faGripLines,
+  faCheck,
+  faListCheck,
   faListUl,
   faPlus,
   faTableCells,
   faUtensils,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 
 import RoomCard from './RoomCard'
@@ -19,6 +22,8 @@ import { CButton, CSpinner, CTab, CTabContent, CTabList, CTabPanel, CTabs } from
 import { Link, useNavigate } from 'react-router-dom'
 
 import { useDuBaoRooms, useRooms } from './hooks'
+import { getAllPhong } from 'src/service/PhongService'
+import { updateCheckInBulk } from 'src/service/XepPhongBooKingService'
 import ViewBuonPhong from '../buonphong/ViewBuonPhong'
 import ImportHangHoa from '../buonphong/ImportHangHoa'
 import TonKho from '../buonphong/TonKho'
@@ -51,26 +56,22 @@ const StatusButton = ({ icon, color, label, count, active, onClick }) => (
         <FontAwesomeIcon icon={icon} className="text-pink-500" />
         {label} ({count})
       </>
-    ) :
-     label === 'Đang sử dụng' ? (
-    <>
-      <FontAwesomeIcon icon={icon} className="text-green-500" />
-      {label} ({count})
-    </>
-  ) :
-  label === 'Check-in trễ' ? (
-    <>
-      <FontAwesomeIcon icon={icon} className="text-blue-500" />
-      {label} ({count})
-    </>
-  ) :
-  label === 'Check-out trễ' ? (
-    <>
-      <FontAwesomeIcon icon={icon} className="text-red-500" />
-      {label} ({count})
-    </>
-  ) :
-    (
+    ) : label === 'Đang sử dụng' ? (
+      <>
+        <FontAwesomeIcon icon={icon} className="text-green-500" />
+        {label} ({count})
+      </>
+    ) : label === 'Check-in trễ' ? (
+      <>
+        <FontAwesomeIcon icon={icon} className="text-blue-500" />
+        {label} ({count})
+      </>
+    ) : label === 'Check-out trễ' ? (
+      <>
+        <FontAwesomeIcon icon={icon} className="text-red-500" />
+        {label} ({count})
+      </>
+    ) : (
       <>
         <FontAwesomeIcon icon={icon} className={`text-${color}-500`} />
         {label} ({count})
@@ -120,6 +121,10 @@ StatusButtonBuonPhong.propTypes = {
 
 const HotelManagement = () => {
   const [statusFilter, setStatusFilter] = useState(null)
+  const [bulkCheckInMode, setBulkCheckInMode] = useState(false)
+  const [selectedCheckInRooms, setSelectedCheckInRooms] = useState([])
+  const [bulkCheckInLoading, setBulkCheckInLoading] = useState(false)
+  const [bulkCheckInMessage, setBulkCheckInMessage] = useState('')
   const navigate = useNavigate()
   const { rooms, loading, fetchRooms, setRooms } = useRooms(navigate)
 
@@ -161,8 +166,7 @@ const HotelManagement = () => {
     // Lọc riêng Check-in trễ (bao gồm cả 'overdue' từ API)
     if (statusFilter === 'CHECK-IN TRỄ') {
       return rooms.filter(
-        (room) =>
-          room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
+        (room) => room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
       )
     }
     // Lọc riêng Check-out trễ (chỉ CHECK-OUT TRỄ)
@@ -202,8 +206,7 @@ const HotelManagement = () => {
     // Lọc riêng Check-in trễ (bao gồm cả 'overdue' từ API)
     if (statusFilterBuonPhong === 'CHECK-IN TRỄ') {
       return rooms.filter(
-        (room) =>
-          room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
+        (room) => room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
       )
     }
     // Lọc riêng Check-out trễ (chỉ CHECK-OUT TRỄ)
@@ -244,9 +247,76 @@ const HotelManagement = () => {
     console.log(maPhong)
     setRooms((prevRooms) =>
       prevRooms.map((room) =>
-        room.maPhong === maPhong ? { ...room, danhanPhong, trangThaiHienTai: 'ĐANG Ở' } : room,
+        room.maPhong === maPhong
+          ? {
+              ...room,
+              danhanPhong,
+              trangThaiHienTai: danhanPhong ? 'ĐANG Ở' : 'SẼ ĐẾN TRONG HÔM NAY',
+            }
+          : room,
       ),
     )
+  }
+  const refreshRoomData = async (maPhongOrList) => {
+    const latestRooms = await getAllPhong(navigate)
+    if (!latestRooms) {
+      console.error('Không thể tải trạng thái phòng mới nhất sau khi cập nhật check-in')
+      return false
+    }
+
+    const maPhongs = Array.isArray(maPhongOrList) ? maPhongOrList : [maPhongOrList]
+    const latestRoomsById = new Map(latestRooms.map((room) => [room.maPhong, room]))
+    const refreshedIds = new Set(maPhongs.filter((maPhong) => latestRoomsById.has(maPhong)))
+
+    setRooms((prevRooms) =>
+      prevRooms.map((room) => {
+        const latestRoom = latestRoomsById.get(room.maPhong)
+        return refreshedIds.has(room.maPhong) ? { ...room, ...latestRoom } : room
+      }),
+    )
+    if (refreshedIds.size !== maPhongs.length) {
+      console.error('Không tìm thấy dữ liệu mới nhất của một hoặc nhiều phòng đã cập nhật')
+      return false
+    }
+    return true
+  }
+
+  const handleBulkCheckIn = async () => {
+    const maXepPhongBookings = selectedCheckInRooms
+      .map((room) => rooms.find((item) => item.maxepphongbooking === room)?.maxepphongbooking)
+      .filter(Boolean)
+
+    if (!maXepPhongBookings.length || bulkCheckInLoading) return
+
+    setBulkCheckInLoading(true)
+    setBulkCheckInMessage('')
+    try {
+      const response = await updateCheckInBulk(maXepPhongBookings)
+      if (response?.code !== 200 || response.result === false) {
+        setBulkCheckInMessage(response?.message || 'Check-in các phòng đã chọn không thành công.')
+        return
+      }
+
+      const selectedRoomNumbers = selectedCheckInRooms
+        .map((roomId) => rooms.find((room) => room.maxepphongbooking === roomId)?.maPhong)
+        .filter(Boolean)
+      const refreshed = await refreshRoomData(selectedRoomNumbers)
+
+      setSelectedCheckInRooms([])
+      setBulkCheckInMode(false)
+      setBulkCheckInMessage(
+        `Đã check-in thành công phòng ${selectedRoomNumbers.join(', ')}.${
+          refreshed ? '' : ' Không thể tải lại trạng thái phòng mới nhất.'
+        }`,
+      )
+    } catch (error) {
+      console.error('Lỗi check-in hàng loạt:', error)
+      setBulkCheckInMessage(
+        error.response?.data?.message || 'Không thể check-in các phòng đã chọn. Vui lòng thử lại.',
+      )
+    } finally {
+      setBulkCheckInLoading(false)
+    }
   }
   const [roomsUpdated, setRoomsUpdated] = useState(0)
 
@@ -413,8 +483,7 @@ const HotelManagement = () => {
       ).length,
       occupied: rooms.filter((room) => room.trangThaiHienTai === 'ĐANG Ở').length,
       lateCheckIn: rooms.filter(
-        (room) =>
-          room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
+        (room) => room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
       ).length,
       leaving: rooms.filter((room) => room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY').length,
       lateCheckOut: rooms.filter((room) => room.trangThaiHienTai === 'CHECK-OUT TRỄ').length,
@@ -432,8 +501,7 @@ const HotelManagement = () => {
       ).length,
       occupied: rooms.filter((room) => room.trangThaiHienTai === 'ĐANG Ở').length,
       lateCheckIn: rooms.filter(
-        (room) =>
-          room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
+        (room) => room.trangThaiHienTai === 'CHECK-IN TRỄ' || room.trangThaiHienTai === 'overdue',
       ).length,
       leaving: rooms.filter((room) => room.trangThaiHienTai === 'SẼ ĐI TRONG HÔM NAY').length,
       lateCheckOut: rooms.filter((room) => room.trangThaiHienTai === 'CHECK-OUT TRỄ').length,
@@ -568,7 +636,7 @@ const HotelManagement = () => {
                 onClick={() => handleTabChange(3)}
                 className="flex items-center text-sm sm:text-base"
               >
-                <FontAwesomeIcon icon={faBed} className='me-1'/>
+                <FontAwesomeIcon icon={faBed} className="me-1" />
                 <span className="hidden sm:inline">Buồng phòng</span>
               </CTab>
             )}
@@ -653,7 +721,7 @@ const HotelManagement = () => {
             {/* Tab Sơ đồ phòng */}
             {canAccessTab(2) && (
               <CTabPanel className="mt-3" aria-labelledby="profile-tab-pane" itemKey={2}>
-                <div className="flex flex-col gap-4 ">
+                <div className="flex flex-col gap-2 ">
                   <div className="flex flex-wrap gap-2 items-center justify-between">
                     <div className="flex flex-wrap gap-2">
                       <StatusButton
@@ -705,7 +773,56 @@ const HotelManagement = () => {
                         onClick={() => handleStatusClick('CHECK-OUT TRỄ')}
                       />
                     </div>
+                    <div className="flex items-center gap-2">
+                      {!bulkCheckInMode ? (
+                        <CButton
+                          color="primary"
+                          variant="outline"
+                          className="font-semibold shadow-sm"
+                          onClick={() => {
+                            setBulkCheckInMessage('')
+                            setBulkCheckInMode(true)
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faListCheck} className="me-2" />
+                          Chọn phòng check-in
+                        </CButton>
+                      ) : (
+                        <>
+                          <CButton
+                            color="success"
+                            className="text-white"
+                            disabled={!selectedCheckInRooms.length || bulkCheckInLoading}
+                            onClick={handleBulkCheckIn}
+                          >
+                            {bulkCheckInLoading && <CSpinner size="sm" className="me-2" />}
+                            {!bulkCheckInLoading && (
+                              <FontAwesomeIcon icon={faCheck} className="me-2" />
+                            )}
+                            Check-in đã chọn ({selectedCheckInRooms.length})
+                          </CButton>
+                          <CButton
+                            color="secondary"
+                            variant="outline"
+                            disabled={bulkCheckInLoading}
+                            onClick={() => {
+                              setBulkCheckInMode(false)
+                              setSelectedCheckInRooms([])
+                              setBulkCheckInMessage('')
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faXmark} className="me-2" />
+                            Hủy
+                          </CButton>
+                        </>
+                      )}
+                    </div>
                   </div>
+                  {bulkCheckInMessage && (
+                    <div className="text-sm text-blue-700" role="status">
+                      {bulkCheckInMessage}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9 gap-1">
                     {filteredRooms.map((room) => (
@@ -714,6 +831,18 @@ const HotelManagement = () => {
                           room={room}
                           updateRoomStatus={updateRoomStatus}
                           updateRoomCheckIn={updateRoomCheckIn}
+                          refreshRoomData={refreshRoomData}
+                          bulkCheckInMode={bulkCheckInMode}
+                          isBulkCheckInSelected={selectedCheckInRooms.includes(
+                            room.maxepphongbooking,
+                          )}
+                          onBulkCheckInToggle={(maXepPhongBooking, selected) => {
+                            setSelectedCheckInRooms((current) =>
+                              selected
+                                ? [...current, maXepPhongBooking]
+                                : current.filter((id) => id !== maXepPhongBooking),
+                            )
+                          }}
                           updateRoomNgayDi={updateRoomNgayDi}
                           updateRoomChuyenPhong={updateRoomChuyenPhong}
                           updateRoomHoanDoiPhong={updateRoomHoanDoiPhong}
@@ -859,17 +988,11 @@ const HotelManagement = () => {
                   </div>
                 )}
 
-                {activeBuonPhongTab === 'import' && (
-                  <ImportHangHoa />
-                )}
+                {activeBuonPhongTab === 'import' && <ImportHangHoa />}
 
-                {activeBuonPhongTab === 'tonkho' && (
-                  <TonKho />
-                )}
+                {activeBuonPhongTab === 'tonkho' && <TonKho />}
 
-                {activeBuonPhongTab === 'thongke' && (
-                  <ThongKeNhapXuat />
-                )}
+                {activeBuonPhongTab === 'thongke' && <ThongKeNhapXuat />}
               </CTabPanel>
             )}
 

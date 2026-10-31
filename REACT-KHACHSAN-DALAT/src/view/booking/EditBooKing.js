@@ -2691,7 +2691,7 @@ const EditBooKing = () => {
             <CCol className='mb-3'>
               <CFormTextarea
                 className="border-2 border-gray-500"
-                rows={2}
+                rows={4}
                 value={booKing.ghiChu}
                 name="ghiChu"
                 placeholder="Nhập ghi chú"

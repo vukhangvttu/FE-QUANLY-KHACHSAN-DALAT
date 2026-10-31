@@ -1,11 +1,11 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react'
 import PropTypes from 'prop-types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faTrashCan, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons'
 
 /**
- * SignaturePad - Component khung ký chữ ký bằng ngón tay
- * Chỉ hiển thị trên thiết bị di động / máy tính bảng (isMobile).
+ * SignaturePad - Component khung ký chữ ký bằng ngón tay hoặc bảng vẽ (Wacom)
+ * Hỗ trợ cảm ứng lực (pressure) và ký toàn màn hình (Fullscreen).
  *
  * Props:
  *   onSave(dataUrl) - callback khi nhấn "Xác nhận chữ ký", truyền data URL ảnh PNG
@@ -15,10 +15,11 @@ const SignaturePad = ({ onSave }) => {
   const [isDrawing, setIsDrawing] = useState(false)
   const [isEmpty, setIsEmpty] = useState(true)
   const [savedSignature, setSavedSignature] = useState(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const lastPos = useRef(null)
 
-  // Adjust canvas resolution for high-DPI screens
-  useEffect(() => {
+  // Adjust canvas resolution for high-DPI screens and resizing
+  const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ratio = window.devicePixelRatio || 1
@@ -31,19 +32,24 @@ const SignaturePad = ({ onSave }) => {
     ctx.lineWidth = 2.5
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
+
+    setIsEmpty(true)
+    setSavedSignature(null)
   }, [])
+
+  useEffect(() => {
+    setupCanvas()
+    window.addEventListener('resize', setupCanvas)
+    return () => window.removeEventListener('resize', setupCanvas)
+  }, [setupCanvas, isFullscreen])
 
   const getPos = (e, canvas) => {
     const rect = canvas.getBoundingClientRect()
-    if (e.touches) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
-      }
-    }
     return {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
+      pressure: e.pressure !== undefined ? e.pressure : 0.5,
+      pointerType: e.pointerType || 'mouse'
     }
   }
 
@@ -51,6 +57,14 @@ const SignaturePad = ({ onSave }) => {
     e.preventDefault()
     const canvas = canvasRef.current
     const pos = getPos(e, canvas)
+
+    // Bỏ qua nếu là chuột (chỉ cho phép bút Wacom hoặc cảm ứng)
+    if (pos.pointerType === 'mouse') return
+
+    if (e.pointerId) {
+      canvas.setPointerCapture(e.pointerId)
+    }
+
     lastPos.current = pos
     setIsDrawing(true)
     setIsEmpty(false)
@@ -70,8 +84,13 @@ const SignaturePad = ({ onSave }) => {
       const ctx = canvas.getContext('2d')
       const pos = getPos(e, canvas)
 
+      // Bỏ qua nếu là chuột
+      if (pos.pointerType === 'mouse') return
+
       ctx.strokeStyle = '#000000'
-      ctx.lineWidth = 2.5
+      const baseLineWidth = Math.max(2, canvas.clientWidth / 140)
+
+      ctx.lineWidth = (baseLineWidth * 0.4) + (pos.pressure * baseLineWidth * 1)
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
 
@@ -92,64 +111,193 @@ const SignaturePad = ({ onSave }) => {
   }, [])
 
   const clearCanvas = () => {
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    const ratio = window.devicePixelRatio || 1
-    ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio)
-    setIsEmpty(true)
-    setSavedSignature(null)
+    setupCanvas()
   }
 
   const handleSave = () => {
     const canvas = canvasRef.current
-    const dataUrl = canvas.toDataURL('image/png')
+
+    // Cắt (crop) khoảng trắng thừa xung quanh chữ ký
+    const ctx = canvas.getContext('2d')
+    const w = canvas.width
+    const h = canvas.height
+    const imgData = ctx.getImageData(0, 0, w, h)
+    const data = imgData.data
+
+    let minX = w, minY = h, maxX = 0, maxY = 0
+    let found = false
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const alpha = data[(y * w + x) * 4 + 3]
+        if (alpha > 0) {
+          if (x < minX) minX = x
+          if (y < minY) minY = y
+          if (x > maxX) maxX = x
+          if (y > maxY) maxY = y
+          found = true
+        }
+      }
+    }
+
+    let dataUrl
+    if (!found) {
+      dataUrl = canvas.toDataURL('image/png')
+    } else {
+      const padding = 12
+      minX = Math.max(0, minX - padding)
+      minY = Math.max(0, minY - padding)
+      maxX = Math.min(w, maxX + padding)
+      maxY = Math.min(h, maxY + padding)
+
+      const cropW = maxX - minX
+      const cropH = maxY - minY
+
+      // Giữ nguyên độ phân giải gốc (không scale down) để nét chữ ký giữ nguyên độ đậm nhạt và sắc nét
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = cropW
+      tempCanvas.height = cropH
+      const tempCtx = tempCanvas.getContext('2d')
+
+      // Nền trắng để nét mực đen tương phản sắc nét
+      tempCtx.fillStyle = '#ffffff'
+      tempCtx.fillRect(0, 0, cropW, cropH)
+
+      // Khử răng cưa
+      tempCtx.imageSmoothingEnabled = true
+      tempCtx.imageSmoothingQuality = 'high'
+      tempCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH)
+
+      dataUrl = tempCanvas.toDataURL('image/png')
+    }
+
     setSavedSignature(dataUrl)
+    if (isFullscreen) {
+      setIsFullscreen(false)
+    }
     if (onSave) onSave(dataUrl)
   }
 
-  return (
-    <div
-      style={{
-        marginTop: '24px',
-        padding: '16px',
-        border: '1px solid #dee2e6',
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen)
+  }
+
+  if (!isFullscreen) {
+    return (
+      <div style={{
+        margin: '24px auto',
+        padding: '30px 20px',
+        border: '2px dashed #adb5bd',
         borderRadius: '12px',
-        backgroundColor: '#fff',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
-      }}
-    >
+        backgroundColor: '#f8f9fa',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '15px',
+        width: '80%',
+      }}>
+        <div style={{ fontSize: '32px', color: savedSignature ? '#198754' : '#495057' }}>
+          {savedSignature ? '✅' : '✍️'}
+        </div>
+        <p style={{ margin: 0, fontWeight: 700, fontSize: '18px', color: savedSignature ? '#198754' : '#212529' }}>
+          {savedSignature ? 'Đã lưu chữ ký khách hàng' : 'Chữ ký khách hàng'}
+        </p>
+        <p style={{ margin: 0, fontSize: '14px', color: '#6c757d', textAlign: 'center' }}>
+          {savedSignature ? 'Nhấn nút bên dưới nếu bạn muốn ký lại.' : 'Bạn cần mở bảng ký toàn màn hình để ký bằng bút Wacom.'}
+        </p>
+        <button
+          onClick={toggleFullscreen}
+          style={{
+            marginTop: '10px',
+            padding: '16px 32px',
+            backgroundColor: savedSignature ? '#198754' : '#0d6efd',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          <FontAwesomeIcon icon={faExpand} />
+          {savedSignature ? 'KÝ LẠI (TOÀN MÀN HÌNH)' : 'MỞ BẢNG KÝ (TOÀN MÀN HÌNH)'}
+        </button>
+      </div>
+    )
+  }
+
+  // Chế độ Fullscreen
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 9999,
+      backgroundColor: 'rgba(0,0,0,0.85)',
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '20px',
+    }}>
       {/* Tiêu đề */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           marginBottom: '12px',
-          gap: '8px',
         }}
       >
-        <span style={{ fontSize: '20px' }}>&#9999;&#65039;</span>
-        <div>
-          <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#212529' }}>
-            Chữ ký khách hàng
-          </p>
-          <p style={{ margin: 0, fontSize: '12px', color: '#6c757d' }}>
-            Dùng ngón tay ký vào khung bên dưới
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '20px' }}>&#9999;&#65039;</span>
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#fff' }}>
+              Chữ ký khách hàng
+            </p>
+            <p style={{ margin: 0, fontSize: '12px', color: '#ccc' }}>
+              Dùng bút Wacom ký vào khung bên dưới
+            </p>
+          </div>
         </div>
+
+        {/* Nút Đóng */}
+        <button
+          onClick={toggleFullscreen}
+          style={{
+            padding: '8px 12px',
+            border: 'none',
+            borderRadius: '6px',
+            backgroundColor: '#495057',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+        >
+          <FontAwesomeIcon icon={faCompress} />
+          Đóng
+        </button>
       </div>
 
       {/* Canvas ký tên */}
-      <div
-        style={{
-          position: 'relative',
-          border: '2px dashed #adb5bd',
-          borderRadius: '8px',
-          backgroundColor: '#f8f9fa',
-          overflow: 'hidden',
-          touchAction: 'none',
-          userSelect: 'none',
-        }}
-      >
+      <div style={{
+        flex: 1,
+        position: 'relative',
+        backgroundColor: '#fff',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        touchAction: 'none',
+        userSelect: 'none',
+      }}>
         {isEmpty && (
           <div
             style={{
@@ -173,17 +321,15 @@ const SignaturePad = ({ onSave }) => {
           style={{
             display: 'block',
             width: '100%',
-            height: '180px',
+            height: '100%',
             cursor: 'crosshair',
             touchAction: 'none',
           }}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
+          onPointerDown={startDrawing}
+          onPointerMove={draw}
+          onPointerUp={stopDrawing}
+          onPointerCancel={stopDrawing}
+          onPointerLeave={stopDrawing}
         />
       </div>
 
@@ -224,41 +370,6 @@ const SignaturePad = ({ onSave }) => {
           <FontAwesomeIcon icon={faCheck} /> Xác nhận chữ ký
         </button>
       </div>
-
-      {/* Hiển thị chữ ký đã lưu */}
-      {savedSignature && (
-        <div
-          style={{
-            marginTop: '16px',
-            padding: '12px',
-            border: '1px solid #c3e6cb',
-            borderRadius: '8px',
-            backgroundColor: '#d4edda',
-          }}
-        >
-          <p style={{ margin: '0 0 8px 0', fontWeight: 600, color: '#155724', fontSize: '13px' }}>
-            Da xac nhan chu ky:
-          </p>
-          <div
-            style={{
-              backgroundColor: '#fff',
-              border: '1px solid #dee2e6',
-              borderRadius: '6px',
-              padding: '8px',
-              display: 'inline-block',
-            }}
-          >
-            <img
-              src={savedSignature}
-              alt="Chu ky khach hang"
-              style={{ maxWidth: '100%', maxHeight: '100px', display: 'block' }}
-            />
-          </div>
-          <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#6c757d' }}>
-            Nhan &ldquo;Xoa&rdquo; roi ky lai neu muon thay doi chu ky
-          </p>
-        </div>
-      )}
     </div>
   )
 }

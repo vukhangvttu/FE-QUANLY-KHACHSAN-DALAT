@@ -144,12 +144,12 @@ const ChuyenPhong = ({
 
     // Kiểm tra giá phòng có hợp lệ không
     const giaPhongKhongHopLe = listGiaPhongTheoNgay.some((item) => {
-      return !item.gia || item.gia <= 0 || isNaN(item.gia)
+      return !item.gia || item.gia < 0 || isNaN(item.gia)
     })
 
-    if (giaPhongKhongHopLe) {
-      return addToast(exampleToast('⚠️ Có ngày có giá phòng không hợp lệ (phải lớn hơn 0)'))
-    }
+    // if (giaPhongKhongHopLe) {
+    //   return addToast(exampleToast('⚠️ Có ngày có giá phòng không hợp lệ (phải lớn hơn 0)'))
+    // }
 
     // Kiểm tra phòng mới có tồn tại trong danh sách phòng trống không
     const phongMoiHopLe = phongOptions.some((phong) => phong.maPhong === selectedMaPhong)
@@ -181,6 +181,7 @@ const ChuyenPhong = ({
         maPhong,
         selectedMaPhong,
         maLoaiPhong,
+        selectedMaLoaiPhong,
         danhSachGiaPhong, // truyền thêm danh sách giá phòng theo ngày
       )
 
@@ -442,10 +443,6 @@ const ChuyenPhong = ({
             Chuyển phòng từ <span className="font-semibold">P.{maPhong}</span> loại {tenPhong} sang
             phòng mới
           </div>
-          <div className="mb-2 text-blue-700 font-semibold ">
-            Chuyển phòng khác loại thời gian áp dụng tính từ ngày hiện tại tới hết ngày đi của
-            booking
-          </div>
 
           <div>
             Ngày đến:{' '}
@@ -462,8 +459,8 @@ const ChuyenPhong = ({
             {/* Cột trái: Chọn loại phòng, số phòng, bảng giá loại phòng */}
             <div className="flex-1 min-w-[260px]">
               <div className="flex gap-2 mb-2">
-                <div className="flex-1">
-                  <label htmlFor="chon-loai-phong" className="block  font-semibold mb-1">
+                {/* <div className="flex-1">
+                  <label htmlFor="chon-loai-phong" className="block font-semibold mb-1">
                     Chọn loại phòng mới
                   </label>
                   <CFormSelect
@@ -472,20 +469,15 @@ const ChuyenPhong = ({
                     value={selectedMaLoaiPhong}
                     onChange={handleLoaiPhongChange}
                     aria-label="Chọn loại phòng mới"
-                    tabIndex={0}
                   >
                     <option value="">Chọn loại phòng</option>
-                    {listLoaiPhongTrong.map((lp) => (
-                      <option
-                        key={lp.maLoaiPhong}
-                        value={lp.maLoaiPhong}
-                        disabled={lp.soPhongTrong === 0}
-                      >
-                        {lp.tenLoaiPhong} (Trống: {lp.soPhongTrong})
+                    {listLoaiPhongTrong?.map((loai) => (
+                      <option key={loai.maLoaiPhong} value={loai.maLoaiPhong}>
+                        {loai.tenLoaiPhong}
                       </option>
                     ))}
                   </CFormSelect>
-                </div>
+                </div> */}
                 <div className="flex-1">
                   <label htmlFor="chon-so-phong" className="block  font-semibold mb-1">
                     Chọn số phòng mới
@@ -575,10 +567,19 @@ const ChuyenPhong = ({
                             listGiaPhongTheoNgay.length > 0 &&
                             listGiaPhongTheoNgay.map((item, index) => {
                               const date = parseISO(item.ngay)
-                              const today = new Date()
-                              today.setHours(0, 0, 0, 0)
                               const itemDate = new Date(item.ngay)
                               itemDate.setHours(0, 0, 0, 0)
+
+                              let isPastDate = false
+                              if (ngayHienTai) {
+                                const currentDayObj = new Date(ngayHienTai)
+                                currentDayObj.setHours(0, 0, 0, 0)
+                                isPastDate = itemDate < currentDayObj
+                              } else {
+                                const today = new Date()
+                                today.setHours(0, 0, 0, 0)
+                                isPastDate = itemDate < today
+                              }
 
                               return (
                                 <CTableRow key={item.maGiaPhongTheoNgay || index}>
@@ -590,7 +591,8 @@ const ChuyenPhong = ({
                                   </CTableDataCell>
                                   <CTableDataCell>
                                     <CurrencyInput
-                                      className="outline-none w-24 border-b border-gray-500 rounded-none text-right"
+                                      disabled={isPastDate}
+                                      className={`outline-none w-24 border-b border-gray-500 rounded-none text-right ${isPastDate ? 'bg-gray-200 cursor-not-allowed opacity-60' : ''}`}
                                       name="input-name"
                                       placeholder="Nhập giá"
                                       decimalsLimit={2}
