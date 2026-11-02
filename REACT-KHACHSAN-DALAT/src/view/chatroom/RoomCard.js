@@ -326,7 +326,7 @@ const RoomCard = ({
               <CCol xs={7} sm={7} md={7}>
                 <Popover
                   content={
-                    <div className="w-52 ">
+                    <div className="w-62 text-sm text-gray-500 bg-white shadow-lg rounded-lg border border-gray-200">
                       <div className="text-left cursor-pointer text-black">
                         <div
                           className="px-4 py-1 hover:bg-gray-100 hover:text-blue-500"
@@ -356,7 +356,7 @@ const RoomCard = ({
                               >
                                 Hủy Check-in
                               </div>
-                              <div
+                              {/* <div
                                 onClick={() => {
                                   handleClickChuyenPhong(
                                     room.maxepphongbooking,
@@ -372,6 +372,9 @@ const RoomCard = ({
                                 className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500"
                               >
                                 Chuyển phòng
+                              </div> */}
+                              <div className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500">
+                                Chuyển thông tin khách hàng
                               </div>
                               {/* <div
                                 onClick={() => {

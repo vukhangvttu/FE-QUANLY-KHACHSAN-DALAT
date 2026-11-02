@@ -24,8 +24,19 @@ import {
   CToaster,
   CToastHeader,
   CPopover,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
 } from '@coreui/react-pro'
-import { faCirclePlus, faDeleteLeft, faFloppyDisk, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
+import {
+  faCirclePlus,
+  faDeleteLeft,
+  faFloppyDisk,
+  faInfoCircle,
+  faRightLeft,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
@@ -57,6 +68,15 @@ const EditBooKing = () => {
 
   const [rows, setRows] = useState([])
   const [giaTheoNgay, setGiaTheoNgay] = useState({})
+  const [visibleDoiPhong, setVisibleDoiPhong] = useState(false)
+  const [doiPhongStep, setDoiPhongStep] = useState(1)
+  const [rowDoiPhong, setRowDoiPhong] = useState(null)
+  const [phongCuDuocChon, setPhongCuDuocChon] = useState([])
+  const [loaiPhongDoiOptions, setLoaiPhongDoiOptions] = useState([])
+  const [maLoaiPhongDoi, setMaLoaiPhongDoi] = useState('')
+  const [phongMoiDoiOptions, setPhongMoiDoiOptions] = useState([])
+  const [phongMoiDuocChon, setPhongMoiDuocChon] = useState([])
+  const [loadingDoiPhong, setLoadingDoiPhong] = useState(false)
 
   // Thêm dòng mới
   const handleAddRow = () => {
@@ -227,11 +247,11 @@ const EditBooKing = () => {
           return old
             ? old
             : {
-              maGiaPhongTheoNgay: null,
-              maLoaiPhong: row.loaiPhong.maLoaiPhong,
-              ngay: ngayStr,
-              gia: getGiaTheoLoaiNgay(row.loaiPhong.maLoaiPhong, date),
-            }
+                maGiaPhongTheoNgay: null,
+                maLoaiPhong: row.loaiPhong.maLoaiPhong,
+                ngay: ngayStr,
+                gia: getGiaTheoLoaiNgay(row.loaiPhong.maLoaiPhong, date),
+              }
         })
       } else {
         newGiaPhongTheoNgays = newDates.map((date) => ({
@@ -408,20 +428,20 @@ const EditBooKing = () => {
       const weekendPrice = options.find((option) => option.giaCuoiTuan)
       return weekendPrice
         ? {
-          maLoaiGia: weekendPrice.maLoaiGia,
-          gia: weekendPrice.gia,
-          maGiaPhong: weekendPrice.maGiaPhong,
-        }
+            maLoaiGia: weekendPrice.maLoaiGia,
+            gia: weekendPrice.gia,
+            maGiaPhong: weekendPrice.maGiaPhong,
+          }
         : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
     }
     // Nếu không phải Thứ 7, ưu tiên giá ngày thường
     const weekdayPrice = options.find((option) => option.giaNgayThuong)
     return weekdayPrice
       ? {
-        maLoaiGia: weekdayPrice.maLoaiGia,
-        gia: weekdayPrice.gia,
-        maGiaPhong: weekdayPrice.maGiaPhong,
-      }
+          maLoaiGia: weekdayPrice.maLoaiGia,
+          gia: weekdayPrice.gia,
+          maGiaPhong: weekdayPrice.maGiaPhong,
+        }
       : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
   }
 
@@ -453,7 +473,8 @@ const EditBooKing = () => {
 
     const loaiListTheoDong = listLoaiPhongTrongTheoDong[rowIndex] || []
     const soPhongTrongTheoApi =
-      loaiListTheoDong.find((item) => item.maLoaiPhong === maLoaiPhong.maLoaiPhong)?.soPhongTrong ?? 0
+      loaiListTheoDong.find((item) => item.maLoaiPhong === maLoaiPhong.maLoaiPhong)?.soPhongTrong ??
+      0
     const maxSoLuong = soPhongTrongTheoApi + (selectedLoaiPhong.soLuongDuBaoPhong || 0)
 
     // Kiểm tra nếu số lượng nhập vào vượt quá số lượng có sẵn
@@ -693,9 +714,9 @@ const EditBooKing = () => {
     const updatedRows = rows.map((row) =>
       row.loaiPhong === maLoaiPhong
         ? {
-          ...row,
-          ghiChu: value,
-        }
+            ...row,
+            ghiChu: value,
+          }
         : row,
     )
 
@@ -783,15 +804,19 @@ const EditBooKing = () => {
         // Lọc giaPhongTheoNgays chỉ lấy các ngày nằm trong khoảng ngayDen và ngayDi (không tính ngayDi)
         chitietbooking = chitietbooking.map((row) => {
           if (row.ngayDen && row.ngayDi && row.giaPhongTheoNgays) {
-            const ngayDenFormat = row.ngayDen.includes('/') ? row.ngayDen.split('/').reverse().join('-') : row.ngayDen;
-            const ngayDiFormat = row.ngayDi.includes('/') ? row.ngayDi.split('/').reverse().join('-') : row.ngayDi;
+            const ngayDenFormat = row.ngayDen.includes('/')
+              ? row.ngayDen.split('/').reverse().join('-')
+              : row.ngayDen
+            const ngayDiFormat = row.ngayDi.includes('/')
+              ? row.ngayDi.split('/').reverse().join('-')
+              : row.ngayDi
             const filteredGia = row.giaPhongTheoNgays.filter((g) => {
-              return g.ngay >= ngayDenFormat && g.ngay < ngayDiFormat;
-            });
-            return { ...row, giaPhongTheoNgays: filteredGia };
+              return g.ngay >= ngayDenFormat && g.ngay < ngayDiFormat
+            })
+            return { ...row, giaPhongTheoNgays: filteredGia }
           }
-          return row;
-        });
+          return row
+        })
 
         // Cập nhật chi tiết booking
         // setChiTietBooKing(chitietbooking)
@@ -959,13 +984,12 @@ const EditBooKing = () => {
   const updateChiTietBooKings = (updatedRows) => {
     let tongTien = 0
     const chiTietBooKings = updatedRows.map((row) => {
-      const ngayDen = new Date(row.ngayDen.split('/').reverse().join('-'))
-      const ngayDi = new Date(row.ngayDi.split('/').reverse().join('-'))
-      const soDem = Math.ceil((ngayDi - ngayDen) / (1000 * 60 * 60 * 24))
+      const soDem = tinhSoDem(row.ngayDen, row.ngayDi)
+      const giaPhongTheoNgays = row.giaPhongTheoNgays || []
 
       // Tính tổng tiền từ giaPhongTheoNgays
       tongTien +=
-        row.giaPhongTheoNgays.reduce((sum, giaNgay) => sum + giaNgay.gia, 0) * (row.soLuong || 0)
+        giaPhongTheoNgays.reduce((sum, giaNgay) => sum + giaNgay.gia, 0) * (row.soLuong || 0)
 
       // Tính tiền extra bed
       const tienExtraBed = (row.giaExtraBed || 0) * (row.soLuongExtraBed || 0) * soDem
@@ -979,13 +1003,13 @@ const EditBooKing = () => {
       const tienPhuThuAnSang = (row.giaPhuThuAnSang || 0) * (row.soLuongPhuThuAnSang || 0) * soDem
       tongTien += tienPhuThuAnSang
 
-      const tongTienDong = row.giaPhongTheoNgays.reduce((sum, giaNgay) => sum + giaNgay.gia, 0)
+      const tongTienDong = giaPhongTheoNgays.reduce((sum, giaNgay) => sum + giaNgay.gia, 0)
 
       return {
         index: row.index,
         maChiTietBooking: row.maChiTietBooking,
-        ngayDen: row.ngayDen ? new Date(row.ngayDen).toLocaleDateString('en-CA') : null,
-        ngayDi: row.ngayDi ? new Date(row.ngayDi).toLocaleDateString('en-CA') : null,
+        ngayDen: row.ngayDen ? toDateString(row.ngayDen) : null,
+        ngayDi: row.ngayDi ? toDateString(row.ngayDi) : null,
         gioDen: row.gioDen,
         gioDi: row.gioDi,
         soDem: soDem,
@@ -1008,7 +1032,7 @@ const EditBooKing = () => {
         giaPhong: { maGiaPhong: row.giaPhong?.maGiaPhong },
         ghiChu: row.ghiChu,
         danhSachPhongChiTiets: row.danhSachPhongChiTiets,
-        giaPhongTheoNgays: row.giaPhongTheoNgays || [],
+        giaPhongTheoNgays,
       }
     })
     console.log('tongTien:', tongTien)
@@ -1323,9 +1347,7 @@ const EditBooKing = () => {
         prevRows.map((row) => {
           const listloaiphong = mapTheoDong[row.index]
           if (!listloaiphong) return row
-          const found = listloaiphong.find(
-            (item) => item.maLoaiPhong === row.loaiPhong.maLoaiPhong,
-          )
+          const found = listloaiphong.find((item) => item.maLoaiPhong === row.loaiPhong.maLoaiPhong)
           return {
             ...row,
             tongSoLuongExtraBed: found?.tongSoGiuongThem || 0,
@@ -1430,7 +1452,7 @@ const EditBooKing = () => {
     }
   }
 
-  const ChoXyLyXoaPhongHoiNghi = () => { }
+  const ChoXyLyXoaPhongHoiNghi = () => {}
   const [visibleXoaHoiNghi, setVisbleXoaHoiNghi] = useState(false)
   const [maPhongHoiNghi, setMaPhongHoiNghi] = useState('')
 
@@ -1525,7 +1547,6 @@ const EditBooKing = () => {
     }
   }
 
-
   // ngày 12-05-2025 bổ sung thêm cột phòng
   const [phongOptions, setPhongOptions] = useState({})
   /** rowIndex: mỗi dòng có khoảng ngày riêng — cache danh sách phòng trống theo dòng, không gộp theo maLoaiPhong */
@@ -1574,13 +1595,13 @@ const EditBooKing = () => {
   useEffect(() => {
     if (!rows.length) return
     rows.forEach((row) => {
-      if (row.loaiPhong?.maLoaiPhong && row.loaiPhong.maLoaiPhong !== '0' && row.ngayDen && row.ngayDi) {
-        fetchPhongOptions(
-          row.loaiPhong.maLoaiPhong,
-          row.ngayDen,
-          row.ngayDi,
-          row.index,
-        )
+      if (
+        row.loaiPhong?.maLoaiPhong &&
+        row.loaiPhong.maLoaiPhong !== '0' &&
+        row.ngayDen &&
+        row.ngayDi
+      ) {
+        fetchPhongOptions(row.loaiPhong.maLoaiPhong, row.ngayDen, row.ngayDi, row.index)
       }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2146,6 +2167,239 @@ const EditBooKing = () => {
     return weekdayPrice ? weekdayPrice.gia : 0
   }
 
+  const getPhongChongLapTrongKhoang = (row, ngayBatDau, ngayKetThuc) =>
+    rows
+      .filter(
+        (otherRow) =>
+          otherRow.index !== row.index &&
+          toDateString(otherRow.ngayDen) < ngayKetThuc &&
+          toDateString(otherRow.ngayDi) > ngayBatDau,
+      )
+      .flatMap((otherRow) => otherRow.danhSachPhongChiTiets || [])
+      .map((phong) => phong.maPhong)
+
+  const handleOpenDoiPhong = (row) => {
+    const ngayHienTai = toDateString(new Date())
+    const ngayDen = toDateString(row.ngayDen)
+    const phongHienTai = row.danhSachPhongChiTiets || []
+
+    if (!ngayDen || ngayDen >= ngayHienTai) {
+      return addToast(exampleToast('⚠️ Chỉ có thể đổi phòng khi ngày đến trước hôm nay.'))
+    }
+
+    if (phongHienTai.length !== Number(row.soLuong)) {
+      return addToast(
+        exampleToast(
+          `⚠️ Dòng này cần có đủ ${row.soLuong} phòng đã được chọn trước khi đổi phòng.`,
+        ),
+      )
+    }
+
+    setRowDoiPhong(row)
+    setPhongCuDuocChon(phongHienTai.map((phong) => phong.maPhong))
+    setLoaiPhongDoiOptions([])
+    setMaLoaiPhongDoi('')
+    setPhongMoiDoiOptions([])
+    setPhongMoiDuocChon([])
+    setDoiPhongStep(1)
+    setVisibleDoiPhong(true)
+  }
+
+  const handleContinueDoiPhong = async () => {
+    if (!rowDoiPhong || phongCuDuocChon.length !== Number(rowDoiPhong.soLuong)) {
+      return addToast(exampleToast('⚠️ Vui lòng chọn đủ tất cả phòng trong dòng cần đổi.'))
+    }
+
+    const ngayHienTai = toDateString(new Date())
+    const ngayDi = toDateString(rowDoiPhong.ngayDi)
+
+    try {
+      setLoadingDoiPhong(true)
+      const loaiPhongs = await getAllLoaiPhongTrongTrongKhoanThoiGian(ngayHienTai, ngayDi, navigate)
+
+      if (!loaiPhongs) {
+        return addToast(exampleToast('❌ Không thể tải danh sách loại phòng. Vui lòng thử lại.'))
+      }
+
+      setLoaiPhongDoiOptions(loaiPhongs)
+      setMaLoaiPhongDoi(rowDoiPhong.loaiPhong?.maLoaiPhong || '')
+      setDoiPhongStep(2)
+
+      const phongTrong = await getListPhongTrongTheoKhoanThoiGianAndBooking(
+        rowDoiPhong.loaiPhong?.maLoaiPhong,
+        ngayHienTai,
+        ngayDi,
+        ma_booking,
+        navigate,
+      )
+
+      if (!phongTrong) {
+        return addToast(exampleToast('❌ Không thể tải danh sách phòng trống. Vui lòng thử lại.'))
+      }
+
+      const phongDangDungKhac = getPhongChongLapTrongKhoang(rowDoiPhong, ngayHienTai, ngayDi)
+      setPhongMoiDoiOptions(
+        phongTrong.filter(
+          (phong) =>
+            !phongCuDuocChon.includes(phong.maPhong) && !phongDangDungKhac.includes(phong.maPhong),
+        ),
+      )
+    } catch (error) {
+      console.error('Lỗi khi tải dữ liệu đổi phòng:', error)
+      addToast(exampleToast('❌ Lỗi khi tải danh sách phòng đổi. Vui lòng thử lại.'))
+    } finally {
+      setLoadingDoiPhong(false)
+    }
+  }
+
+  const handleLoaiPhongDoiChange = async (event) => {
+    const selectedMaLoaiPhong = event.target.value
+    setMaLoaiPhongDoi(selectedMaLoaiPhong)
+    setPhongMoiDuocChon([])
+    setPhongMoiDoiOptions([])
+
+    if (!selectedMaLoaiPhong || !rowDoiPhong) return
+
+    const ngayHienTai = toDateString(new Date())
+    const ngayDi = toDateString(rowDoiPhong.ngayDi)
+
+    try {
+      setLoadingDoiPhong(true)
+      const phongTrong = await getListPhongTrongTheoKhoanThoiGianAndBooking(
+        selectedMaLoaiPhong,
+        ngayHienTai,
+        ngayDi,
+        ma_booking,
+        navigate,
+      )
+
+      if (!phongTrong) {
+        return addToast(exampleToast('❌ Không thể tải danh sách phòng trống. Vui lòng thử lại.'))
+      }
+
+      const phongDangDungKhac = getPhongChongLapTrongKhoang(rowDoiPhong, ngayHienTai, ngayDi)
+      setPhongMoiDoiOptions(
+        phongTrong.filter(
+          (phong) =>
+            !phongCuDuocChon.includes(phong.maPhong) && !phongDangDungKhac.includes(phong.maPhong),
+        ),
+      )
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách phòng trống:', error)
+      addToast(exampleToast('❌ Lỗi khi tải danh sách phòng trống. Vui lòng thử lại.'))
+    } finally {
+      setLoadingDoiPhong(false)
+    }
+  }
+
+  const handleConfirmDoiPhong = () => {
+    if (!rowDoiPhong || !maLoaiPhongDoi) {
+      return addToast(exampleToast('⚠️ Vui lòng chọn loại phòng mới.'))
+    }
+
+    if (phongCuDuocChon.length !== Number(rowDoiPhong.soLuong)) {
+      return addToast(exampleToast('⚠️ Phải đổi toàn bộ phòng trong dòng booking.'))
+    }
+
+    if (phongMoiDuocChon.length !== Number(rowDoiPhong.soLuong)) {
+      return addToast(exampleToast(`⚠️ Vui lòng chọn đúng ${rowDoiPhong.soLuong} phòng mới.`))
+    }
+
+    const phongMoi = phongMoiDoiOptions.filter((phong) => phongMoiDuocChon.includes(phong.maPhong))
+    const soPhongExtraMoi = phongMoi.filter((phong) => phong.soGiuongThem === 1).length
+    if (soPhongExtraMoi < (rowDoiPhong.soLuongExtraBed || 0)) {
+      return addToast(
+        exampleToast(`⚠️ Cần chọn ít nhất ${rowDoiPhong.soLuongExtraBed} phòng Extra.`),
+      )
+    }
+
+    const loaiPhongMoi = loaiPhongDoiOptions.find(
+      (loaiPhong) => loaiPhong.maLoaiPhong === maLoaiPhongDoi,
+    )
+    const ngayHienTai = toDateString(new Date())
+    const ngayDiCu = toDateString(rowDoiPhong.ngayDi)
+    const loaiPhongThayDoi = maLoaiPhongDoi !== rowDoiPhong.loaiPhong?.maLoaiPhong
+    const giaMacDinh = loaiPhongThayDoi
+      ? getDefaultGia(maLoaiPhongDoi)
+      : {
+          maLoaiGia: rowDoiPhong.loaiGia?.maLoaiGia,
+          maGiaPhong: rowDoiPhong.giaPhong?.maGiaPhong,
+        }
+    if (!giaMacDinh || !giaMacDinh.maGiaPhong || Number(giaMacDinh.maGiaPhong) === 0) {
+      return addToast(exampleToast('⚠️ Loại phòng mới chưa có cấu hình giá.'))
+    }
+
+    const giaCuTheoNgay = new Map(
+      (rowDoiPhong.giaPhongTheoNgays || []).map((giaNgay) => [
+        toDateString(giaNgay.ngay),
+        giaNgay.gia,
+      ]),
+    )
+    const giaPhongTheoNgaysMoi = []
+    for (
+      let ngay = new Date(`${ngayHienTai}T00:00:00`);
+      format(ngay, 'yyyy-MM-dd') < ngayDiCu;
+      ngay.setDate(ngay.getDate() + 1)
+    ) {
+      const ngayStr = format(ngay, 'yyyy-MM-dd')
+      giaPhongTheoNgaysMoi.push({
+        maLoaiPhong: maLoaiPhongDoi,
+        ngay: ngayStr,
+        gia: loaiPhongThayDoi
+          ? getGiaTheoLoaiNgay(maLoaiPhongDoi, ngay)
+          : giaCuTheoNgay.get(ngayStr) ?? getGiaTheoLoaiNgay(maLoaiPhongDoi, ngay),
+      })
+    }
+
+    if (giaPhongTheoNgaysMoi.some((giaNgay) => !giaNgay.gia || giaNgay.gia <= 0)) {
+      return addToast(
+        exampleToast('⚠️ Loại phòng mới chưa có giá hợp lệ cho toàn bộ ngày còn lại.'),
+      )
+    }
+
+    const maxIndex = rows.length > 0 ? Math.max(...rows.map((row) => row.index)) : -1
+    const indexMoi = maxIndex + 1
+    const loaiPhongMoiData = {
+      maLoaiPhong: maLoaiPhongDoi,
+      tenLoaiPhong: loaiPhongMoi?.tenLoaiPhong || rowDoiPhong.loaiPhong?.tenLoaiPhong || '',
+    }
+    const tongGiaMoi = giaPhongTheoNgaysMoi.reduce((sum, item) => sum + item.gia, 0)
+    const dongLichSu = {
+      ...rowDoiPhong,
+      ngayDi: ngayHienTai,
+      giaPhongTheoNgays: (rowDoiPhong.giaPhongTheoNgays || []).filter(
+        (giaNgay) => toDateString(giaNgay.ngay) < ngayHienTai,
+      ),
+    }
+    const dongTuongLai = {
+      ...rowDoiPhong,
+      index: indexMoi,
+      maChiTietBooking: '',
+      isNew: true,
+      ngayDen: ngayHienTai,
+      ngayDi: ngayDiCu,
+      loaiPhong: loaiPhongMoiData,
+      loaiGia: { maLoaiGia: giaMacDinh.maLoaiGia },
+      giaPhong: { maGiaPhong: giaMacDinh.maGiaPhong },
+      gia: tongGiaMoi,
+      giaPhongTheoNgays: giaPhongTheoNgaysMoi,
+      danhSachPhongChiTiets: phongMoi,
+      soLuongDuBaoPhong: loaiPhongMoi?.soPhongTrong ?? rowDoiPhong.soLuongDuBaoPhong,
+    }
+    const updatedRows = rows.map((row) => (row.index === rowDoiPhong.index ? dongLichSu : row))
+    updatedRows.push(dongTuongLai)
+    setPhongOptions((prevOptions) => ({ ...prevOptions, [indexMoi]: phongMoi }))
+    setListLoaiPhongTrongTheoDong((prevOptions) => ({
+      ...prevOptions,
+      [indexMoi]: loaiPhongDoiOptions,
+    }))
+
+    setRows(updatedRows)
+    updateChiTietBooKings(updatedRows)
+    setVisibleDoiPhong(false)
+    addToast(exampleToast('✔️ Đã cập nhật thay đổi phòng. Nhấn Update để lưu booking.'))
+  }
+
   // Hàm xử lý thay đổi giá theo ngày
   const handleGiaTheoNgayChange = (index, maLoaiPhong, ngay, value) => {
     // Chuyển đổi value thành số
@@ -2509,7 +2763,7 @@ const EditBooKing = () => {
                       />
                     </CCol>
                   </CRow>
-                  <CRow className='mb-4'>
+                  <CRow className="mb-4">
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -2528,7 +2782,6 @@ const EditBooKing = () => {
                   </CRow>
                 </div>
               </div>
-
             </CCol>
             <CCol md={6}>
               <div className="relative mb-3">
@@ -2597,7 +2850,7 @@ const EditBooKing = () => {
                       </CInputGroup>
                     </CCol>
                   </CRow>
-                  <CRow >
+                  <CRow>
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -2683,12 +2936,10 @@ const EditBooKing = () => {
                       </CFormSelect>
                     </CCol>
                   </CRow>
-
                 </div>
-
               </div>
             </CCol>
-            <CCol className='mb-3'>
+            <CCol className="mb-3">
               <CFormTextarea
                 className="border-2 border-gray-500"
                 rows={4}
@@ -2825,17 +3076,17 @@ const EditBooKing = () => {
                                   const tongTienDong =
                                     (row.giaPhongTheoNgays && row.giaPhongTheoNgays.length > 0
                                       ? row.giaPhongTheoNgays.reduce(
-                                        (sum, giaNgay) => sum + giaNgay.gia * (row.soLuong || 0),
-                                        0,
-                                      )
+                                          (sum, giaNgay) => sum + giaNgay.gia * (row.soLuong || 0),
+                                          0,
+                                        )
                                       : 0) +
                                     (row.giaExtraBed || 0) * (row.soLuongExtraBed || 0) * soDem +
                                     (row.giaPhuThuTreEm || 0) *
-                                    (row.soLuongPhuThuTreEm || 0) *
-                                    soDem +
+                                      (row.soLuongPhuThuTreEm || 0) *
+                                      soDem +
                                     (row.giaPhuThuAnSang || 0) *
-                                    (row.soLuongPhuThuAnSang || 0) *
-                                    soDem
+                                      (row.soLuongPhuThuAnSang || 0) *
+                                      soDem
 
                                   row.tongTienDong = tongTienDong
 
@@ -2856,7 +3107,7 @@ const EditBooKing = () => {
                                               return (
                                                 ngayDenDate < createDateFromInput(today) &&
                                                 ngayDenDate.toDateString() !==
-                                                createDateFromInput(today).toDateString()
+                                                  createDateFromInput(today).toDateString()
                                               )
                                             })()}
                                           />
@@ -2881,17 +3132,19 @@ const EditBooKing = () => {
                                           }
                                         >
                                           <option value="0">Chọn loại phòng</option>
-                                          {(listLoaiPhongTrongTheoDong[row.index] || []).map((item) => {
-                                            return (
-                                              <option
-                                                key={item.maLoaiPhong}
-                                                value={item.maLoaiPhong}
-                                                disabled={item.soPhongTrong === 0}
-                                              >
-                                                {item.tenLoaiPhong} Trống {item.soPhongTrong}
-                                              </option>
-                                            )
-                                          })}
+                                          {(listLoaiPhongTrongTheoDong[row.index] || []).map(
+                                            (item) => {
+                                              return (
+                                                <option
+                                                  key={item.maLoaiPhong}
+                                                  value={item.maLoaiPhong}
+                                                  disabled={item.soPhongTrong === 0}
+                                                >
+                                                  {item.tenLoaiPhong} Trống {item.soPhongTrong}
+                                                </option>
+                                              )
+                                            },
+                                          )}
                                         </CFormSelect>
                                       </CTableDataCell>
                                       <CTableDataCell>{row.soLuongDuBaoPhong}</CTableDataCell>
@@ -2907,7 +3160,7 @@ const EditBooKing = () => {
                                               row.soLuongExtraBed,
                                             )
                                           }
-                                        // disabled={daXepPhong && !row.isNew}
+                                          // disabled={daXepPhong && !row.isNew}
                                         />
                                       </CTableDataCell>
 
@@ -2946,7 +3199,7 @@ const EditBooKing = () => {
                                               event,
                                               row.loaiPhong,
                                               (row.tongSoLuongExtraBed || 0) -
-                                              (row.tongSoLuongExtraBedDaSuDung || 0),
+                                                (row.tongSoLuongExtraBedDaSuDung || 0),
                                               row.soLuong,
                                             )
                                           }
@@ -3021,93 +3274,129 @@ const EditBooKing = () => {
                                         />
                                       </CTableDataCell>
                                       <CTableDataCell className="text-center">
-                                        <Select
-                                          getOptionValue={(option) => option.maPhong}
-                                          getOptionLabel={(option) => {
-                                            const labels = [option.tenPhong]
-                                            if (option.daDo && option.soGiuongThem === 1) {
-                                              labels.push('(Dơ, Extra)')
-                                            } else {
-                                              if (option.daDo) labels.push('(Dơ)')
-                                              if (option.soGiuongThem === 1) labels.push('(Extra)')
-                                            }
-                                            return labels.join(' ')
-                                          }}
-                                          options={phongOptions[row.index] || []}
-                                          menuPortalTarget={document.body}
-                                          styles={{
-                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                            menu: (base) => ({ ...base, zIndex: 9999 }),
-                                            option: (base, state) => ({
-                                              ...base,
-                                              backgroundColor: state.isDisabled
-                                                ? '#e2e8f0'
-                                                : state.isSelected
+                                        <div className="flex w-full min-w-0 items-center gap-2">
+                                          <Select
+                                            getOptionValue={(option) => option.maPhong}
+                                            getOptionLabel={(option) => {
+                                              const labels = [option.tenPhong]
+                                              if (option.daDo && option.soGiuongThem === 1) {
+                                                labels.push('(Dơ, Extra)')
+                                              } else {
+                                                if (option.daDo) labels.push('(Dơ)')
+                                                if (option.soGiuongThem === 1)
+                                                  labels.push('(Extra)')
+                                              }
+                                              return labels.join(' ')
+                                            }}
+                                            options={phongOptions[row.index] || []}
+                                            menuPortalTarget={document.body}
+                                            styles={{
+                                              container: (base) => ({
+                                                ...base,
+                                                flex: '1 1 0%',
+                                                minWidth: 0,
+                                              }),
+                                              control: (base) => ({
+                                                ...base,
+                                                minHeight: 40,
+                                              }),
+                                              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                              menu: (base) => ({ ...base, zIndex: 9999 }),
+                                              option: (base, state) => ({
+                                                ...base,
+                                                backgroundColor: state.isDisabled
                                                   ? '#e2e8f0'
-                                                  : 'white',
-                                              color: state.isDisabled ? '#94a3b8' : 'black',
-                                              cursor: state.isDisabled ? 'not-allowed' : 'default',
-                                            }),
-                                          }}
-                                          isMulti
-                                          value={
-                                            row.danhSachPhongChiTiets &&
+                                                  : state.isSelected
+                                                    ? '#e2e8f0'
+                                                    : 'white',
+                                                color: state.isDisabled ? '#94a3b8' : 'black',
+                                                cursor: state.isDisabled
+                                                  ? 'not-allowed'
+                                                  : 'default',
+                                              }),
+                                            }}
+                                            isMulti
+                                            value={
+                                              row.danhSachPhongChiTiets &&
                                               row.danhSachPhongChiTiets.length > 0
-                                              ? phongOptions[row.index]?.filter(
-                                                (option) =>
-                                                  row.danhSachPhongChiTiets.some(
-                                                    (p) => p.maPhong === option.maPhong,
-                                                  ),
-                                              )
-                                              : []
-                                          }
-                                          onChange={(selected) =>
-                                            handleSoPhongChange(selected, {
-                                              rowIndex: row.index,
-                                              maLoaiPhong: row.loaiPhong,
-                                              ma_chitiet: row.maChiTietBooking,
-                                            })
-                                          }
-                                          placeholder="Chọn phòng"
-                                          className={
-                                            ((row.danhSachPhongChiTiets?.length || 0) < row.soLuong
-                                              ? 'border-red-500'
-                                              : 'border-green-500') + ' border-2 rounded'
-                                          }
-                                          isOptionDisabled={(option) => {
-                                            // Kiểm tra xem phòng này đã được chọn ở dòng khác chưa
-                                            const isPhongDaChonOChoKhac = rows.some((otherRow) => {
-                                              // Bỏ qua dòng hiện tại
-                                              if (otherRow.index === row.index) return false
-
-                                              // Kiểm tra xem phòng này có trong danh sách phòng của dòng khác không
-                                              return otherRow.danhSachPhongChiTiets?.some(
-                                                (phong) => phong.maPhong === option.maPhong,
-                                              )
-                                            })
-
-                                            if (isPhongDaChonOChoKhac) {
-                                              return true
+                                                ? phongOptions[row.index]?.filter((option) =>
+                                                    row.danhSachPhongChiTiets.some(
+                                                      (p) => p.maPhong === option.maPhong,
+                                                    ),
+                                                  )
+                                                : []
                                             }
-
-                                            // Trường hợp 1: Nếu soLuong = soLuongExtraBed, chỉ cho phép chọn phòng có extra bed
-                                            if (row.soLuong === row.soLuongExtraBed) {
-                                              return option.soGiuongThem !== 1
+                                            onChange={(selected) =>
+                                              handleSoPhongChange(selected, {
+                                                rowIndex: row.index,
+                                                maLoaiPhong: row.loaiPhong,
+                                                ma_chitiet: row.maChiTietBooking,
+                                              })
                                             }
+                                            placeholder="Chọn phòng"
+                                            className={
+                                              ((row.danhSachPhongChiTiets?.length || 0) <
+                                              row.soLuong
+                                                ? 'border-red-500'
+                                                : 'border-green-500') + ' border-2 rounded'
+                                            }
+                                            isOptionDisabled={(option) => {
+                                              // Kiểm tra xem phòng này đã được chọn ở dòng khác chưa
+                                              const isPhongDaChonOChoKhac = rows.some(
+                                                (otherRow) => {
+                                                  // Bỏ qua dòng hiện tại
+                                                  if (otherRow.index === row.index) return false
 
-                                            // Trường hợp 2: Nếu soLuong > soLuongExtraBed
-                                            if (row.soLuong > row.soLuongExtraBed) {
-                                              // Nếu đã chọn đủ số phòng extra, disable các phòng extra còn lại
-                                              // if (soPhongExtraDaChon >= row.soLuongExtraBed) {
-                                              //   return option.soGiuongThem === 1
-                                              // }
-                                              // Nếu chưa chọn đủ số phòng extra, cho phép chọn cả 2 loại
+                                                  // Kiểm tra xem phòng này có trong danh sách phòng của dòng khác không
+                                                  return otherRow.danhSachPhongChiTiets?.some(
+                                                    (phong) => phong.maPhong === option.maPhong,
+                                                  )
+                                                },
+                                              )
+
+                                              if (isPhongDaChonOChoKhac) {
+                                                return true
+                                              }
+
+                                              // Trường hợp 1: Nếu soLuong = soLuongExtraBed, chỉ cho phép chọn phòng có extra bed
+                                              if (row.soLuong === row.soLuongExtraBed) {
+                                                return option.soGiuongThem !== 1
+                                              }
+
+                                              // Trường hợp 2: Nếu soLuong > soLuongExtraBed
+                                              if (row.soLuong > row.soLuongExtraBed) {
+                                                // Nếu đã chọn đủ số phòng extra, disable các phòng extra còn lại
+                                                // if (soPhongExtraDaChon >= row.soLuongExtraBed) {
+                                                //   return option.soGiuongThem === 1
+                                                // }
+                                                // Nếu chưa chọn đủ số phòng extra, cho phép chọn cả 2 loại
+                                                return false
+                                              }
+
                                               return false
-                                            }
-
-                                            return false
-                                          }}
-                                        />
+                                            }}
+                                          />
+                                          {toDateString(row.ngayDen) &&
+                                          toDateString(row.ngayDen) <
+                                            toDateString(new Date()) ? (
+                                              <CButton
+                                                type="button"
+                                                color="primary"
+                                                variant="outline"
+                                                className="inline-flex h-10 w-10 shrink-0 items-center justify-center p-0"
+                                                title="Đổi phòng"
+                                                aria-label="Đổi phòng"
+                                                onClick={() => handleOpenDoiPhong(row)}
+                                              >
+                                                <FontAwesomeIcon icon={faRightLeft} />
+                                              </CButton>
+                                            ) : (
+                                              <span
+                                                className="h-10 w-10 shrink-0"
+                                                aria-hidden="true"
+                                              />
+                                            )}
+                                        </div>
                                       </CTableDataCell>
                                       <CTableDataCell>
                                         <CFormSelect
@@ -3123,8 +3412,9 @@ const EditBooKing = () => {
                                                 key={option.maGiaPhong}
                                                 value={option.maLoaiGia}
                                               >
-                                                {`${option.tenLoaiGia
-                                                  } - Giá: ${option.gia.toLocaleString('vi-VN')}`}
+                                                {`${
+                                                  option.tenLoaiGia
+                                                } - Giá: ${option.gia.toLocaleString('vi-VN')}`}
                                                 {option.giaCuoiTuan ? ' (Cuối tuần)' : ''}
                                                 {option.giaNgayThuong ? ' (Ngày thường)' : ''}
                                                 {option.giaNgayLe ? ' (Ngày lễ)' : ''}
@@ -3188,12 +3478,13 @@ const EditBooKing = () => {
                                                           className="flex items-center justify-between gap-2"
                                                         >
                                                           <div
-                                                            className={`text-sm ${isSaturday
-                                                              ? 'text-red-500 font-medium'
-                                                              : isPastDate
-                                                                ? 'text-gray-400'
-                                                                : ''
-                                                              }`}
+                                                            className={`text-sm ${
+                                                              isSaturday
+                                                                ? 'text-red-500 font-medium'
+                                                                : isPastDate
+                                                                  ? 'text-gray-400'
+                                                                  : ''
+                                                            }`}
                                                           >
                                                             {row.loaiPhong.maLoaiPhong},{' '}
                                                             {formatNgayThu(date)}{' '}
@@ -3202,13 +3493,15 @@ const EditBooKing = () => {
                                                           </div>
                                                           <div className="relative">
                                                             <CurrencyInput
-                                                              className={`outline-none w-32 border-b-2 ${isSaturday
-                                                                ? 'border-red-500'
-                                                                : isPastDate
-                                                                  ? 'border-gray-300'
-                                                                  : 'border-gray-500'
-                                                                } rounded-none text-right ${isPastDate ? 'bg-gray-100' : ''
-                                                                }`}
+                                                              className={`outline-none w-32 border-b-2 ${
+                                                                isSaturday
+                                                                  ? 'border-red-500'
+                                                                  : isPastDate
+                                                                    ? 'border-gray-300'
+                                                                    : 'border-gray-500'
+                                                              } rounded-none text-right ${
+                                                                isPastDate ? 'bg-gray-100' : ''
+                                                              }`}
                                                               value={giaHienTai}
                                                               decimalsLimit={2}
                                                               // disabled={isPastDate}
@@ -3239,7 +3532,10 @@ const EditBooKing = () => {
                                             </div>
                                           }
                                         >
-                                          <FontAwesomeIcon icon={faInfoCircle} className="text-xl ml-2 text-blue-500 cursor-pointer" />
+                                          <FontAwesomeIcon
+                                            icon={faInfoCircle}
+                                            className="text-xl ml-2 text-blue-500 cursor-pointer"
+                                          />
                                         </CPopover>
                                       </CTableDataCell>
 
@@ -3464,6 +3760,146 @@ const EditBooKing = () => {
       </CCard>
 
       {/* <ThongBaoDaXepPhongModal visible={daXepPhong} /> */}
+
+      <CModal
+        visible={visibleDoiPhong}
+        onClose={() => setVisibleDoiPhong(false)}
+        alignment="center"
+        backdrop="static"
+      >
+        <CModalHeader>
+          <CModalTitle>
+            {doiPhongStep === 1 ? 'Chọn phòng cần đổi' : 'Chọn loại phòng và phòng mới'}
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {rowDoiPhong && doiPhongStep === 1 && (
+            <>
+              <p className="mb-3">
+                Booking {rowDoiPhong.loaiPhong?.tenLoaiPhong} · {rowDoiPhong.soLuong} phòng ·{' '}
+                {rowDoiPhong.ngayDen} đến {rowDoiPhong.ngayDi}
+              </p>
+              <p className="text-sm text-gray-600">
+                Để giữ nguyên lịch sử booking, cần chọn đủ toàn bộ phòng trong dòng này.
+              </p>
+              {rowDoiPhong.danhSachPhongChiTiets.map((phong) => (
+                <CFormCheck
+                  key={phong.maPhong}
+                  id={`phong-cu-${rowDoiPhong.index}-${phong.maPhong}`}
+                  label={`${phong.tenPhong || phong.maPhong}${
+                    phong.soGiuongThem === 1 ? ' (Extra)' : ''
+                  }`}
+                  checked={phongCuDuocChon.includes(phong.maPhong)}
+                  onChange={(event) =>
+                    setPhongCuDuocChon((prev) =>
+                      event.target.checked
+                        ? [...prev, phong.maPhong]
+                        : prev.filter((maPhong) => maPhong !== phong.maPhong),
+                    )
+                  }
+                />
+              ))}
+            </>
+          )}
+          {rowDoiPhong && doiPhongStep === 2 && (
+            <>
+              <div className="mb-3">
+                <CFormLabel htmlFor="loai-phong-doi">Loại phòng mới</CFormLabel>
+                <CFormSelect
+                  id="loai-phong-doi"
+                  value={maLoaiPhongDoi}
+                  onChange={handleLoaiPhongDoiChange}
+                  disabled={loadingDoiPhong}
+                >
+                  <option value="">Chọn loại phòng</option>
+                  {loaiPhongDoiOptions.map((loaiPhong) => (
+                    <option key={loaiPhong.maLoaiPhong} value={loaiPhong.maLoaiPhong}>
+                      {loaiPhong.tenLoaiPhong} · Trống {loaiPhong.soPhongTrong}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </div>
+              <div className="mb-2 font-semibold">Chọn {rowDoiPhong.soLuong} phòng mới</div>
+              {loadingDoiPhong ? (
+                <div className="text-center py-3">
+                  <CSpinner size="sm" className="me-2" />
+                  Đang tải danh sách phòng...
+                </div>
+              ) : phongMoiDoiOptions.length > 0 ? (
+                <div className="max-h-64 overflow-auto">
+                  {phongMoiDoiOptions.map((phong) => (
+                    <CFormCheck
+                      key={phong.maPhong}
+                      id={`phong-moi-${rowDoiPhong.index}-${phong.maPhong}`}
+                      label={`${phong.tenPhong || phong.maPhong}${
+                        phong.soGiuongThem === 1 ? ' (Extra)' : ''
+                      }`}
+                      checked={phongMoiDuocChon.includes(phong.maPhong)}
+                      disabled={
+                        !phongMoiDuocChon.includes(phong.maPhong) &&
+                        phongMoiDuocChon.length >= Number(rowDoiPhong.soLuong)
+                      }
+                      onChange={(event) =>
+                        setPhongMoiDuocChon((prev) =>
+                          event.target.checked
+                            ? [...prev, phong.maPhong]
+                            : prev.filter((maPhong) => maPhong !== phong.maPhong),
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-3">
+                  Không có phòng trống phù hợp trong thời gian còn lại.
+                </div>
+              )}
+              <div className="mt-2 text-sm text-gray-600">
+                Đã chọn {phongMoiDuocChon.length}/{rowDoiPhong.soLuong} phòng
+              </div>
+            </>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" variant="outline" onClick={() => setVisibleDoiPhong(false)}>
+            Hủy
+          </CButton>
+          {doiPhongStep === 1 ? (
+            <CButton
+              color="primary"
+              onClick={handleContinueDoiPhong}
+              disabled={
+                loadingDoiPhong ||
+                !rowDoiPhong ||
+                phongCuDuocChon.length !== Number(rowDoiPhong.soLuong)
+              }
+            >
+              {loadingDoiPhong ? <CSpinner size="sm" className="me-2" /> : null}
+              Tiếp tục
+            </CButton>
+          ) : (
+            <>
+              <CButton
+                color="secondary"
+                variant="outline"
+                onClick={() => setDoiPhongStep(1)}
+                disabled={loadingDoiPhong}
+              >
+                Quay lại
+              </CButton>
+              <CButton
+                color="primary"
+                onClick={handleConfirmDoiPhong}
+                disabled={
+                  loadingDoiPhong || phongMoiDuocChon.length !== Number(rowDoiPhong?.soLuong)
+                }
+              >
+                Xác nhận
+              </CButton>
+            </>
+          )}
+        </CModalFooter>
+      </CModal>
 
       <XoaLoaiPhongChiTiet
         visible={visibleHuyBooKing}

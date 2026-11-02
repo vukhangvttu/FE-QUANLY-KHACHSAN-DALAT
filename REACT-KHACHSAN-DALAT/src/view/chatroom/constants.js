@@ -1,5 +1,5 @@
 export const ROOM_STATUS_STYLES = {
-  'TRỐNG': 'bg-white text-gray-800 border border-gray-300',
+  TRỐNG: 'bg-white text-gray-800 border border-gray-300',
   'ĐÃ ĐẶT': 'bg-blue-600 text-white',
   'ĐANG Ở': 'bg-green-500 text-white',
   'SẼ ĐẾN TRONG HÔM NAY': 'bg-pink-500 text-white border border-blue-300',
@@ -36,7 +36,7 @@ export const ROOM_ACTIONS = {
   UNCLEAN: 'Chưa dọn',
   CHECKOUT: 'Check-out',
   SERVICES: 'Dịch vụ',
-  ADD_GUEST: 'Add guest to room',
+  ADD_GUEST: 'Thêm khách vào phòng',
   PAYMENT: 'Thanh toán',
   CHECKIN: 'Check-in',
   PRINT_REGISTRATION_FROM: 'In phiếu đăng ký',

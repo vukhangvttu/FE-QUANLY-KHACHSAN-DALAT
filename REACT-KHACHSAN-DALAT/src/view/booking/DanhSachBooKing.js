@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   CBadge,
   CButton,
   CCard,
   CCardBody,
+  CFormSelect,
   CRow,
   CSmartTable,
   CModal,
@@ -113,10 +114,11 @@ const DanhSachDatPhong = () => {
 
   const [booKing, setBooKing] = useState([])
   const [loading, setLoading] = useState(false)
-  const fetchData = async () => {
+  const [size, setSize] = useState(1000)
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      const danhsach = await getAllBooKing()
+      const danhsach = await getAllBooKing(size)
       console.log(danhsach)
 
       // Thêm _props cho row có co_hoa_don_vat = true
@@ -131,7 +133,7 @@ const DanhSachDatPhong = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [size])
 
   // const [visibleXepPhong, setvisibleXepPhong] = useState(false)
 
@@ -222,14 +224,29 @@ const DanhSachDatPhong = () => {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [fetchData])
 
   return (
     <CRow className="px-2">
       <CCard>
         <CCardBody>
           <div className="d-grid gap-2 d-md-flex justify-content-md-between mb-2">
-            <div className=" font-bold">Tổng danh sách: {booKing?.length}</div>
+            <div className="d-flex align-items-center gap-3">
+              <div className="font-bold">Tổng danh sách: {booKing?.length}</div>
+              <CFormSelect
+                aria-label="Số lượng booking hiển thị"
+                value={size}
+                onChange={(event) => setSize(Number(event.target.value))}
+                style={{ width: 'auto', minWidth: '150px' }}
+              >
+                {Array.from({ length: 10 }, (_, index) => (index + 1) * 1000).map((count) => (
+                  <option key={count} value={count}>
+                    {count.toLocaleString('vi-VN')}
+                  </option>
+                ))}
+                <option value={0}>Tất cả</option>
+              </CFormSelect>
+            </div>
             <Link to="/dashboard/pos/danh-sach-booking/add-booking">
               <CButton color="success" className="px-4 text-white py-1">
                 <FontAwesomeIcon icon={faPlus} /> Tạo booking

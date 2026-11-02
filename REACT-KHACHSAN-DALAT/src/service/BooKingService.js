@@ -1,8 +1,10 @@
 import axiosInstance from './axiosConfig'
 
-export async function getAllBooKing() {
+export async function getAllBooKing(size) {
   try {
-    const response = await axiosInstance.get(`/booking`)
+    const response = await axiosInstance.get(`/booking`, {
+      params: { size },
+    })
     console.log(response)
     if (response.status === 200) {
       return response.data.result
