@@ -26,9 +26,11 @@ import { Popover } from 'flowbite-react'
 import GoCheckIn from '../modal/GoCheckIn'
 import CapNhatTraPhong from '../modal/CapNhatTraPhong'
 import HoanDoiPhong from '../modal/HoanDoiPhong'
+import ChuyenThongTinKhachHangModal from '../modal/ChuyenThongTinKhachHangModal'
 
 const RoomCard = ({
   room,
+  phongDangCheckIn,
   updateRoomStatus,
   updateRoomCheckIn,
   refreshRoomData,
@@ -42,6 +44,7 @@ const RoomCard = ({
   updateRoomTraPhong,
 }) => {
   const [visibleCheckInBooKing, setVisibleCheckInBooKing] = useState(false)
+  const [visibleChuyenThongTinKhachHang, setVisibleChuyenThongTinKhachHang] = useState(false)
   const [visibleGoCheckIn, setVisibleGoCheckIn] = useState(false)
   const [visibleTrangThaiVeSinh, setVisibleTrangThaiVeSinh] = useState(false)
   const [activePopover, setActivePopover] = useState(null)
@@ -243,6 +246,12 @@ const RoomCard = ({
     setVisibleCapNhatTraPhong(false)
   }
 
+  const handleChuyenThongTinKhachHangComplete = (maXepPhongMoi) => {
+    const phongMoi = phongDangCheckIn.find((phong) => phong.maxepphongbooking === maXepPhongMoi)
+    const maPhongsCanTaiLai = [room.maPhong, phongMoi?.maPhong].filter(Boolean)
+    refreshRoomData(maPhongsCanTaiLai)
+  }
+
   const [visibleNgayDi, setVisibleNgayDi] = useState(false)
 
   const [soLuongKhach, setSoLuongKhach] = useState(0)
@@ -356,6 +365,13 @@ const RoomCard = ({
                               >
                                 Hủy Check-in
                               </div>
+                              <Link
+                                to={`/dashboard/pos/danh-sach-booking/edit-booking/${room.maBooking}`}
+                                onClick={handlePopoverClose}
+                                className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500"
+                              >
+                                Chuyển phòng
+                              </Link>
                               {/* <div
                                 onClick={() => {
                                   handleClickChuyenPhong(
@@ -373,9 +389,7 @@ const RoomCard = ({
                               >
                                 Chuyển phòng
                               </div> */}
-                              <div className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500">
-                                Chuyển thông tin khách hàng
-                              </div>
+
                               {/* <div
                                 onClick={() => {
                                   handleClickHoanDoiPhong(
@@ -475,7 +489,15 @@ const RoomCard = ({
                               >
                                 {ROOM_ACTIONS.ADD_GUEST}
                               </Link>
-
+                              <div
+                                className="block px-4 py-1 hover:bg-gray-100 hover:text-blue-500 cursor-pointer"
+                                onClick={() => {
+                                  setVisibleChuyenThongTinKhachHang(true)
+                                  handlePopoverClose()
+                                }}
+                              >
+                                Chuyển thông tin khách hàng
+                              </div>
                               <div
                                 onClick={() => {
                                   handleClickUpdateTraPhong(room.maxepphongbooking, room.maPhong)
@@ -709,6 +731,16 @@ const RoomCard = ({
         onSubmit={handleTraPhongComplete}
       />
 
+      <ChuyenThongTinKhachHangModal
+        visible={visibleChuyenThongTinKhachHang}
+        onClose={() => setVisibleChuyenThongTinKhachHang(false)}
+        maXepPhongCu={room.maxepphongbooking}
+        phongOptions={phongDangCheckIn.filter(
+          (phong) => phong.maxepphongbooking !== room.maxepphongbooking,
+        )}
+        onSubmit={handleChuyenThongTinKhachHangComplete}
+      />
+
       {/* <GhiChuModal visible={visible} onClose={() => setVisible(false)} /> */}
     </div>
   )
@@ -742,6 +774,14 @@ RoomCard.propTypes = {
     tenNhomKhachHang: PropTypes.string,
     dangBaoTri: PropTypes.bool,
   }).isRequired,
+  phongDangCheckIn: PropTypes.arrayOf(
+    PropTypes.shape({
+      maPhong: PropTypes.string.isRequired,
+      tenPhong: PropTypes.string.isRequired,
+      maxepphongbooking: PropTypes.string.isRequired,
+      tenkhachhang: PropTypes.string,
+    }),
+  ).isRequired,
   updateRoomStatus: PropTypes.func.isRequired,
   updateRoomCheckIn: PropTypes.func.isRequired,
   refreshRoomData: PropTypes.func.isRequired,

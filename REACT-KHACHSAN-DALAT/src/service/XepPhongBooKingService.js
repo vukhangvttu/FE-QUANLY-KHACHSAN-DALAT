@@ -82,6 +82,28 @@ export async function updateCheckInBulk(ma_xepphong_booking) {
   }
 }
 
+export async function updateChuyenThongTinKhachHang(
+  ma_xepphong_booking_cu,
+  ma_xepphong_booking_moi,
+) {
+  try {
+    const response = await axiosInstance.put(
+      '/xep-phong-booking/chuyen-thong-tin-khach-hang',
+      null,
+      {
+        params: {
+          ma_xepphong_booking_cu,
+          ma_xepphong_booking_moi,
+        },
+      },
+    )
+    return response.data
+  } catch (error) {
+    console.error('Lỗi chuyển thông tin khách hàng:', error)
+    throw error
+  }
+}
+
 export async function updateCheckOutBooking(
   ma_xepphong_bookking,
   nhanphong,

@@ -31,7 +31,14 @@ import {
   CModalFooter,
   CSmartTable,
 } from '@coreui/react-pro'
-import { faCirclePlus, faDeleteLeft, faFloppyDisk, faInfo, faInfoCircle, faPen } from '@fortawesome/free-solid-svg-icons'
+import {
+  faCirclePlus,
+  faDeleteLeft,
+  faFloppyDisk,
+  faInfo,
+  faInfoCircle,
+  faPen,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
@@ -47,46 +54,61 @@ import {
 import { getAllLoaiPhongTrongTrongKhoanThoiGian } from 'src/service/LoaiPhongService'
 import { getAllNhomKhachHang } from 'src/service/NhomKhachHang'
 import { createBooking } from 'src/service/BooKingService'
-import { createTenNguon, getAllTenNguon, updateTenNguon, getTenNguonById } from 'src/service/TenNguonService'
+import {
+  createTenNguon,
+  getAllTenNguon,
+  updateTenNguon,
+  getTenNguonById,
+} from 'src/service/TenNguonService'
 import CurrencyInput from 'react-currency-input-field'
 import { getAllGiaPhongTheoThoiGian } from 'src/service/GiaPhongService'
 import { getListPhongTrongTheoKhoanThoiGian } from 'src/service/PhongService'
+import { getAllNhomDichVu } from 'src/service/DichVu'
 
 const ThemDatPhong = () => {
   const [rows, setRows] = useState([])
+  const [dichVuGroups, setDichVuGroups] = useState([])
+  const [dichVuRows, setDichVuRows] = useState([])
+  const [loadingDichVu, setLoadingDichVu] = useState(false)
+  const nextDichVuRowId = useRef(0)
   const [visibleModalNameSource, setVisibleModalNameSource] = useState(false)
   const [nameSourceData, setNameSourceData] = useState({
     maTenNguon: '',
     nameSource: '',
     address: '',
     email: '',
-    codeVat: ''
+    codeVat: '',
   })
 
   const handleNameSourceDataChange = (e) => {
-    const { name, value } = e.target;
-    setNameSourceData(prev => ({
+    const { name, value } = e.target
+    setNameSourceData((prev) => ({
       ...prev,
-      [name]: value
-    }));
-  };
+      [name]: value,
+    }))
+  }
 
   const [loadingNameSource, setLoadingNameSource] = useState(false)
   const [listTenNguon, setListTenNguon] = useState([])
 
   const fetchTenNguon = async () => {
-    const response = await getAllTenNguon();
+    const response = await getAllTenNguon()
     if (response && response.code === 200) {
-      setListTenNguon(response.result || []);
+      setListTenNguon(response.result || [])
     }
   }
 
   useEffect(() => {
-    fetchTenNguon();
+    fetchTenNguon()
   }, [visibleModalNameSource])
 
   const handleSaveNameSource = async () => {
-    if (!nameSourceData.nameSource || !nameSourceData.address || !nameSourceData.email || !nameSourceData.codeVat) {
+    if (
+      !nameSourceData.nameSource ||
+      !nameSourceData.address ||
+      !nameSourceData.email ||
+      !nameSourceData.codeVat
+    ) {
       addToast(exampleToast('⚠️ Vui lòng nhập đầy đủ thông tin Tên nguồn!'))
       return
     }
@@ -98,7 +120,7 @@ const ThemDatPhong = () => {
       codeVAT: nameSourceData.codeVat,
     }
 
-    console.log("req", req);
+    console.log('req', req)
     setLoadingNameSource(true)
     const response = await createTenNguon(req)
     setLoadingNameSource(false)
@@ -108,14 +130,14 @@ const ThemDatPhong = () => {
       setVisibleModalNameSource(false)
       setBooKing((prev) => ({
         ...prev,
-        loaiNguonKhach: nameSourceData.nameSource
+        loaiNguonKhach: nameSourceData.nameSource,
       }))
       setNameSourceData({
         maTenNguon: '',
         nameSource: '',
         address: '',
         email: '',
-        codeVat: ''
+        codeVat: '',
       })
       fetchTenNguon()
     } else {
@@ -128,7 +150,12 @@ const ThemDatPhong = () => {
       addToast(exampleToast('⚠️ Vui lòng chọn một nguồn khách từ danh sách để cập nhật!'))
       return
     }
-    if (!nameSourceData.nameSource || !nameSourceData.address || !nameSourceData.email || !nameSourceData.codeVat) {
+    if (
+      !nameSourceData.nameSource ||
+      !nameSourceData.address ||
+      !nameSourceData.email ||
+      !nameSourceData.codeVat
+    ) {
       addToast(exampleToast('⚠️ Vui lòng nhập đầy đủ thông tin Tên nguồn!'))
       return
     }
@@ -152,7 +179,7 @@ const ThemDatPhong = () => {
         nameSource: '',
         address: '',
         email: '',
-        codeVat: ''
+        codeVat: '',
       })
       fetchTenNguon()
     } else {
@@ -436,19 +463,19 @@ const ThemDatPhong = () => {
       const weekendPrice = options.find((option) => option.giaCuoiTuan)
       return weekendPrice
         ? {
-          maLoaiGia: weekendPrice.maLoaiGia,
-          gia: weekendPrice.gia,
-          maGiaPhong: weekendPrice.maGiaPhong,
-        }
+            maLoaiGia: weekendPrice.maLoaiGia,
+            gia: weekendPrice.gia,
+            maGiaPhong: weekendPrice.maGiaPhong,
+          }
         : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
     }
     const weekdayPrice = options.find((option) => option.giaNgayThuong)
     return weekdayPrice
       ? {
-        maLoaiGia: weekdayPrice.maLoaiGia,
-        gia: weekdayPrice.gia,
-        maGiaPhong: weekdayPrice.maGiaPhong,
-      }
+          maLoaiGia: weekdayPrice.maLoaiGia,
+          gia: weekdayPrice.gia,
+          maGiaPhong: weekdayPrice.maGiaPhong,
+        }
       : { maLoaiGia: '0', gia: 0, maGiaPhong: 0 }
   }
 
@@ -939,9 +966,9 @@ const ThemDatPhong = () => {
 
       const phong = Array.isArray(row.soPhongDaChon)
         ? row.soPhongDaChon.map((phong) => ({
-          maPhong: phong.maPhong || '',
-          soGiuongThem: phong.soGiuongThem || 0,
-        }))
+            maPhong: phong.maPhong || '',
+            soGiuongThem: phong.soGiuongThem || 0,
+          }))
         : []
 
       return {
@@ -1054,6 +1081,73 @@ const ThemDatPhong = () => {
     DanhSach()
   }, [])
 
+  useEffect(() => {
+    const fetchDichVu = async () => {
+      setLoadingDichVu(true)
+      try {
+        const groups = await getAllNhomDichVu(navigate)
+        if (!Array.isArray(groups)) {
+          addToast(exampleToast('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau!'))
+          return
+        }
+        setDichVuGroups(groups)
+      } catch (error) {
+        console.error('Lỗi khi tải danh sách dịch vụ:', error)
+        addToast(exampleToast('Đã xảy ra lỗi khi tải danh sách dịch vụ. Vui lòng thử lại!'))
+      } finally {
+        setLoadingDichVu(false)
+      }
+    }
+
+    fetchDichVu()
+  }, [navigate])
+
+  const dichVuOptions = dichVuGroups.flatMap((group) =>
+    (group.dichVus || []).map((dichVu) => ({
+      value: dichVu.maDichVu,
+      label: `${dichVu.tenDichVu} (${dichVu.dvt})${
+        group.tenNhomDichVu ? ` - ${group.tenNhomDichVu}` : ''
+      }`,
+      dichVu,
+    })),
+  )
+
+  const tongSoLuongDichVu = dichVuRows.reduce((total, row) => total + (Number(row.soLuong) || 0), 0)
+  const tongTienDichVu = dichVuRows.reduce(
+    (total, row) => total + (Number(row.soLuong) || 0) * (Number(row.gia) || 0),
+    0,
+  )
+
+  const handleAddDichVuRow = () => {
+    const id = nextDichVuRowId.current
+    nextDichVuRowId.current += 1
+    setDichVuRows((current) => [...current, { id, dichVu: null, soLuong: 1, gia: 0, ghiChu: '' }])
+  }
+
+  const handleSelectDichVu = (rowId, option) => {
+    setDichVuRows((current) =>
+      current.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              dichVu: option?.dichVu || null,
+              gia: Number(option?.dichVu?.gia) || 0,
+            }
+          : row,
+      ),
+    )
+  }
+
+  const handleDichVuFieldChange = (rowId, field, value) => {
+    setDichVuRows((current) =>
+      current.map((row) => (row.id === rowId ? { ...row, [field]: value } : row)),
+    )
+  }
+
+  const handleRemoveDichVuRow = (rowId) => {
+    setDichVuRows((current) => current.filter((row) => row.id !== rowId))
+  }
+
   // save thông tin đặt phòng
 
   const [booKing, setBooKing] = useState({
@@ -1071,6 +1165,7 @@ const ThemDatPhong = () => {
     tongTien: 0,
     ghiChu: '',
     loaiNguonKhach: '',
+    tongTienDichVu: 0,
 
     danhXung: {
       maDanhXung: 0,
@@ -1092,6 +1187,8 @@ const ThemDatPhong = () => {
       faxThongTinLienHeBooKing: '',
       tourCode: '',
     },
+
+    dichVuBooKings: [], // Mảng dịch vụ đặt phòng
 
     nhomKhachHang: {
       maNhomKhachHang: 'NKH2024040306',
@@ -1344,6 +1441,20 @@ const ThemDatPhong = () => {
       return addToast(exampleToast('⚠️ Chưa thêm loại phòng'))
     }
 
+    const invalidDichVu = dichVuRows.find(
+      (row) =>
+        !row.dichVu ||
+        !Number(row.soLuong) ||
+        Number(row.soLuong) < 1 ||
+        !Number(row.gia) ||
+        Number(row.gia) <= 0,
+    )
+    if (invalidDichVu) {
+      return addToast(
+        exampleToast('⚠️ Vui lòng chọn dịch vụ, nhập số lượng từ 1 và đơn giá hợp lệ.'),
+      )
+    }
+
     // Kiểm tra giá từng ngày trong giaPhongTheoNgays
     const isInvalidGiaNgay = booKing.chiTietBooKings.some((item) =>
       (item.giaPhongTheoNgays || []).some((g) => !g.gia || Number(g.gia) <= 0),
@@ -1465,19 +1576,33 @@ const ThemDatPhong = () => {
     try {
       setTrangthaiload(true)
 
+      const dichVuBookings = dichVuRows.map((row) => ({
+        maDichVu: row.dichVu.maDichVu,
+        soLuong: Number(row.soLuong),
+        donGia: Number(row.gia),
+        tongTien: Number(row.soLuong) * Number(row.gia),
+        ghiChu: row.ghiChu || '',
+        booKing: null,
+      }))
+
       const updateBooking = {
         ...booKing,
         tongSoLuong: tongSoLuong,
-        // tongTien: tongTien,
+        tongTien: (Number(booKing.tongTien) || 0) + tongTienDichVu,
         soNguoiLon: tongNguoiLon,
         soTreEm: tongTreEm,
         ngayDen: formatDateToISO(booKing.ngayDen),
         ngayDi: formatDateToISO(booKing.ngayDi),
       }
+      const bookingRequest = {
+        ...updateBooking,
+        tongTienDichVu,
+        dichVuBookings,
+      }
 
-      console.log('gui', updateBooking)
+      console.log('gui', bookingRequest)
       // 4. Gọi API nếu dữ liệu hợp lệ
-      const response = await createBooking(updateBooking)
+      const response = await createBooking(bookingRequest)
       // const response = ''
       console.log('Booking created successfully:', response)
 
@@ -1883,9 +2008,12 @@ const ThemDatPhong = () => {
                                     ...prev,
                                     khachHangBooKing: {
                                       ...prev.khachHangBooKing,
-                                      diaChiBooking: res.result.diaChi || prev.khachHangBooKing.diaChiBooking,
-                                      emailBooking: res.result.email || prev.khachHangBooKing.emailBooking,
-                                      maSoThue: res.result.codeVAT || prev.khachHangBooKing.maSoThue,
+                                      diaChiBooking:
+                                        res.result.diaChi || prev.khachHangBooKing.diaChiBooking,
+                                      emailBooking:
+                                        res.result.email || prev.khachHangBooKing.emailBooking,
+                                      maSoThue:
+                                        res.result.codeVAT || prev.khachHangBooKing.maSoThue,
                                     },
                                   }))
                                 }
@@ -1923,7 +2051,7 @@ const ThemDatPhong = () => {
                       </div>
                     </CCol>
                   </CRow>
-                  <CRow >
+                  <CRow>
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -1942,7 +2070,6 @@ const ThemDatPhong = () => {
                   </CRow>
                 </div>
               </div>
-
             </CCol>
             <CCol md={6}>
               <div className="relative mb-3">
@@ -2082,7 +2209,7 @@ const ThemDatPhong = () => {
                     </CCol>
                   </CRow>
 
-                  <CRow className='mb-3'>
+                  <CRow className="mb-3">
                     <CFormLabel
                       htmlFor="inputPassword"
                       className="col-sm-4 col-form-label labelcustome"
@@ -2152,7 +2279,7 @@ const ThemDatPhong = () => {
               </div>
             </div>
 
-            <div className="relative mb-2">
+            <div className="relative mb-3">
               <span className="absolute -top-3 left-6 bg-white px-1 text-sm font-semibold">
                 Thông tin booking <span className="text-danger"> *</span>
               </span>
@@ -2225,9 +2352,9 @@ const ThemDatPhong = () => {
                               const tongTienDong =
                                 (row.giaPhongTheoNgays && row.giaPhongTheoNgays.length > 0
                                   ? row.giaPhongTheoNgays.reduce(
-                                    (sum, giaNgay) => sum + giaNgay.gia * (row.soLuong || 0),
-                                    0,
-                                  )
+                                      (sum, giaNgay) => sum + giaNgay.gia * (row.soLuong || 0),
+                                      0,
+                                    )
                                   : 0) +
                                 (row.giaExtraBed || 0) * (row.soLuongExtraBed || 0) * soDem +
                                 (row.giaPhuThuTreEm || 0) * (row.soLuongPhuThuTreEm || 0) * soDem +
@@ -2318,7 +2445,7 @@ const ThemDatPhong = () => {
                                           event,
                                           index,
                                           (row.tongSoLuongExtraBed || 0) -
-                                          (row.tongSoLuongExtraBedDaSuDung || 0),
+                                            (row.tongSoLuongExtraBedDaSuDung || 0),
                                           row.soLuong,
                                         )
                                       }
@@ -2472,9 +2599,10 @@ const ThemDatPhong = () => {
                                           {option.giaNgayLe ? ' (Ngày lễ)' : ''}
                                           {option.giaGiuong ? ' (Giường extra)' : ''}
                                         </option>
-
                                       ))}
-                                      <option key="41" value="41">Giá Booking Online </option>
+                                      <option key="41" value="41">
+                                        Giá Booking Online{' '}
+                                      </option>
                                     </CFormSelect>
                                   </CTableDataCell>
                                   <CTableDataCell>
@@ -2510,20 +2638,22 @@ const ThemDatPhong = () => {
                                                       className="flex items-center justify-between gap-2"
                                                     >
                                                       <div
-                                                        className={`text-sm ${isSaturday
-                                                          ? 'text-red-500 font-medium'
-                                                          : ''
-                                                          }`}
+                                                        className={`text-sm ${
+                                                          isSaturday
+                                                            ? 'text-red-500 font-medium'
+                                                            : ''
+                                                        }`}
                                                       >
                                                         {formatNgayThu(date)}{' '}
                                                         {date.toLocaleDateString('vi-VN')}
                                                         {isSaturday}:
                                                       </div>
                                                       <CurrencyInput
-                                                        className={`outline-none w-32 border-b-2 ${isSaturday
-                                                          ? 'border-red-500'
-                                                          : 'border-gray-500'
-                                                          } rounded-none text-right`}
+                                                        className={`outline-none w-32 border-b-2 ${
+                                                          isSaturday
+                                                            ? 'border-red-500'
+                                                            : 'border-gray-500'
+                                                        } rounded-none text-right`}
                                                         value={giaHienTai}
                                                         decimalsLimit={2}
                                                         onValueChange={(value, _, values) => {
@@ -2551,9 +2681,11 @@ const ThemDatPhong = () => {
                                         </div>
                                       }
                                     >
-                                      <FontAwesomeIcon icon={faInfoCircle} className="text-xl ml-2 text-blue-500 cursor-pointer" />
+                                      <FontAwesomeIcon
+                                        icon={faInfoCircle}
+                                        className="text-xl ml-2 text-blue-500 cursor-pointer"
+                                      />
                                     </CPopover>
-
                                   </CTableDataCell>
                                   {/* <CTableDataCell className="text-center">{soDem}</CTableDataCell> */}
                                   <CTableDataCell className="text-right">
@@ -2627,6 +2759,152 @@ const ThemDatPhong = () => {
                 {/* )} */}
               </div>
             </div>
+            <div className="relative mb-3">
+              <span className="absolute -top-3 left-6 bg-white px-1 text-sm font-semibold">
+                Dịch vụ booking
+              </span>
+              <div className="border-2 border-gray-500 rounded-md p-3">
+                <div className="overflow-x-auto">
+                  <CTable align="middle" responsive hover>
+                    <CTableHead>
+                      <CTableRow>
+                        <CTableHeaderCell>STT</CTableHeaderCell>
+                        <CTableHeaderCell style={{ minWidth: '320px' }}>Dịch vụ</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '130px' }}>Số lượng</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '180px' }}>Đơn giá</CTableHeaderCell>
+                        <CTableHeaderCell className="text-end" style={{ width: '180px' }}>
+                          Thành tiền
+                        </CTableHeaderCell>
+                        <CTableHeaderCell style={{ minWidth: '220px' }}>Ghi chú</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '70px' }}></CTableHeaderCell>
+                      </CTableRow>
+                    </CTableHead>
+                    <CTableBody>
+                      {loadingDichVu ? (
+                        <CTableRow>
+                          <CTableDataCell colSpan={7} className="text-center">
+                            <CSpinner size="sm" className="me-2" />
+                            Đang tải danh sách dịch vụ...
+                          </CTableDataCell>
+                        </CTableRow>
+                      ) : dichVuRows.length > 0 ? (
+                        dichVuRows.map((row, index) => (
+                          <CTableRow key={row.id}>
+                            <CTableDataCell>{index + 1}</CTableDataCell>
+                            <CTableDataCell>
+                              <Select
+                                options={dichVuOptions}
+                                value={
+                                  row.dichVu
+                                    ? dichVuOptions.find(
+                                        (option) =>
+                                          String(option.value) === String(row.dichVu.maDichVu),
+                                      ) || null
+                                    : null
+                                }
+                                onChange={(option) => handleSelectDichVu(row.id, option)}
+                                placeholder="Tìm và chọn dịch vụ..."
+                                noOptionsMessage={() => 'Không tìm thấy dịch vụ'}
+                                isSearchable
+                                isLoading={loadingDichVu}
+                                menuPortalTarget={document.body}
+                                menuPosition="fixed"
+                                styles={{ menuPortal: (base) => ({ ...base, zIndex: 2000 }) }}
+                              />
+                            </CTableDataCell>
+                            <CTableDataCell>
+                              <CFormInput
+                                type="number"
+                                min={1}
+                                step={1}
+                                value={row.soLuong}
+                                onChange={(event) =>
+                                  handleDichVuFieldChange(
+                                    row.id,
+                                    'soLuong',
+                                    Number(event.target.value),
+                                  )
+                                }
+                              />
+                            </CTableDataCell>
+                            <CTableDataCell>
+                              <CurrencyInput
+                                className="form-control text-end"
+                                value={row.gia}
+                                decimalsLimit={2}
+                                onValueChange={(value) =>
+                                  handleDichVuFieldChange(row.id, 'gia', Number(value) || 0)
+                                }
+                              />
+                            </CTableDataCell>
+                            <CTableDataCell className="text-end">
+                              {((Number(row.soLuong) || 0) * (Number(row.gia) || 0)).toLocaleString(
+                                'en-US',
+                              )}
+                            </CTableDataCell>
+                            <CTableDataCell>
+                              <CFormInput
+                                type="text"
+                                value={row.ghiChu}
+                                placeholder="Nhập ghi chú"
+                                onChange={(event) =>
+                                  handleDichVuFieldChange(row.id, 'ghiChu', event.target.value)
+                                }
+                              />
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                              <CButton
+                                type="button"
+                                color="danger"
+                                variant="ghost"
+                                size="sm"
+                                aria-label="Xóa dịch vụ"
+                                onClick={() => handleRemoveDichVuRow(row.id)}
+                              >
+                                <FontAwesomeIcon icon={faDeleteLeft} />
+                              </CButton>
+                            </CTableDataCell>
+                          </CTableRow>
+                        ))
+                      ) : (
+                        <CTableRow>
+                          <CTableDataCell colSpan={7} className="text-center text-body-secondary">
+                            Chưa chọn dịch vụ.
+                          </CTableDataCell>
+                        </CTableRow>
+                      )}
+                      <CTableRow>
+                        <CTableDataCell colSpan={2} className="fw-bold text-success">
+                          Tổng dịch vụ
+                        </CTableDataCell>
+                        <CTableDataCell className="fw-bold text-center text-success">
+                          {tongSoLuongDichVu}
+                        </CTableDataCell>
+                        <CTableDataCell></CTableDataCell>
+                        <CTableDataCell className="fw-bold text-end text-success">
+                          {tongTienDichVu.toLocaleString('en-US')}
+                        </CTableDataCell>
+                        <CTableDataCell></CTableDataCell>
+                        <CTableDataCell></CTableDataCell>
+                      </CTableRow>
+                    </CTableBody>
+                  </CTable>
+                </div>
+                <div className="d-flex justify-content-end">
+                  <CButton
+                    type="button"
+                    color="success"
+                    variant="outline"
+                    className="text-green-600"
+                    onClick={handleAddDichVuRow}
+                    disabled={loadingDichVu || dichVuOptions.length === 0}
+                  >
+                    <FontAwesomeIcon icon={faCirclePlus} className="me-2" />
+                    Thêm dịch vụ
+                  </CButton>
+                </div>
+              </div>
+            </div>
             <div className="d-grid gap-2 d-md-flex justify-content-md-end">
               {/* <button className="px-3 py-1 bg-white rounded-full flex items-center gap-2">
                 Chọn nhiều phòng
@@ -2643,7 +2921,11 @@ const ThemDatPhong = () => {
                     //   .reduce((sum, row) => sum + (row.tongTienDong || 0) - booKing.tienCoc, 0)
                     //   .toLocaleString('vi-VN')}
                     //   onChange={handleChange}
-                    value={(booKing.tongTien - booKing.tienCoc).toLocaleString('en-US')}
+                    value={(
+                      (Number(booKing.tongTien) || 0) +
+                      tongTienDichVu -
+                      (Number(booKing.tienCoc) || 0)
+                    ).toLocaleString('en-US')}
                     readOnly
                   />
                 </div>
@@ -2666,7 +2948,12 @@ const ThemDatPhong = () => {
         </CCardBody>
       </CCard>
 
-      <CModal size="xl" visible={visibleModalNameSource} onClose={() => setVisibleModalNameSource(false)} scrollable>
+      <CModal
+        size="xl"
+        visible={visibleModalNameSource}
+        onClose={() => setVisibleModalNameSource(false)}
+        scrollable
+      >
         <CModalHeader onClose={() => setVisibleModalNameSource(false)}>
           <CModalTitle>Name Source Information</CModalTitle>
         </CModalHeader>
@@ -2675,7 +2962,9 @@ const ThemDatPhong = () => {
             <CRow className="mb-3">
               <CCol md={6}>
                 <CRow>
-                  <CFormLabel className="col-sm-4 col-form-label labelcustome">Name Source</CFormLabel>
+                  <CFormLabel className="col-sm-4 col-form-label labelcustome">
+                    Name Source
+                  </CFormLabel>
                   <CCol sm={8}>
                     <CFormInput
                       type="text"
@@ -2732,7 +3021,15 @@ const ThemDatPhong = () => {
               <CButton
                 color="secondary"
                 variant="outline"
-                onClick={() => setNameSourceData({ maTenNguon: '', nameSource: '', address: '', email: '', codeVat: '' })}
+                onClick={() =>
+                  setNameSourceData({
+                    maTenNguon: '',
+                    nameSource: '',
+                    address: '',
+                    email: '',
+                    codeVat: '',
+                  })
+                }
               >
                 Reset
               </CButton>
@@ -2741,9 +3038,13 @@ const ThemDatPhong = () => {
                 onClick={handleUpdateNameSource}
                 disabled={loadingNameSource || !nameSourceData.maTenNguon}
               >
-                <FontAwesomeIcon icon={faFloppyDisk} />  Update
+                <FontAwesomeIcon icon={faFloppyDisk} /> Update
               </CButton>
-              <CButton color="primary" onClick={handleSaveNameSource} disabled={loadingNameSource || !!nameSourceData.maTenNguon}>
+              <CButton
+                color="primary"
+                onClick={handleSaveNameSource}
+                disabled={loadingNameSource || !!nameSourceData.maTenNguon}
+              >
                 {loadingNameSource ? (
                   <>
                     <CSpinner as="span" size="sm" aria-hidden="true" className="me-2" />
@@ -2768,7 +3069,13 @@ const ThemDatPhong = () => {
               { key: 'diaChi', label: 'Địa Chỉ' },
               { key: 'email', label: 'Email' },
               { key: 'codeVAT', label: 'Code VAT' },
-              { key: 'action', label: 'Thao Tác', filter: false, sorter: false, _style: { width: '100px' } },
+              {
+                key: 'action',
+                label: 'Thao Tác',
+                filter: false,
+                sorter: false,
+                _style: { width: '100px' },
+              },
             ]}
             columnFilter
             columnSorter
@@ -2802,7 +3109,7 @@ const ThemDatPhong = () => {
             onRowClick={(item) => {
               setBooKing((prev) => ({
                 ...prev,
-                loaiNguonKhach: item.tenNguon
+                loaiNguonKhach: item.tenNguon,
               }))
               setVisibleModalNameSource(false)
             }}
@@ -2814,7 +3121,6 @@ const ThemDatPhong = () => {
             }}
           />
         </CModalBody>
-
       </CModal>
     </CRow>
   )

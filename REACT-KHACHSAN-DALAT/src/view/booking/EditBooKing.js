@@ -51,6 +51,7 @@ import {
 
 import { getAllLoaiPhongTrongTrongKhoanThoiGian } from 'src/service/LoaiPhongService'
 import { getAllNhomKhachHang } from 'src/service/NhomKhachHang'
+import { getAllNhomDichVu } from 'src/service/DichVu'
 import {
   getBooKingByMaBooKing,
   getChiTietBooKingByMaBooKing,
@@ -67,6 +68,11 @@ const EditBooKing = () => {
   const { ma_booking } = useParams()
 
   const [rows, setRows] = useState([])
+  const [dichVuGroups, setDichVuGroups] = useState([])
+  const [dichVuRows, setDichVuRows] = useState([])
+  const [loadingDichVu, setLoadingDichVu] = useState(false)
+  const [tongTienPhong, setTongTienPhong] = useState(0)
+  const nextDichVuRowId = useRef(0)
   const [giaTheoNgay, setGiaTheoNgay] = useState({})
   const [visibleDoiPhong, setVisibleDoiPhong] = useState(false)
   const [doiPhongStep, setDoiPhongStep] = useState(1)
@@ -845,6 +851,26 @@ const EditBooKing = () => {
       const booking = await getBooKingByMaBooKing(ma_booking, navigate)
 
       if (booking) {
+        const services = (booking.dichVuBookings || []).map((service) => {
+          const soLuong = Number(service.soLuong) || 1
+          const tongTien = Number(service.tongTien) || 0
+          const donGia = Number(service.donGia) || (soLuong > 0 ? tongTien / soLuong : 0)
+          const id = nextDichVuRowId.current
+          nextDichVuRowId.current += 1
+
+          return {
+            id,
+            dichVu: {
+              maDichVu: service.maDichVu,
+              tenDichVu: service.maDichVu,
+            },
+            soLuong,
+            gia: donGia,
+            ghiChu: service.ghiChu || '',
+          }
+        })
+        setDichVuRows(services)
+
         const chitietbooking = await ChiTietBooKing(ma_booking)
 
         setRowsHoiNghi(booking?.phongHoiNghis || [])
@@ -857,7 +883,7 @@ const EditBooKing = () => {
           setValueNgayDi(booking.ngayDi)
 
           // Cập nhật lại chi tiết booking thông qua hàm updateChiTietBooKings để tính toán lại tienPhong, tổng tiền...
-          updateChiTietBooKings(chitietbooking)
+          updateChiTietBooKings(chitietbooking, services)
 
           // Mỗi dòng chi tiết có ngày đến/đi riêng — kiểm tra phòng trống theo đúng từng dòng
           await kiemTraPhongTrongNhieuDong(chitietbooking)
@@ -878,6 +904,27 @@ const EditBooKing = () => {
     DanhSach()
     BooKing(ma_booking)
   }, [ma_booking])
+
+  useEffect(() => {
+    const fetchDichVu = async () => {
+      setLoadingDichVu(true)
+      try {
+        const groups = await getAllNhomDichVu(navigate)
+        if (!Array.isArray(groups)) {
+          addToast(exampleToast('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau!'))
+          return
+        }
+        setDichVuGroups(groups)
+      } catch (error) {
+        console.error('Lỗi khi tải danh sách dịch vụ:', error)
+        addToast(exampleToast('Đã xảy ra lỗi khi tải danh sách dịch vụ. Vui lòng thử lại!'))
+      } finally {
+        setLoadingDichVu(false)
+      }
+    }
+
+    fetchDichVu()
+  }, [navigate])
   /* eslint-enable react-hooks/exhaustive-deps */
   // save thông tin đặt phòng
 
@@ -963,12 +1010,70 @@ const EditBooKing = () => {
   // eslint-disable-next-line no-unused-vars
   const [tongTienKhachCanTra, setTongTienKhachCanTra] = useState(0)
 
+  const dichVuOptions = dichVuGroups.flatMap((group) =>
+    (group.dichVus || []).map((dichVu) => ({
+      value: dichVu.maDichVu,
+      label: `${dichVu.tenDichVu} (${dichVu.dvt})${
+        group.tenNhomDichVu ? ` - ${group.tenNhomDichVu}` : ''
+      }`,
+      dichVu,
+    })),
+  )
+
+  const tongSoLuongDichVu = dichVuRows.reduce(
+    (total, row) => total + (Number(row.soLuong) || 0),
+    0,
+  )
+  const tongTienDichVu = dichVuRows.reduce(
+    (total, row) => total + (Number(row.soLuong) || 0) * (Number(row.gia) || 0),
+    0,
+  )
+
+  const updateDichVuRows = (updatedRows) => {
+    const total = updatedRows.reduce(
+      (sum, row) => sum + (Number(row.soLuong) || 0) * (Number(row.gia) || 0),
+      0,
+    )
+    setDichVuRows(updatedRows)
+    setBooKing((prev) => ({ ...prev, tongTienDichVu: total, tongTien: tongTienPhong + total }))
+  }
+
+  const handleAddDichVuRow = () => {
+    const id = nextDichVuRowId.current
+    nextDichVuRowId.current += 1
+    updateDichVuRows([...dichVuRows, { id, dichVu: null, soLuong: 1, gia: 0, ghiChu: '' }])
+  }
+
+  const handleSelectDichVu = (rowId, option) => {
+    updateDichVuRows(
+      dichVuRows.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              dichVu: option?.dichVu || null,
+              gia: Number(option?.dichVu?.gia) || 0,
+            }
+          : row,
+      ),
+    )
+  }
+
+  const handleDichVuFieldChange = (rowId, field, value) => {
+    updateDichVuRows(
+      dichVuRows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row)),
+    )
+  }
+
+  const handleRemoveDichVuRow = (rowId) => {
+    updateDichVuRows(dichVuRows.filter((row) => row.id !== rowId))
+  }
+
   const handleOnValueChange = (value) => {
     setBooKing((prev) => {
       const newTienCoc = value || 0 // Nếu giá trị rỗng, set về 0
 
       // Tính tổng tiền tất cả các hàng
-      const tongTienTatCa = rows.reduce((sum, row) => sum + (row.gia || 0) * (row.soLuong || 0), 0)
+      const tongTienTatCa = tongTienPhong + tongTienDichVu
 
       // Tính tổng tiền khách cần trả sau khi trừ tiền cọc
       const tongTienKhachTra = Math.max(tongTienTatCa - newTienCoc, 0) // Đảm bảo không âm
@@ -981,7 +1086,7 @@ const EditBooKing = () => {
   }
 
   // Đồng bộ rows với booKing.chiTietBooKings
-  const updateChiTietBooKings = (updatedRows) => {
+  const updateChiTietBooKings = (updatedRows, services = dichVuRows) => {
     let tongTien = 0
     const chiTietBooKings = updatedRows.map((row) => {
       const soDem = tinhSoDem(row.ngayDen, row.ngayDi)
@@ -1035,8 +1140,17 @@ const EditBooKing = () => {
         giaPhongTheoNgays,
       }
     })
-    console.log('tongTien:', tongTien)
-    setBooKing((prev) => ({ ...prev, chiTietBooKings, tongTien: tongTien }))
+    const tongDichVu = services.reduce(
+      (sum, service) => sum + (Number(service.soLuong) || 0) * (Number(service.gia) || 0),
+      0,
+    )
+    setTongTienPhong(tongTien)
+    setBooKing((prev) => ({
+      ...prev,
+      chiTietBooKings,
+      tongTienDichVu: tongDichVu,
+      tongTien: tongTien + tongDichVu,
+    }))
   }
 
   // console.log('booKing:', booKing)
@@ -1074,6 +1188,20 @@ const EditBooKing = () => {
 
       if (!booKing?.chiTietBooKings?.length) {
         return addToast(exampleToast('⚠️ Chưa thêm loại phòng'))
+      }
+
+      const invalidDichVu = dichVuRows.some(
+        (row) =>
+          !row.dichVu?.maDichVu ||
+          !Number(row.soLuong) ||
+          Number(row.soLuong) < 1 ||
+          !Number(row.gia) ||
+          Number(row.gia) <= 0,
+      )
+      if (invalidDichVu) {
+        return addToast(
+          exampleToast('⚠️ Vui lòng chọn dịch vụ, nhập số lượng từ 1 và đơn giá hợp lệ.'),
+        )
       }
 
       // 2. Kiểm tra chi tiết từng loại phòng sử dụng .some()
@@ -1201,10 +1329,21 @@ const EditBooKing = () => {
         return dateInput
       }
 
+      const dichVuBookings = dichVuRows.map((row) => ({
+        maDichVu: row.dichVu.maDichVu,
+        soLuong: Number(row.soLuong),
+        donGia: Number(row.gia),
+        tongTien: Number(row.soLuong) * Number(row.gia),
+        ghiChu: row.ghiChu || '',
+        booKing: null,
+      }))
       const bookingToSend = {
         ...booKing,
         ngayDen: formatDateToISO(booKing.ngayDen),
         ngayDi: formatDateToISO(booKing.ngayDi),
+        tongTien: tongTienPhong + tongTienDichVu,
+        tongTienDichVu,
+        dichVuBookings,
       }
 
       console.log('data gui di:', bookingToSend)
@@ -2181,10 +2320,23 @@ const EditBooKing = () => {
   const handleOpenDoiPhong = (row) => {
     const ngayHienTai = toDateString(new Date())
     const ngayDen = toDateString(row.ngayDen)
+    const ngayDi = toDateString(row.ngayDi)
     const phongHienTai = row.danhSachPhongChiTiets || []
 
     if (!ngayDen || ngayDen >= ngayHienTai) {
       return addToast(exampleToast('⚠️ Chỉ có thể đổi phòng khi ngày đến trước hôm nay.'))
+    }
+
+    if (!ngayDi || ngayDi <= ngayDen) {
+      return addToast(
+        exampleToast('⚠️ Không thể đổi phòng vì ngày đi phải sau ngày đến để có ngày tính giá.'),
+      )
+    }
+
+    if (ngayDi <= ngayHienTai) {
+      return addToast(
+        exampleToast('⚠️ Không thể đổi phòng vì ngày đi đã đến, không còn ngày để tính giá phòng.'),
+      )
     }
 
     if (phongHienTai.length !== Number(row.soLuong)) {
@@ -2211,7 +2363,14 @@ const EditBooKing = () => {
     }
 
     const ngayHienTai = toDateString(new Date())
+    const ngayDen = toDateString(rowDoiPhong.ngayDen)
     const ngayDi = toDateString(rowDoiPhong.ngayDi)
+
+    if (!ngayDen || !ngayDi || ngayDi <= ngayDen || ngayDi <= ngayHienTai) {
+      return addToast(
+        exampleToast('⚠️ Không thể đổi phòng vì không còn ngày lưu trú để tính giá phòng.'),
+      )
+    }
 
     try {
       setLoadingDoiPhong(true)
@@ -3377,25 +3536,25 @@ const EditBooKing = () => {
                                             }}
                                           />
                                           {toDateString(row.ngayDen) &&
-                                          toDateString(row.ngayDen) <
-                                            toDateString(new Date()) ? (
-                                              <CButton
-                                                type="button"
-                                                color="primary"
-                                                variant="outline"
-                                                className="inline-flex h-10 w-10 shrink-0 items-center justify-center p-0"
-                                                title="Đổi phòng"
-                                                aria-label="Đổi phòng"
-                                                onClick={() => handleOpenDoiPhong(row)}
-                                              >
-                                                <FontAwesomeIcon icon={faRightLeft} />
-                                              </CButton>
-                                            ) : (
-                                              <span
-                                                className="h-10 w-10 shrink-0"
-                                                aria-hidden="true"
-                                              />
-                                            )}
+                                          toDateString(row.ngayDen) < toDateString(new Date()) &&
+                                          toDateString(row.ngayDi) > toDateString(new Date()) ? (
+                                            <CButton
+                                              type="button"
+                                              color="primary"
+                                              variant="outline"
+                                              className="inline-flex h-8 w-8 shrink-0 items-center justify-center p-0"
+                                              title="Đổi phòng"
+                                              aria-label="Đổi phòng"
+                                              onClick={() => handleOpenDoiPhong(row)}
+                                            >
+                                              <FontAwesomeIcon icon={faRightLeft} />
+                                            </CButton>
+                                          ) : (
+                                            <span
+                                              className="h-10 w-10 shrink-0"
+                                              aria-hidden="true"
+                                            />
+                                          )}
                                         </div>
                                       </CTableDataCell>
                                       <CTableDataCell>
@@ -3601,7 +3760,7 @@ const EditBooKing = () => {
                                 className="text-center"
                               ></CTableDataCell>
                               <CTableDataCell className="text-center font-bold">
-                                {booKing.tongTien.toLocaleString('en-US')}
+                                {tongTienPhong.toLocaleString('en-US')}
                               </CTableDataCell>
                               <CTableDataCell colSpan={2} className="text-center"></CTableDataCell>
                             </CTableRow>
@@ -3623,6 +3782,161 @@ const EditBooKing = () => {
                     Thêm loại phòng
                   </CButton>
                 </CCol>
+              </div>
+            </div>
+            <div className="relative mb-3">
+              <span className="absolute -top-3 left-6 bg-white px-1 text-sm font-semibold">
+                Dịch vụ booking
+              </span>
+              <div className="border-2 border-gray-500 rounded-md p-3">
+                <div className="overflow-x-auto">
+                  <CTable align="middle" responsive hover>
+                    <CTableHead>
+                      <CTableRow>
+                        <CTableHeaderCell>STT</CTableHeaderCell>
+                        <CTableHeaderCell style={{ minWidth: '320px' }}>Dịch vụ</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '130px' }}>Số lượng</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '180px' }}>Đơn giá</CTableHeaderCell>
+                        <CTableHeaderCell className="text-end" style={{ width: '180px' }}>
+                          Thành tiền
+                        </CTableHeaderCell>
+                        <CTableHeaderCell style={{ minWidth: '220px' }}>Ghi chú</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '70px' }}></CTableHeaderCell>
+                      </CTableRow>
+                    </CTableHead>
+                    <CTableBody>
+                      {loadingDichVu ? (
+                        <CTableRow>
+                          <CTableDataCell colSpan={7} className="text-center">
+                            <CSpinner size="sm" className="me-2" />
+                            Đang tải danh sách dịch vụ...
+                          </CTableDataCell>
+                        </CTableRow>
+                      ) : dichVuRows.length > 0 ? (
+                        dichVuRows.map((row, index) => {
+                          const option =
+                            dichVuOptions.find(
+                              (item) => String(item.value) === String(row.dichVu?.maDichVu),
+                            ) ||
+                            (row.dichVu
+                              ? {
+                                  value: row.dichVu.maDichVu,
+                                  label: row.dichVu.tenDichVu || row.dichVu.maDichVu,
+                                  dichVu: row.dichVu,
+                                }
+                              : null)
+
+                          return (
+                            <CTableRow key={row.id}>
+                              <CTableDataCell>{index + 1}</CTableDataCell>
+                              <CTableDataCell>
+                                <Select
+                                  options={dichVuOptions}
+                                  value={option}
+                                  onChange={(selectedOption) =>
+                                    handleSelectDichVu(row.id, selectedOption)
+                                  }
+                                  placeholder="Tìm và chọn dịch vụ..."
+                                  noOptionsMessage={() => 'Không tìm thấy dịch vụ'}
+                                  isSearchable
+                                  isLoading={loadingDichVu}
+                                  menuPortalTarget={document.body}
+                                  menuPosition="fixed"
+                                  styles={{ menuPortal: (base) => ({ ...base, zIndex: 2000 }) }}
+                                />
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                <CFormInput
+                                  type="number"
+                                  min={1}
+                                  step={1}
+                                  value={row.soLuong}
+                                  onChange={(event) =>
+                                    handleDichVuFieldChange(
+                                      row.id,
+                                      'soLuong',
+                                      Number(event.target.value),
+                                    )
+                                  }
+                                />
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                <CurrencyInput
+                                  className="form-control text-end"
+                                  value={row.gia}
+                                  decimalsLimit={2}
+                                  onValueChange={(value) =>
+                                    handleDichVuFieldChange(row.id, 'gia', Number(value) || 0)
+                                  }
+                                />
+                              </CTableDataCell>
+                              <CTableDataCell className="text-end">
+                                {(
+                                  (Number(row.soLuong) || 0) * (Number(row.gia) || 0)
+                                ).toLocaleString('en-US')}
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                <CFormInput
+                                  type="text"
+                                  value={row.ghiChu}
+                                  placeholder="Nhập ghi chú"
+                                  onChange={(event) =>
+                                    handleDichVuFieldChange(row.id, 'ghiChu', event.target.value)
+                                  }
+                                />
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center">
+                                <CButton
+                                  type="button"
+                                  color="danger"
+                                  variant="ghost"
+                                  size="sm"
+                                  aria-label="Xóa dịch vụ"
+                                  onClick={() => handleRemoveDichVuRow(row.id)}
+                                >
+                                  <FontAwesomeIcon icon={faDeleteLeft} />
+                                </CButton>
+                              </CTableDataCell>
+                            </CTableRow>
+                          )
+                        })
+                      ) : (
+                        <CTableRow>
+                          <CTableDataCell colSpan={7} className="text-center text-body-secondary">
+                            Chưa chọn dịch vụ.
+                          </CTableDataCell>
+                        </CTableRow>
+                      )}
+                      <CTableRow>
+                        <CTableDataCell colSpan={2} className="fw-bold text-success">
+                          Tổng dịch vụ
+                        </CTableDataCell>
+                        <CTableDataCell className="fw-bold text-center text-success">
+                          {tongSoLuongDichVu}
+                        </CTableDataCell>
+                        <CTableDataCell></CTableDataCell>
+                        <CTableDataCell className="fw-bold text-end text-success">
+                          {tongTienDichVu.toLocaleString('en-US')}
+                        </CTableDataCell>
+                        <CTableDataCell></CTableDataCell>
+                        <CTableDataCell></CTableDataCell>
+                      </CTableRow>
+                    </CTableBody>
+                  </CTable>
+                </div>
+                <div className="d-flex justify-content-end">
+                  <CButton
+                    type="button"
+                    color="success"
+                    variant="outline"
+                    className="text-green-600"
+                    onClick={handleAddDichVuRow}
+                    disabled={loadingDichVu || dichVuOptions.length === 0}
+                  >
+                    <FontAwesomeIcon icon={faCirclePlus} className="me-2" />
+                    Thêm dịch vụ
+                  </CButton>
+                </div>
               </div>
             </div>
             {/* <div className="relative mb-3">
@@ -3768,7 +4082,7 @@ const EditBooKing = () => {
         backdrop="static"
       >
         <CModalHeader>
-          <CModalTitle>
+          <CModalTitle className="fw-bold text-blue-500">
             {doiPhongStep === 1 ? 'Chọn phòng cần đổi' : 'Chọn loại phòng và phòng mới'}
           </CModalTitle>
         </CModalHeader>
@@ -3776,8 +4090,9 @@ const EditBooKing = () => {
           {rowDoiPhong && doiPhongStep === 1 && (
             <>
               <p className="mb-3">
-                Booking {rowDoiPhong.loaiPhong?.tenLoaiPhong} · {rowDoiPhong.soLuong} phòng ·{' '}
-                {rowDoiPhong.ngayDen} đến {rowDoiPhong.ngayDi}
+                {rowDoiPhong.loaiPhong?.tenLoaiPhong} · {rowDoiPhong.soLuong} phòng ·{' '}
+                {formatDateToDisplay(rowDoiPhong.ngayDen)} đến{' '}
+                {formatDateToDisplay(rowDoiPhong.ngayDi)}
               </p>
               <p className="text-sm text-gray-600">
                 Để giữ nguyên lịch sử booking, cần chọn đủ toàn bộ phòng trong dòng này.

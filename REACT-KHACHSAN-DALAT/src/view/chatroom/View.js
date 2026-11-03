@@ -127,6 +127,14 @@ const HotelManagement = () => {
   const [bulkCheckInMessage, setBulkCheckInMessage] = useState('')
   const navigate = useNavigate()
   const { rooms, loading, fetchRooms, setRooms } = useRooms(navigate)
+  const phongDangCheckIn = useMemo(
+    () =>
+      rooms.filter(
+        (room) =>
+          room.danhanPhong === true && room.daTraPhong === false && Boolean(room.maxepphongbooking),
+      ),
+    [rooms],
+  )
 
   // Sử dụng hook permissions
   const {
@@ -566,147 +574,250 @@ const HotelManagement = () => {
     <div className="min-h-screen bg-gray-50">
       <div className=" mx-auto ">
         <CTabs activeItemKey={activeTab} onActiveTabChange={handleTabChange}>
-          <CTabList variant="underline-border" className="flex flex-wrap gap-2">
-            {/* Tab Dự báo loại phòng */}
-            {canAccessTab(1) && (
-              <CTab
-                aria-controls="home-tab-pane"
-                className="flex items-center text-sm sm:text-base"
-                itemKey={1}
-                onClick={() => handleTabChange(1)}
-              >
-                <svg
-                  className="w-4 h-4 mt-1 me-0.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
+          <div className="sticky bg-gray-50 shadow-sm" style={{ top: '4.1rem', zIndex: 1019 }}>
+            <CTabList variant="underline-border" className="flex flex-wrap gap-2 mb-2">
+              {/* Tab Dự báo loại phòng */}
+              {canAccessTab(1) && (
+                <CTab
+                  aria-controls="home-tab-pane"
+                  className="flex items-center text-sm sm:text-base"
+                  itemKey={1}
+                  onClick={() => handleTabChange(1)}
                 >
-                  <path d="M3 3h18v18H3z"></path>
-                  <path d="M21 9H3"></path>
-                  <path d="M21 15H3"></path>
-                </svg>
-                <span className="hidden sm:inline">Dự báo loại phòng</span>
-              </CTab>
-            )}
-
-            {/* Tab Line phòng */}
-            {canAccessTab(6) && (
-              <CTab
-                aria-controls="profile-tab-pane"
-                itemKey={6}
-                onClick={() => handleTabChange(6)}
-                className="flex items-center text-sm sm:text-base"
-              >
-                <FontAwesomeIcon icon={faGripLines} className="me-1" />
-                <span className="hidden sm:inline">Line phòng</span>
-              </CTab>
-            )}
-
-            {/* Tab Dự báo khách */}
-            {canAccessTab(7) && (
-              <CTab
-                aria-controls="profile-tab-pane"
-                itemKey={7}
-                onClick={() => handleTabChange(7)}
-                className="flex items-center text-sm sm:text-base"
-              >
-                <FontAwesomeIcon icon={faTableCells} className="me-1" />
-                <span className="hidden sm:inline">Dự báo khách</span>
-              </CTab>
-            )}
-
-            {/* Tab Sơ đồ phòng */}
-            {canAccessTab(2) && (
-              <CTab
-                aria-controls="profile-tab-pane"
-                itemKey={2}
-                onClick={() => handleTabChange(2)}
-                className="flex items-center text-sm sm:text-base"
-              >
-                <FontAwesomeIcon icon={faTableCells} className="me-1" />
-                <span className="hidden sm:inline">Sơ đồ phòng</span>
-              </CTab>
-            )}
-
-            {/* Tab Buồng phòng */}
-            {canAccessTab(3) && (
-              <CTab
-                aria-controls="profile-tab-pane"
-                itemKey={3}
-                onClick={() => handleTabChange(3)}
-                className="flex items-center text-sm sm:text-base"
-              >
-                <FontAwesomeIcon icon={faBed} className="me-1" />
-                <span className="hidden sm:inline">Buồng phòng</span>
-              </CTab>
-            )}
-
-            {/* Tab Nhà hàng */}
-            {canAccessTab(4) && (
-              <CTab
-                aria-controls="profile-tab-pane"
-                itemKey={4}
-                onClick={() => handleTabChange(4)}
-                className="flex items-center text-sm sm:text-base"
-              >
-                <FontAwesomeIcon icon={faUtensils} className="me-1" />
-                <span className="hidden sm:inline">Nhà hàng</span>
-              </CTab>
-            )}
-
-            <div className="flex flex-wrap gap-2 ml-auto">
-              {/* Button Đặt phòng */}
-              {canAccessButton('DATPHONG') && (
-                <Link to="/dashboard/pos/danh-sach-booking/add-booking">
-                  <CButton
-                    color="success"
-                    className="px-2 sm:px-4 text-white py-1 text-sm sm:text-base"
+                  <svg
+                    className="w-4 h-4 mt-1 me-0.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
                   >
-                    <FontAwesomeIcon icon={faPlus} className="me-1" />
-                    <span className="hidden sm:inline font-semibold">Đặt phòng</span>
-                  </CButton>
-                </Link>
+                    <path d="M3 3h18v18H3z"></path>
+                    <path d="M21 9H3"></path>
+                    <path d="M21 15H3"></path>
+                  </svg>
+                  <span className="hidden sm:inline">Dự báo loại phòng</span>
+                </CTab>
               )}
 
-              {/* Button Danh sách đặt phòng */}
-              {canAccessButton('DANHSACHDATPHONG') && (
-                <Link to="/dashboard/pos/danh-sach-booking">
-                  <CButton
-                    color="info"
-                    className="px-2 sm:px-4 text-white py-1 text-sm sm:text-base"
-                  >
-                    <FontAwesomeIcon icon={faListUl} className="me-1" />
-                    <span className="hidden sm:inline font-semibold">Danh sách đặt phòng</span>
-                  </CButton>
-                </Link>
+              {/* Tab Line phòng */}
+              {canAccessTab(6) && (
+                <CTab
+                  aria-controls="profile-tab-pane"
+                  itemKey={6}
+                  onClick={() => handleTabChange(6)}
+                  className="flex items-center text-sm sm:text-base"
+                >
+                  <FontAwesomeIcon icon={faGripLines} className="me-1" />
+                  <span className="hidden sm:inline">Line phòng</span>
+                </CTab>
               )}
 
-              {/* Button Thống kê */}
-              {canAccessButton('THONGKEDOANHTHU') && (
-                <Link to={`/dashboard/pos/thong-ke`}>
-                  <CButton
-                    color="primary"
-                    className="px-2 sm:px-4 text-white py-1 text-sm sm:text-base"
-                  >
-                    <FontAwesomeIcon icon={faChartLine} className="me-1" />
-                    <span className="hidden sm:inline font-semibold">Thống kê</span>
-                  </CButton>
-                </Link>
+              {/* Tab Dự báo khách */}
+              {canAccessTab(7) && (
+                <CTab
+                  aria-controls="profile-tab-pane"
+                  itemKey={7}
+                  onClick={() => handleTabChange(7)}
+                  className="flex items-center text-sm sm:text-base"
+                >
+                  <FontAwesomeIcon icon={faTableCells} className="me-1" />
+                  <span className="hidden sm:inline">Dự báo khách</span>
+                </CTab>
               )}
 
-              {canAccessButton('THONGKEBUONPHONG') && (
-                <Link to={`/dashboard/pos/thong-ke-buon-phong`}>
-                  <CButton
-                    color="primary"
-                    className="px-2 sm:px-4 text-white py-1 text-sm sm:text-base"
-                  >
-                    <FontAwesomeIcon icon={faChartLine} className="me-1" />
-                    <span className="hidden sm:inline font-semibold">Thống kê</span>
-                  </CButton>
-                </Link>
+              {/* Tab Sơ đồ phòng */}
+              {canAccessTab(2) && (
+                <CTab
+                  aria-controls="profile-tab-pane"
+                  itemKey={2}
+                  onClick={() => handleTabChange(2)}
+                  className="flex items-center text-sm sm:text-base"
+                >
+                  <FontAwesomeIcon icon={faTableCells} className="me-1" />
+                  <span className="hidden sm:inline">Sơ đồ phòng</span>
+                </CTab>
               )}
-            </div>
-          </CTabList>
+
+              {/* Tab Buồng phòng */}
+              {canAccessTab(3) && (
+                <CTab
+                  aria-controls="profile-tab-pane"
+                  itemKey={3}
+                  onClick={() => handleTabChange(3)}
+                  className="flex items-center text-sm sm:text-base"
+                >
+                  <FontAwesomeIcon icon={faBed} className="me-1" />
+                  <span className="hidden sm:inline">Buồng phòng</span>
+                </CTab>
+              )}
+
+              {/* Tab Nhà hàng */}
+              {canAccessTab(4) && (
+                <CTab
+                  aria-controls="profile-tab-pane"
+                  itemKey={4}
+                  onClick={() => handleTabChange(4)}
+                  className="flex items-center text-sm sm:text-base"
+                >
+                  <FontAwesomeIcon icon={faUtensils} className="me-1" />
+                  <span className="hidden sm:inline">Nhà hàng</span>
+                </CTab>
+              )}
+
+              <div className="flex flex-wrap gap-2 ml-auto align-items-center">
+                {/* Button Đặt phòng */}
+                {canAccessButton('DATPHONG') && (
+                  <Link to="/dashboard/pos/danh-sach-booking/add-booking">
+                    <CButton
+                      color="success"
+                      className="px-2 sm:px-4 text-white py-1 text-sm sm:text-base"
+                    >
+                      <FontAwesomeIcon icon={faPlus} className="me-1" />
+                      <span className="hidden sm:inline font-semibold">Đặt phòng</span>
+                    </CButton>
+                  </Link>
+                )}
+
+                {/* Button Danh sách đặt phòng */}
+                {canAccessButton('DANHSACHDATPHONG') && (
+                  <Link to="/dashboard/pos/danh-sach-booking">
+                    <CButton
+                      color="info"
+                      className="px-2 sm:px-4 text-white py-1 text-sm sm:text-base"
+                    >
+                      <FontAwesomeIcon icon={faListUl} className="me-1" />
+                      <span className="hidden sm:inline font-semibold">Danh sách đặt phòng</span>
+                    </CButton>
+                  </Link>
+                )}
+
+                {/* Button Thống kê */}
+                {canAccessButton('THONGKEDOANHTHU') && (
+                  <Link to={`/dashboard/pos/thong-ke`}>
+                    <CButton
+                      color="primary"
+                      className="px-2 sm:px-4 text-white py-1 text-sm sm:text-base"
+                    >
+                      <FontAwesomeIcon icon={faChartLine} className="me-1" />
+                      <span className="hidden sm:inline font-semibold">Thống kê</span>
+                    </CButton>
+                  </Link>
+                )}
+
+                {canAccessButton('THONGKEBUONPHONG') && (
+                  <Link to={`/dashboard/pos/thong-ke-buon-phong`}>
+                    <CButton
+                      color="primary"
+                      className="px-2 sm:px-4 text-white py-1 text-sm sm:text-base"
+                    >
+                      <FontAwesomeIcon icon={faChartLine} className="me-1" />
+                      <span className="hidden sm:inline font-semibold">Thống kê</span>
+                    </CButton>
+                  </Link>
+                )}
+              </div>
+            </CTabList>
+
+            {activeTab === 2 && (
+              <div className="flex flex-col gap-2 border-b border-gray-200 pb-2">
+                <div className="flex flex-wrap gap-2 items-center justify-between">
+                  <div className="flex flex-wrap gap-2">
+                    <StatusButton
+                      icon={faCircle}
+                      color="white"
+                      label="Đang trống"
+                      count={getRoomCounts().empty}
+                      active={statusFilter === 'TRỐNG'}
+                      onClick={() => handleStatusClick('TRỐNG')}
+                    />
+                    <StatusButton
+                      icon={faCircle}
+                      color="pink"
+                      label="Sắp nhận"
+                      count={getRoomCounts().upcoming}
+                      active={statusFilter === 'SẼ ĐẾN TRONG HÔM NAY'}
+                      onClick={() => handleStatusClick('SẼ ĐẾN TRONG HÔM NAY')}
+                    />
+                    <StatusButton
+                      icon={faCircle}
+                      color="green"
+                      label="Đang sử dụng"
+                      count={getRoomCounts().occupied}
+                      active={statusFilter === 'ĐANG Ở'}
+                      onClick={() => handleStatusClick('ĐANG Ở')}
+                    />
+                    <StatusButton
+                      icon={faCircle}
+                      color="yellow"
+                      label="Sắp trả"
+                      count={getRoomCounts().leaving}
+                      active={statusFilter === 'SẼ ĐI TRONG HÔM NAY'}
+                      onClick={() => handleStatusClick('SẼ ĐI TRONG HÔM NAY')}
+                    />
+                    <StatusButton
+                      icon={faCircle}
+                      color="blue"
+                      label="Check-in trễ"
+                      count={getRoomCounts().lateCheckIn}
+                      active={statusFilter === 'CHECK-IN TRỄ'}
+                      onClick={() => handleStatusClick('CHECK-IN TRỄ')}
+                    />
+                    <StatusButton
+                      icon={faCircle}
+                      color="amber"
+                      label="Check-out trễ"
+                      count={getRoomCounts().lateCheckOut}
+                      active={statusFilter === 'CHECK-OUT TRỄ'}
+                      onClick={() => handleStatusClick('CHECK-OUT TRỄ')}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!bulkCheckInMode ? (
+                      <CButton
+                        color="primary"
+                        variant="outline"
+                        className="font-semibold shadow-sm"
+                        onClick={() => {
+                          setBulkCheckInMessage('')
+                          setBulkCheckInMode(true)
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faListCheck} className="me-2" />
+                        Chọn phòng check-in
+                      </CButton>
+                    ) : (
+                      <>
+                        <CButton
+                          color="success"
+                          className="text-white"
+                          disabled={!selectedCheckInRooms.length || bulkCheckInLoading}
+                          onClick={handleBulkCheckIn}
+                        >
+                          {bulkCheckInLoading && <CSpinner size="sm" className="me-2" />}
+                          {!bulkCheckInLoading && (
+                            <FontAwesomeIcon icon={faCheck} className="me-2" />
+                          )}
+                          Check-in đã chọn ({selectedCheckInRooms.length})
+                        </CButton>
+                        <CButton
+                          color="secondary"
+                          variant="outline"
+                          disabled={bulkCheckInLoading}
+                          onClick={() => {
+                            setBulkCheckInMode(false)
+                            setSelectedCheckInRooms([])
+                            setBulkCheckInMessage('')
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faXmark} className="me-2" />
+                          Hủy
+                        </CButton>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           <CTabContent>
             {/* Tab Dự báo loại phòng */}
@@ -722,102 +833,6 @@ const HotelManagement = () => {
             {canAccessTab(2) && (
               <CTabPanel className="mt-3" aria-labelledby="profile-tab-pane" itemKey={2}>
                 <div className="flex flex-col gap-2 ">
-                  <div className="flex flex-wrap gap-2 items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
-                      <StatusButton
-                        icon={faCircle}
-                        color="white"
-                        label="Đang trống"
-                        count={getRoomCounts().empty}
-                        active={statusFilter === 'TRỐNG'}
-                        onClick={() => handleStatusClick('TRỐNG')}
-                      />
-                      <StatusButton
-                        icon={faCircle}
-                        color="pink"
-                        label="Sắp nhận"
-                        count={getRoomCounts().upcoming}
-                        active={statusFilter === 'SẼ ĐẾN TRONG HÔM NAY'}
-                        onClick={() => handleStatusClick('SẼ ĐẾN TRONG HÔM NAY')}
-                      />
-                      <StatusButton
-                        icon={faCircle}
-                        color="green"
-                        label="Đang sử dụng"
-                        count={getRoomCounts().occupied}
-                        active={statusFilter === 'ĐANG Ở'}
-                        onClick={() => handleStatusClick('ĐANG Ở')}
-                      />
-                      <StatusButton
-                        icon={faCircle}
-                        color="yellow"
-                        label="Sắp trả"
-                        count={getRoomCounts().leaving}
-                        active={statusFilter === 'SẼ ĐI TRONG HÔM NAY'}
-                        onClick={() => handleStatusClick('SẼ ĐI TRONG HÔM NAY')}
-                      />
-                      <StatusButton
-                        icon={faCircle}
-                        color="blue"
-                        label="Check-in trễ"
-                        count={getRoomCounts().lateCheckIn}
-                        active={statusFilter === 'CHECK-IN TRỄ'}
-                        onClick={() => handleStatusClick('CHECK-IN TRỄ')}
-                      />
-                      <StatusButton
-                        icon={faCircle}
-                        color="amber"
-                        label="Check-out trễ"
-                        count={getRoomCounts().lateCheckOut}
-                        active={statusFilter === 'CHECK-OUT TRỄ'}
-                        onClick={() => handleStatusClick('CHECK-OUT TRỄ')}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!bulkCheckInMode ? (
-                        <CButton
-                          color="primary"
-                          variant="outline"
-                          className="font-semibold shadow-sm"
-                          onClick={() => {
-                            setBulkCheckInMessage('')
-                            setBulkCheckInMode(true)
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faListCheck} className="me-2" />
-                          Chọn phòng check-in
-                        </CButton>
-                      ) : (
-                        <>
-                          <CButton
-                            color="success"
-                            className="text-white"
-                            disabled={!selectedCheckInRooms.length || bulkCheckInLoading}
-                            onClick={handleBulkCheckIn}
-                          >
-                            {bulkCheckInLoading && <CSpinner size="sm" className="me-2" />}
-                            {!bulkCheckInLoading && (
-                              <FontAwesomeIcon icon={faCheck} className="me-2" />
-                            )}
-                            Check-in đã chọn ({selectedCheckInRooms.length})
-                          </CButton>
-                          <CButton
-                            color="secondary"
-                            variant="outline"
-                            disabled={bulkCheckInLoading}
-                            onClick={() => {
-                              setBulkCheckInMode(false)
-                              setSelectedCheckInRooms([])
-                              setBulkCheckInMessage('')
-                            }}
-                          >
-                            <FontAwesomeIcon icon={faXmark} className="me-2" />
-                            Hủy
-                          </CButton>
-                        </>
-                      )}
-                    </div>
-                  </div>
                   {bulkCheckInMessage && (
                     <div className="text-sm text-blue-700" role="status">
                       {bulkCheckInMessage}
@@ -829,6 +844,7 @@ const HotelManagement = () => {
                       <div key={room.maPhong} className="w-full">
                         <RoomCard
                           room={room}
+                          phongDangCheckIn={phongDangCheckIn}
                           updateRoomStatus={updateRoomStatus}
                           updateRoomCheckIn={updateRoomCheckIn}
                           refreshRoomData={refreshRoomData}

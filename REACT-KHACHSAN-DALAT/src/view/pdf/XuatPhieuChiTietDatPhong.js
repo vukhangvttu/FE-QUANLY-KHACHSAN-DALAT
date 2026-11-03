@@ -244,12 +244,12 @@ const getTongTienPhuThu = (data, dataPhuThu) => {
   // Tính tổng phụ thu từ dataPhuThu (thongTinPhuThu)
   const tongPhuThuTuDataPhuThu = Array.isArray(dataPhuThu)
     ? dataPhuThu.reduce(
-      (sum, row) =>
-        sum +
-        (row.tong_tien || 0) +
-        (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1),
-      0,
-    )
+        (sum, row) =>
+          sum +
+          (row.tong_tien || 0) +
+          (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1),
+        0,
+      )
     : 0
 
   // Trả về tổng của cả hai
@@ -391,12 +391,14 @@ const columns = [
 
         // Cộng phụ thu ăn sáng
         if (row.so_luong_phu_thu_an_sang > 0) {
-          tongTienPhuThu += (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1)
+          tongTienPhuThu +=
+            (row.gia_phu_thu_an_sang || 0) * row.so_luong_phu_thu_an_sang * (row.so_dem || 1)
         }
 
         // Cộng phụ thu trẻ em
         if (row.so_luong_phu_thu_tre_em > 0) {
-          tongTienPhuThu += (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em * (row.so_dem || 1)
+          tongTienPhuThu +=
+            (row.gia_phu_thu_tre_em || 0) * row.so_luong_phu_thu_tre_em * (row.so_dem || 1)
         }
 
         // Cộng phụ thu extra bed
@@ -648,21 +650,21 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
           style={{ width: '100%', marginBottom: 5, height: '140px', marginTop: 5 }}
         />
 
-        {
-          viTri === 'DALAT' && (
-            <>
-              <View style={styles.contactInfo}>
-                <Text style={{ fontWeight: 'bold' }}>DƯƠNG HOÀNG - GOLDEN ERA ĐÀ LẠT Hotel </Text>
-                <Text>10 Bùi Thị Xuân, phường Xuân Hương - Đà Lạt, tỉnh Lâm Đồng </Text>
-                <Text>Hotline: 02633.551.551; (Zalo: 0914.581.551 ) </Text>
-                <Text>Website: goldenera.vttu.edu.vn </Text>
-              </View>
-            </>
-          )
-        }
+        {viTri === 'DALAT' && (
+          <>
+            <View style={styles.contactInfo}>
+              <Text style={{ fontWeight: 'bold' }}>DƯƠNG HOÀNG - GOLDEN ERA ĐÀ LẠT Hotel </Text>
+              <Text>10 Bùi Thị Xuân, phường Xuân Hương - Đà Lạt, tỉnh Lâm Đồng </Text>
+              <Text>Hotline: 02633.551.551; (Zalo: 0914.581.551 ) </Text>
+              <Text>Website: goldenera.vttu.edu.vn </Text>
+            </View>
+          </>
+        )}
 
         {viTri === 'VUNGTAU' && (
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+          >
             <View style={[styles.contactInfo, { flex: 1 }]}>
               <Text style={{ fontWeight: 'bold' }}>DƯƠNG HOÀNG - GOLDEN ERA VŨNG TÀU Hotel </Text>
               <Text>03-05 Thuy Van Street, Vung Tau Ward , Ho Chi Minh City, S.R Vietnam</Text>
@@ -671,12 +673,15 @@ const HotelRegistrationForm = ({ thongTinKhachHang, thongTinThanhToan, thongTinP
             </View>
             <View style={{ width: 80, height: 80 }}>
               <Image
-                src={`https://img.vietqr.io/image/970436-3366696969-compact.png?amount=${Math.round(soTienConLai * 0.5)}&addInfo=${encodeURIComponent(`Thanh toan booking ${thongTinKhachHang?.ma_booking || ''}`)}&accountName=${encodeURIComponent('CTY TRACH NHIEM HUU HAN HOANG KIM-DOLDEN')}`}
+                src={`https://img.vietqr.io/image/970436-3366696969-compact.png?amount=${Math.round(
+                  soTienConLai * 0.5,
+                )}&addInfo=${encodeURIComponent(
+                  `Thanh toan booking ${thongTinKhachHang?.ma_booking || ''}`,
+                )}&accountName=${encodeURIComponent('CTY TRACH NHIEM HUU HAN HOANG KIM-DOLDEN')}`}
               />
             </View>
           </View>
         )}
-
       </Page>
     </Document>
   )
@@ -775,7 +780,6 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
 
   const [previewImageUrl, setPreviewImageUrl] = useState(null)
   const [generatingPreview, setGeneratingPreview] = useState(false)
-  const originalPreviewRef = useRef(null)
 
   const handleDownloadImage = useCallback(async () => {
     if (!thongTinKhachHang || !thongTinThanhToan) return
@@ -858,7 +862,6 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
     } finally {
     }
   }, [thongTinKhachHang, thongTinThanhToan, thongTinPhuThu, previewImageUrl])
-
 
   const isMobile =
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -950,8 +953,8 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
 
         // PDF A5 landscape – column5 (30% bên phải), imageContainer: 160×200pt
         const sigBoxX = w * 0.715
-        const sigBoxY = h * 0.10
-        const sigBoxW = w * 0.270
+        const sigBoxY = h * 0.1
+        const sigBoxW = w * 0.27
         const sigBoxH = h * 0.476
 
         const sigImg = new window.Image()
@@ -990,7 +993,13 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
             fontSize: 14,
           }}
         >
-          {downloading ? 'Đang tải...' : <><FontAwesomeIcon icon={faCircleDown} /> Tải ảnh PNG</>}
+          {downloading ? (
+            'Đang tải...'
+          ) : (
+            <>
+              <FontAwesomeIcon icon={faCircleDown} /> Tải ảnh PNG
+            </>
+          )}
         </button>
       </div>
       <div>
@@ -1021,7 +1030,8 @@ const ChiTietDatPhong = ({ maBookingProp }) => {
               >
                 <h4 style={{ color: '#dc3545', marginBottom: '15px' }}>Không thể xem trước PDF</h4>
                 <p style={{ marginBottom: '10px' }}>
-                  Trình duyệt trên thiết bị di động hoặc máy tính bảng không hỗ trợ xem trước tệp PDF này.
+                  Trình duyệt trên thiết bị di động hoặc máy tính bảng không hỗ trợ xem trước tệp
+                  PDF này.
                 </p>
                 <p>
                   Vui lòng nhấn nút <strong>Tải ảnh PNG</strong> ở trên để tải về.
